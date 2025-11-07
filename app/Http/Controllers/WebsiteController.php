@@ -20,6 +20,39 @@ class WebsiteController extends Controller
     /**
      * Show public website pages - SIMPLIFIED for localhost
      */
+    // public function showPage(Request $request, $page = 'home')
+    // {
+    //     // Get current user if logged in
+    //     $user = session('firebase_user');
+
+    //     // 🔥 CORRECT: Determine whose website we're viewing
+    //     $websiteOwnerUid = $this->getWebsiteOwnerUid($request, $user);
+
+    //     // 🔥 RECORD ANALYTICS for the website owner
+    //     if ($websiteOwnerUid) {
+    //         $this->analyticsService->recordVisit($websiteOwnerUid, $page, $request);
+    //     }
+
+    //     // Get content and settings for the website owner
+    //     $pageContent     = $this->getPageContentForOwner($websiteOwnerUid, $page);
+    //     $websiteSettings = $this->getWebsiteSettingsForOwner($websiteOwnerUid);
+
+    //     // Personalize content ONLY if current user is the website owner
+    //     $isOwner = $user && $user['uid'] === $websiteOwnerUid;
+    //     if ($isOwner) {
+    //         $pageContent = $this->personalizeContentForOwner($user, $page, $pageContent);
+    //     }
+
+    //     return Inertia::render('Website/Page', [
+    //         'user'            => $user,
+    //         'page'            => $page,
+    //         'pageContent'     => $pageContent,
+    //         'websiteSettings' => $websiteSettings,
+    //         'isEditMode'      => $request->has('edit') && $isOwner,
+    //         'isOwner'         => $isOwner,
+    //     ]);
+    // }
+
     public function showPage(Request $request, $page = 'home')
     {
         // Get current user if logged in
@@ -28,20 +61,31 @@ class WebsiteController extends Controller
         // 🔥 CORRECT: Determine whose website we're viewing
         $websiteOwnerUid = $this->getWebsiteOwnerUid($request, $user);
 
-        // 🔥 RECORD ANALYTICS for the website owner
-        if ($websiteOwnerUid) {
-            $this->analyticsService->recordVisit($websiteOwnerUid, $page, $request);
-        }
-
         // Get content and settings for the website owner
         $pageContent     = $this->getPageContentForOwner($websiteOwnerUid, $page);
         $websiteSettings = $this->getWebsiteSettingsForOwner($websiteOwnerUid);
 
-        // Personalize content ONLY if current user is the website owner
+        // Determine if current user is the owner
         $isOwner = $user && $user['uid'] === $websiteOwnerUid;
+
+        // 🔥 CHECK IF PAGE IS PUBLISHED (unless user is the owner)
+        if (! $isOwner && ! ($pageContent['published'] ?? false)) {
+            // Page is not published and user is not the owner
+            abort(404, 'Page not found');
+        }
+
+        // 🔥 RECORD ANALYTICS for the website owner (only for published pages)
+        if ($websiteOwnerUid && ($pageContent['published'] ?? false)) {
+            $this->analyticsService->recordVisit($websiteOwnerUid, $page, $request);
+        }
+
+        // Personalize content ONLY if current user is the website owner
         if ($isOwner) {
             $pageContent = $this->personalizeContentForOwner($user, $page, $pageContent);
         }
+
+        // Get list of published pages
+        $publishedPages = $this->getPublishedPages($websiteOwnerUid);
 
         return Inertia::render('Website/Page', [
             'user'            => $user,
@@ -50,7 +94,28 @@ class WebsiteController extends Controller
             'websiteSettings' => $websiteSettings,
             'isEditMode'      => $request->has('edit') && $isOwner,
             'isOwner'         => $isOwner,
+            'publishedPages'  => $publishedPages,
         ]);
+    }
+
+    private function getPublishedPages($uid)
+    {
+        if (! $uid) {
+            return ['home'];
+        }
+        // Default pages
+
+        $pages          = ['home', 'about', 'gallery', 'contact'];
+        $publishedPages = [];
+
+        foreach ($pages as $page) {
+            $content = $this->firebaseService->getUserPageContent($uid, $page);
+            if ($content['published'] ?? false) {
+                $publishedPages[] = $page;
+            }
+        }
+
+        return $publishedPages;
     }
 
     /**

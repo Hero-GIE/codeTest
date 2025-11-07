@@ -28,6 +28,7 @@ import {
     faArrowDown,
     faSpinner
 } from '@fortawesome/free-solid-svg-icons';
+import LogoutDialog from './Auth/Logout.vue';
 
 // Props
 const props = defineProps({
@@ -44,7 +45,17 @@ const analyticsData = ref(null);
 const analyticsPeriod = ref('7days');
 const loadingAnalytics = ref(false);
 const exportLoading = ref(false);
-const overviewLoading = ref(true); // Add loading state for overview
+const overviewLoading = ref(true); 
+const showLogoutDialog = ref(false); 
+
+// Logout dialog methods
+const openLogoutDialog = () => {
+    showLogoutDialog.value = true;
+};
+
+const closeLogoutDialog = () => {
+    showLogoutDialog.value = false;
+};
 
 const colorForm = ref({
     colorPalette: props.websiteSettings?.colorPalette || 'default',
@@ -73,7 +84,6 @@ const PAGE_ICONS = {
     contact: faEnvelope
 };
 
-// Methods
 const fetchAnalytics = async (period = '7days') => {
     loadingAnalytics.value = true;
     overviewLoading.value = true; // Set overview loading when fetching analytics
@@ -166,7 +176,7 @@ const togglePublish = async (page, currentStatus) => {
         await router.post(`/dashboard/pages/${page}/publish`, {
             published: !currentStatus
         });
-        router.reload();
+
     } catch (error) {
         console.error('Error toggling publish:', error);
     }
@@ -185,6 +195,9 @@ const totalPagesCount = () => {
 onMounted(() => {
     fetchAnalytics(analyticsPeriod.value);
 });
+
+
+
 </script>
 
 <template>
@@ -212,14 +225,13 @@ onMounted(() => {
                             <FontAwesomeIcon :icon="faExternalLinkAlt" class="text-sm" />
                             <span>View Live Site</span>
                         </Link>
-                        <Link 
-                            :href="route('logout')" 
-                            method="post"
+                          <button 
+                            @click="openLogoutDialog"
                             class="group flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                         >
                             <FontAwesomeIcon :icon="faSignOutAlt" class="text-sm" />
                             <span>Logout</span>
-                        </Link>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -733,5 +745,10 @@ onMounted(() => {
                 </div>
             </div>
         </div>
+         <!-- Logout Dialog -->
+        <LogoutDialog 
+            :show-dialog="showLogoutDialog" 
+            @close="closeLogoutDialog" 
+        />
     </div>
 </template>

@@ -29,8 +29,29 @@ const props = defineProps({
     page: String,
     pageContent: Object,
     websiteSettings: Object,
-    isEditMode: Boolean
+    isEditMode: Boolean,
+    publishedPages: {
+        type: Array,
+        default: ()=>['home', 'about', 'gallery', 'contact']
+    }, 
 });
+
+// Enhanced page visibility check
+const isPagePublished = (pageName) => {
+    // Owner can see all pages in navigation
+    if (props.isOwner) return true;
+    
+    // Check if page is in published pages list
+    // Ensure publishedPages is always treated as an array
+    const publishedPages = Array.isArray(props.publishedPages) ? props.publishedPages : [];
+    return publishedPages.includes(pageName);
+};
+
+// Get available navigation pages
+const availablePages = computed(() => {
+    return ['home', 'about', 'gallery', 'contact'].filter(page => isPagePublished(page));
+});
+
 
 // Scroll detection for header
 const isScrolled = ref(false);
@@ -150,10 +171,10 @@ const getPageRoute = (pageName) => {
                         </Link>
                     </div>
 
-                    <!-- Navigation Menu -->
-                    <nav class="hidden md:flex space-x-8">
+                  <!-- Navigation Menu -->
+    <nav class="hidden md:flex space-x-8">
                         <Link
-                            v-for="navPage in ['home', 'about', 'gallery', 'contact']"
+                            v-for="navPage in availablePages"
                             :key="navPage"
                             :href="getPageRoute(navPage)"
                             class="px-3 py-2 rounded-md text-sm font-medium transition-all duration-300 transform hover:scale-105"
@@ -205,12 +226,13 @@ const getPageRoute = (pageName) => {
                 :page-content="pageContent"
                 :user="user"
                 :is-edit-mode="isEditMode"
+                :published-pages="publishedPages"
             />
         </main>
 
-        <!-- Footer (rest of your existing footer code remains the same) -->
+       <!-- Footer - Updated to use availablePages -->
         <footer class="bg-black text-white py-16 mt-20 relative overflow-hidden">
-            <!-- Your existing footer content -->
+            <!-- Background decoration -->
             <div class="absolute inset-0 opacity-5">
                 <div class="absolute top-10 left-10 w-32 h-32 bg-accent rounded-full blur-xl"></div>
                 <div class="absolute bottom-10 right-10 w-40 h-40 bg-primary rounded-full blur-xl"></div>
@@ -258,7 +280,7 @@ const getPageRoute = (pageName) => {
                         </div>
                     </div>
 
-                    <!-- Quick Links -->
+                    <!-- Quick Links - Updated to use availablePages -->
                     <div>
                         <h4 class="text-xl font-bold mb-6 text-accent inline-flex items-center space-x-2">
                             <FontAwesomeIcon :icon="faRocket" />
@@ -266,7 +288,7 @@ const getPageRoute = (pageName) => {
                         </h4>
                         <div class="space-y-3">
                             <Link 
-                                v-for="navPage in ['home', 'about', 'gallery', 'contact']"
+                                v-for="navPage in availablePages"
                                 :key="navPage"
                                 :href="getPageRoute(navPage)"
                                 class="group flex items-center space-x-2 text-gray-300 hover:text-accent transition-all duration-300 hover:translate-x-2"

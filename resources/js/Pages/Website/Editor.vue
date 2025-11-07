@@ -13,7 +13,6 @@ import {
     faTextWidth,
     faList,
     faPalette,
-    faSpinner,
     faExternalLinkAlt,
     faFileAlt,
     faDesktop,
@@ -30,8 +29,10 @@ import {
     faShieldAlt,     
     faGlobe,
     faLightbulb,
-    faImages
+    faImages,
+    faSpinner 
 } from '@fortawesome/free-solid-svg-icons';
+import DeleteImageConfirmationDialog from '../Auth/DeleteImageConfirmationDialog.vue';
 
 const props = defineProps({
     user: Object,
@@ -392,18 +393,26 @@ const updateImage = async (image) => {
     }
 };
 
-const deleteImage = async (image) => {
-    if (!image?.publitio_id || !image?.id) {
-        console.warn('Delete aborted: missing image identifiers.', image);
+// Add these new reactive variables
+const showDeleteDialog = ref(false);
+const imageToDelete = ref(null);
+const deleting = ref(false);
+
+// Replace the deleteImage function with this:
+const openDeleteDialog = (image) => {
+    imageToDelete.value = image;
+    showDeleteDialog.value = true;
+};
+
+const deleteImage = async () => {
+    if (!imageToDelete.value?.publitio_id || !imageToDelete.value?.id) {
+        console.warn('Delete aborted: missing image identifiers.', imageToDelete.value);
+        showDeleteDialog.value = false;
         return;
     }
 
-    if (!confirm('Are you sure you want to delete this image?')) {
-        console.log('Delete cancelled by user.');
-        return;
-    }
-
-    console.log('Deleting image:', image.publitio_id, 'Firebase key:', image.id);
+    deleting.value = true;
+    console.log('Deleting image:', imageToDelete.value.publitio_id, 'Firebase key:', imageToDelete.value.id);
 
     try {
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
@@ -412,7 +421,7 @@ const deleteImage = async (image) => {
             throw new Error('CSRF token is missing. Please refresh the page.');
         }
 
-        const response = await fetch(`/gallery/image/${image.publitio_id}?firebase_key=${image.id}`, {
+        const response = await fetch(`/gallery/image/${imageToDelete.value.publitio_id}?firebase_key=${imageToDelete.value.id}`, {
             method: 'DELETE',
             headers: {
                 'X-CSRF-TOKEN': csrfToken,
@@ -430,18 +439,35 @@ const deleteImage = async (image) => {
         console.log('Delete response:', result);
 
         if (result.success) {
-            editedContent.images = editedContent.images.filter(img => img.id !== image.id);
-            console.log('Image removed locally:', image.id);
+            // Remove image from local state
+            editedContent.images = editedContent.images.filter(img => img.id !== imageToDelete.value.id);
+            console.log('Image removed locally:', imageToDelete.value.id);
+            
+            // Show success message (optional)
+            // You can add a toast notification here if you have one
+            
             await saveContent();
             console.log('Gallery content saved after delete.');
         } else {
-            alert('Delete failed: ' + (result.error || 'Unknown error'));
+            throw new Error(result.error || 'Unknown error during deletion');
         }
     } catch (error) {
         console.error('Delete error:', error);
+        // Show error message to user
         alert('Delete failed: ' + error.message);
+    } finally {
+        deleting.value = false;
+        showDeleteDialog.value = false;
+        imageToDelete.value = null;
     }
 };
+
+const cancelDelete = () => {
+    showDeleteDialog.value = false;
+    imageToDelete.value = null;
+    deleting.value = false;
+};
+
 
 
 const startEditing = (sectionPath) => {
@@ -1485,13 +1511,13 @@ const pageTitle = computed(() => {
                 class="w-full px-2 py-1 border border-gray-300 rounded text-sm mb-2"
                 placeholder="Location"
             />
-            <button
-                @click="deleteImage(image)"
-                class="w-full bg-red-500 text-white py-1 rounded text-sm hover:bg-red-600 flex items-center justify-center space-x-1"
-            >
-                <FontAwesomeIcon :icon="faTrash" />
-                <span>Delete</span>
-            </button>
+           <button
+                        @click="openDeleteDialog(image)"
+                        class="w-full bg-red-500 text-white py-1 rounded text-sm hover:bg-red-600 flex items-center justify-center space-x-1 transition-all duration-200"
+                    >
+                        <FontAwesomeIcon :icon="faTrash" />
+                        <span>Delete</span>
+                    </button>
         </div>
     </div>
 </div>
@@ -1771,6 +1797,14 @@ const pageTitle = computed(() => {
             </div>
         </div>
     </div>
+       <!-- Add the delete confirmation dialog at the end of your template -->
+    <DeleteImageConfirmationDialog
+        :show="showDeleteDialog"
+        :image="imageToDelete"
+        :deleting="deleting"
+        @confirm="deleteImage"
+        @cancel="cancelDelete"
+    />
 </template>
 
 <style scoped>

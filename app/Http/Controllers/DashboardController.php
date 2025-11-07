@@ -192,16 +192,17 @@ class DashboardController extends Controller
         $user = session('firebase_user');
 
         if (! $user) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+            return redirect('/login');
         }
 
         $published = $request->boolean('published');
         $result    = $this->firebaseService->togglePublishPage($user['uid'], $page, $published);
 
         if ($result['success']) {
-            return response()->json(['success' => true, 'published' => $published]);
+            // Return simple success response
+            return back();
         }
 
-        return response()->json(['error' => $result['error']], 400);
+        return back();
     }
 }
