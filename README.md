@@ -22,9 +22,10 @@ php artisan key:generate
 # Configure Firebase & Publitio in .env
 
 # Build assets
+npm run build
 
+# Run frontend
 npm run run - frontend
 
-# Serve
-
+# Server
 php artisan serve – backend
