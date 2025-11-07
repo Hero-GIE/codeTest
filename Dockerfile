@@ -12,14 +12,14 @@ RUN apt-get update && apt-get install -y \
     nodejs \
     npm \
     && npm install -g n \
-    && n stable \
+    && n 20 \
     && apt-get purge -y nodejs npm
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+# Install PHP extensions (SQLite for your current setup)
+RUN docker-php-ext-install pdo_sqlite mbstring exif pcntl bcmath gd
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -36,7 +36,7 @@ COPY . .
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Install Node.js dependencies and build
+# Install Node.js dependencies and build Vite assets
 RUN npm install && npm run build
 
 # Change document root for Apache
@@ -44,11 +44,13 @@ ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Set permissions
+# Set permissions for Laravel
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Create .env file from environment variables (Render will provide these)
-RUN touch .env
+# Create SQLite database file if it doesn't exist (for sessions)
+RUN touch /var/www/html/database/database.sqlite
+RUN chown www-data:www-data /var/www/html/database/database.sqlite
 
 EXPOSE 80
 
