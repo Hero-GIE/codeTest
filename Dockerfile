@@ -31,8 +31,16 @@ RUN a2enmod rewrite
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy existing application directory
+# Copy existing application directory (excluding .env via .dockerignore)
 COPY . .
+
+# Create .env file with basic configuration
+RUN echo "APP_NAME=WowLogBook" > .env && \
+    echo "APP_ENV=production" >> .env && \
+    echo "APP_DEBUG=false" >> .env && \
+    echo "APP_URL=https://codetest-sbbz.onrender.com" >> .env && \
+    echo "SESSION_DRIVER=database" >> .env && \
+    echo "CACHE_STORE=database" >> .env
 
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
@@ -53,16 +61,12 @@ RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 RUN touch /var/www/html/database/database.sqlite
 RUN chown www-data:www-data /var/www/html/database/database.sqlite
 
-# Laravel Optimizations and Database Setup (FIXED)
-RUN php artisan key:generate --no-interaction --force
+# Laravel Optimizations and Database Setup (FIXED - no key generation needed)
 RUN php artisan session:table
 RUN php artisan migrate --force
 RUN php artisan config:cache
 RUN php artisan route:cache
 RUN php artisan view:cache
-
-# Remove test file (optional)
-RUN rm /var/www/html/public/test.php
 
 EXPOSE 80
 
