@@ -37,7 +37,7 @@ COPY . .
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Install Node.js dependencies and build Vite assets (FIXED)
+# Install Node.js dependencies and build Vite assets
 RUN npm install --legacy-peer-deps && npm run build
 
 # Change document root for Apache
@@ -52,6 +52,17 @@ RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 # Create SQLite database file if it doesn't exist (for sessions)
 RUN touch /var/www/html/database/database.sqlite
 RUN chown www-data:www-data /var/www/html/database/database.sqlite
+
+# Laravel Optimizations and Database Setup (FIXED)
+RUN php artisan key:generate --no-interaction --force
+RUN php artisan session:table
+RUN php artisan migrate --force
+RUN php artisan config:cache
+RUN php artisan route:cache
+RUN php artisan view:cache
+
+# Remove test file (optional)
+RUN rm /var/www/html/public/test.php
 
 EXPOSE 80
 
