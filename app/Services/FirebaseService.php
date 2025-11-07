@@ -1,0 +1,1055 @@
+<?php
+namespace App\Services;
+
+use Kreait\Firebase\Auth;
+use Kreait\Firebase\Database;
+use Kreait\Firebase\Exception\AuthException;
+use Kreait\Firebase\Factory;
+
+class FirebaseService
+{
+    private $auth;
+    private $database;
+    private $firebase;
+
+    public function __construct()
+    {
+        $this->initializeFirebase();
+    }
+
+    private function initializeFirebase()
+    {
+        $firebaseConfig = [
+            'apiKey'            => env('FIREBASE_API_KEY'),
+            'authDomain'        => env('FIREBASE_AUTH_DOMAIN'),
+            'databaseURL'       => env('FIREBASE_DATABASE_URL'),
+            'projectId'         => env('FIREBASE_PROJECT_ID'),
+            'storageBucket'     => env('FIREBASE_STORAGE_BUCKET'),
+            'messagingSenderId' => env('FIREBASE_MESSAGING_SENDER_ID'),
+            'appId'             => env('FIREBASE_APP_ID'),
+        ];
+
+        $serviceAccount = [
+            "type"                        => "service_account",
+            "project_id"                  => env('FIREBASE_PROJECT_ID'),
+            "private_key_id"              => env('FIREBASE_PRIVATE_KEY_ID'),
+            "private_key"                 => str_replace('\\n', "\n", env('FIREBASE_PRIVATE_KEY')),
+            "client_email"                => env('FIREBASE_CLIENT_EMAIL'),
+            "client_id"                   => env('FIREBASE_CLIENT_ID'),
+            "auth_uri"                    => "https://accounts.google.com/o/oauth2/auth",
+            "token_uri"                   => "https://oauth2.googleapis.com/token",
+            "auth_provider_x509_cert_url" => "https://www.googleapis.com/oauth2/v1/certs",
+            "client_x509_cert_url"        => env('FIREBASE_CLIENT_CERT_URL'),
+        ];
+
+        $this->firebase = (new Factory)
+            ->withServiceAccount(storage_path('firebase/firebase-adminsdk.json'))
+            ->withDatabaseUri(env('FIREBASE_DATABASE_URL'));
+
+        $this->auth     = $this->firebase->createAuth();
+        $this->database = $this->firebase->createDatabase();
+
+    }
+
+    /**
+     * Check if user exists in Realtime Database
+     */
+    public function checkUserExists($email)
+    {
+        try {
+            \Log::info("🔍 [checkUserExists] Starting check for: " . $email);
+
+            $usersRef = $this->database->getReference('users');
+            $query    = $usersRef->orderByChild('email')->equalTo($email);
+
+            $snapshot = $query->getSnapshot();
+            $data     = $snapshot->getValue();
+
+            \Log::info("📊 [checkUserExists] Query result: " . json_encode($data));
+            \Log::info("✅ [checkUserExists] User exists: " . (! empty($data) ? 'true' : 'false'));
+
+            return ! empty($data);
+        } catch (\Exception $error) {
+            \Log::error("❌ [checkUserExists] Error: " . $error->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Register new user
+     */
+    public function register($email, $password, $userData = [])
+    {
+        \Log::info("\n🚀 ========== REGISTRATION START ==========");
+
+        try {
+            // Step 1: Check if user exists
+            \Log::info("📍 STEP 1: Quick check if email might be registered...");
+
+            // Step 2: Create Firebase Auth user
+            \Log::info("📍 STEP 2: Creating Firebase Auth user...");
+
+            $userProperties = [
+                'email'         => $email,
+                'emailVerified' => false,
+                'password'      => $password,
+                'displayName'   => $userData['name'] ?? explode('@', $email)[0],
+            ];
+
+            $user = $this->auth->createUser($userProperties);
+
+            \Log::info("✅ Auth user created - UID: " . $user->uid);
+
+            // Step 3: Save to Realtime Database
+            \Log::info("📍 STEP 3: Saving to Realtime Database...");
+
+            $userProfile = [
+                'uid'       => $user->uid,
+                'email'     => $user->email,
+                'name'      => $userData['name'] ?? $user->displayName ?? explode('@', $email)[0],
+                'createdAt' => date('c'),
+                'updatedAt' => date('c'),
+            ] + $userData;
+
+            $dbSaveSuccess = false;
+
+            try {
+                $dbRef = $this->database->getReference('users/' . $user->uid);
+                $dbRef->set($userProfile);
+                $dbSaveSuccess = true;
+                \Log::info("✅ User profile saved to Realtime DB");
+            } catch (\Exception $dbError) {
+                \Log::error("❌ Failed to save to Realtime DB: " . $dbError->getMessage());
+                // Don't throw here - we still have the auth user
+            }
+
+            // Step 4: Verify the save
+            if ($dbSaveSuccess) {
+                \Log::info("📍 STEP 4: Verifying database save...");
+                $verifyRef  = $this->database->getReference('users/' . $user->uid);
+                $verifyData = $verifyRef->getValue();
+                \Log::info("✅ Database verification: " . (! empty($verifyData) ? "SUCCESS" : "FAILED"));
+            }
+
+            \Log::info("\n🎉 ========== REGISTRATION SUCCESS ==========");
+            \Log::info("📧 User: " . $user->email);
+            \Log::info("🆔 UID: " . $user->uid);
+            \Log::info("💾 Database save: " . ($dbSaveSuccess ? "SUCCESS" : "FAILED (but auth user created)"));
+
+            return [
+                'success'       => true,
+                'user'          => [
+                    'uid'         => $user->uid,
+                    'email'       => $user->email,
+                    'displayName' => $user->displayName,
+                ],
+                'dbSaveSuccess' => $dbSaveSuccess,
+            ];
+
+        } catch (AuthException $error) {
+            \Log::error("\n❌ ========== REGISTRATION FAILED ==========");
+            \Log::error("❌ Error code: " . $error->getCode());
+            \Log::error("❌ Error message: " . $error->getMessage());
+
+            $errorMessage = $error->getMessage();
+
+            if (strpos($errorMessage, 'email-already-exists') !== false) {
+                $errorMessage = "This email is already registered. Please login instead.";
+            } elseif (strpos($errorMessage, 'invalid-email') !== false) {
+                $errorMessage = "Invalid email address format.";
+            } elseif (strpos($errorMessage, 'weak-password') !== false) {
+                $errorMessage = "Password is too weak. Please use at least 6 characters.";
+            }
+
+            return ['success' => false, 'error' => $errorMessage];
+        } catch (\Exception $error) {
+            \Log::error("\n❌ ========== REGISTRATION FAILED ==========");
+            \Log::error("❌ Error: " . $error->getMessage());
+            return ['success' => false, 'error' => 'Registration failed. Please try again.'];
+        }
+    }
+
+    /**
+     * Login user
+     */
+    public function login($email, $password)
+    {
+        \Log::info("\n🔐 ========== LOGIN START ==========");
+        \Log::info("📧 Email: " . $email);
+
+        try {
+            \Log::info("📍 STEP 1: Attempting Firebase Auth sign in...");
+
+            // Try to sign in directly with Firebase Auth
+            $signInResult = $this->auth->signInWithEmailAndPassword($email, $password);
+            $user         = $signInResult->data();
+
+            \Log::info("✅ Firebase Auth sign in successful");
+            \Log::info("🆔 User UID: " . $user['localId']);
+
+            // Optional: Check if user profile exists in Realtime Database
+            \Log::info("📍 STEP 2: Checking user profile in Realtime DB...");
+            $userProfile = $this->getUserProfile($user['localId']);
+
+            if (empty($userProfile['data'])) {
+                \Log::info("⚠️ User exists in Auth but not in Realtime DB - creating profile...");
+
+                // Create basic profile if missing
+                $basicProfile = [
+                    'uid'       => $user['localId'],
+                    'email'     => $user['email'],
+                    'name'      => explode('@', $user['email'])[0],
+                    'createdAt' => date('c'),
+                    'updatedAt' => date('c'),
+                ];
+
+                $this->database->getReference('users/' . $user['localId'])->set($basicProfile);
+                \Log::info("✅ Created missing user profile in Realtime DB");
+            } else {
+                \Log::info("✅ User profile found in Realtime DB");
+            }
+
+            \Log::info("✅ LOGIN SUCCESS");
+
+            return [
+                'success' => true,
+                'user'    => [
+                    'uid'   => $user['localId'],
+                    'email' => $user['email'],
+                ],
+            ];
+
+        } catch (AuthException $error) {
+            \Log::error("\n❌ ========== LOGIN FAILED ==========");
+            \Log::error("❌ Error: " . $error->getMessage());
+
+            $errorMessage = $error->getMessage();
+
+            if (strpos($errorMessage, 'INVALID_LOGIN_CREDENTIALS') !== false) {
+                $errorMessage = "Invalid email or password";
+            } elseif (strpos($errorMessage, 'USER_NOT_FOUND') !== false) {
+                $errorMessage = "No user found with this email";
+            } elseif (strpos($errorMessage, 'TOO_MANY_ATTEMPTS_TRY_LATER') !== false) {
+                $errorMessage = "Too many failed attempts. Please try again later.";
+            }
+
+            return ['success' => false, 'error' => $errorMessage];
+        } catch (\Exception $error) {
+            \Log::error("\n❌ ========== LOGIN FAILED ==========");
+            \Log::error("❌ Error: " . $error->getMessage());
+            return ['success' => false, 'error' => 'Login failed. Please try again.'];
+        }
+    }
+
+    /**
+     * Get user profile from Realtime Database
+     */
+    public function getUserProfile($uid)
+    {
+        \Log::info("👤 [getUserProfile] Fetching profile for UID: " . $uid);
+        try {
+            $ref  = $this->database->getReference('users/' . $uid);
+            $data = $ref->getValue();
+
+            \Log::info("✅ [getUserProfile] Profile data: " . json_encode($data));
+
+            return ['success' => true, 'data' => $data];
+        } catch (\Exception $error) {
+            \Log::error("❌ [getUserProfile] Error: " . $error->getMessage());
+            return ['success' => false, 'error' => $error->getMessage()];
+        }
+    }
+
+    /**
+     * Update user profile
+     */
+    public function updateProfile($uid, $userData)
+    {
+        \Log::info("✏️ [updateProfile] Updating profile for UID: " . $uid);
+        \Log::info("📝 [updateProfile] New data: " . json_encode($userData));
+
+        try {
+            $userData['updatedAt'] = date('c');
+            $this->database->getReference('users/' . $uid)->update($userData);
+
+            \Log::info("✅ [updateProfile] Profile updated successfully");
+            return ['success' => true];
+        } catch (\Exception $error) {
+            \Log::error("❌ [updateProfile] Error: " . $error->getMessage());
+            return ['success' => false, 'error' => $error->getMessage()];
+        }
+    }
+
+    /**
+     * Logout user (Note: Server-side logout is different from client-side)
+     */
+    public function revokeUserTokens($uid)
+    {
+        \Log::info("👋 [revokeUserTokens] Revoking tokens for UID: " . $uid);
+        try {
+            $this->auth->revokeRefreshTokens($uid);
+            \Log::info("✅ [revokeUserTokens] Tokens revoked successfully");
+            return ['success' => true];
+        } catch (\Exception $error) {
+            \Log::error("❌ [revokeUserTokens] Error: " . $error->getMessage());
+            return ['success' => false, 'error' => $error->getMessage()];
+        }
+    }
+
+    /**
+     * Get current user by UID
+     */
+    public function getUser($uid)
+    {
+        \Log::info("👤 [getUser] Getting user for UID: " . $uid);
+        try {
+            $user = $this->auth->getUser($uid);
+            \Log::info("✅ [getUser] User retrieved: " . $user->email);
+
+            return [
+                'success' => true,
+                'user'    => [
+                    'uid'         => $user->uid,
+                    'email'       => $user->email,
+                    'displayName' => $user->displayName,
+                ],
+            ];
+        } catch (\Exception $error) {
+            \Log::error("❌ [getUser] Error: " . $error->getMessage());
+            return ['success' => false, 'error' => $error->getMessage()];
+        }
+    }
+
+    /**
+     * Verify ID token (for session management)
+     */
+    public function verifyIdToken($idToken)
+    {
+        try {
+            $verifiedIdToken = $this->auth->verifyIdToken($idToken);
+            $uid             = $verifiedIdToken->claims()->get('sub');
+
+            return [
+                'success' => true,
+                'uid'     => $uid,
+                'token'   => $verifiedIdToken,
+            ];
+        } catch (\Exception $error) {
+            return ['success' => false, 'error' => $error->getMessage()];
+        }
+    }
+
+    /**
+     * Database operations
+     */
+    public function create($path, $data)
+    {
+        \Log::info("💾 [DB create] Path: " . $path);
+        try {
+            $this->database->getReference($path)->set($data);
+            \Log::info("✅ [DB create] Success");
+            return ['success' => true];
+        } catch (\Exception $error) {
+            \Log::error("❌ [DB create] Error: " . $error->getMessage());
+            return ['success' => false, 'error' => $error->getMessage()];
+        }
+    }
+
+    public function read($path)
+    {
+        \Log::info("📖 [DB read] Path: " . $path);
+        try {
+            $data = $this->database->getReference($path)->getValue();
+            \Log::info("✅ [DB read] Data retrieved");
+            return ['success' => true, 'data' => $data];
+        } catch (\Exception $error) {
+            \Log::error("❌ [DB read] Error: " . $error->getMessage());
+            return ['success' => false, 'error' => $error->getMessage()];
+        }
+    }
+
+    public function update($path, $data)
+    {
+        \Log::info("✏️ [DB update] Path: " . $path);
+        try {
+            $this->database->getReference($path)->update($data);
+            \Log::info("✅ [DB update] Success");
+            return ['success' => true];
+        } catch (\Exception $error) {
+            \Log::error("❌ [DB update] Error: " . $error->getMessage());
+            return ['success' => false, 'error' => $error->getMessage()];
+        }
+    }
+
+    public function delete($path)
+    {
+        \Log::info("🗑️ [DB delete] Path: " . $path);
+        try {
+            $this->database->getReference($path)->remove();
+            \Log::info("✅ [DB delete] Success");
+            return ['success' => true];
+        } catch (\Exception $error) {
+            \Log::error("❌ [DB delete] Error: " . $error->getMessage());
+            return ['success' => false, 'error' => $error->getMessage()];
+        }
+    }
+
+    public function query($path, $field, $value)
+    {
+        \Log::info("🔎 [DB query] Path: " . $path . " Field: " . $field . " Value: " . $value);
+        try {
+            $ref   = $this->database->getReference($path);
+            $query = $ref->orderByChild($field)->equalTo($value);
+            $data  = $query->getValue();
+
+            \Log::info("✅ [DB query] Results: " . json_encode($data));
+            return ['success' => true, 'data' => $data];
+        } catch (\Exception $error) {
+            \Log::error("❌ [DB query] Error: " . $error->getMessage());
+            return ['success' => false, 'error' => $error->getMessage()];
+        }
+    }
+
+    public function getAuth()
+    {
+        return $this->auth;
+    }
+
+    public function getDatabase()
+    {
+        return $this->database;
+    }
+
+    public function getWebsiteSettings($uid)
+    {
+        try {
+            $ref      = $this->database->getReference("websites/{$uid}/settings");
+            $settings = $ref->getValue();
+
+            if (empty($settings)) {
+                // Create default settings
+                $defaultSettings = [
+                    'colorPalette' => 'default',
+                    'customColors' => [
+                        'primary'   => '#000000',
+                        'secondary' => '#8B4513',
+                        'accent'    => '#FFFFFF',
+                    ],
+                ];
+                $ref->set($defaultSettings);
+                return $defaultSettings;
+            }
+
+            return $settings;
+        } catch (\Exception $error) {
+            \Log::error("❌ [getWebsiteSettings] Error: " . $error->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Update website settings
+     */
+    public function updateWebsiteSettings($uid, $settings)
+    {
+        try {
+            $this->database->getReference("websites/{$uid}/settings")
+                ->update($settings);
+            return ['success' => true];
+        } catch (\Exception $error) {
+            \Log::error("❌ [updateWebsiteSettings] Error: " . $error->getMessage());
+            return ['success' => false, 'error' => $error->getMessage()];
+        }
+    }
+
+    /**
+     * Get page content
+     */
+    public function getPageContent($uid, $page)
+    {
+        try {
+            $ref     = $this->database->getReference("websites/{$uid}/pages/{$page}");
+            $content = $ref->getValue();
+
+            if (empty($content)) {
+                // Create default page content
+                $defaultContent = $this->getDefaultPageContent($page);
+                $ref->set($defaultContent);
+                return $defaultContent;
+            }
+
+            return $content;
+        } catch (\Exception $error) {
+            \Log::error("❌ [getPageContent] Error: " . $error->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Update page content
+     */
+    public function updatePageContent($uid, $page, $content)
+    {
+        try {
+            $this->database->getReference("websites/{$uid}/pages/{$page}")
+                ->update($content);
+            return ['success' => true];
+        } catch (\Exception $error) {
+            \Log::error("❌ [updatePageContent] Error: " . $error->getMessage());
+            return ['success' => false, 'error' => $error->getMessage()];
+        }
+    }
+
+    /**
+     * Get analytics data
+     */
+    public function getAnalytics($uid)
+    {
+        try {
+            $ref       = $this->database->getReference("analytics/{$uid}");
+            $analytics = $ref->getValue();
+
+            if (empty($analytics)) {
+                // Create default analytics
+                $defaultAnalytics = [
+                    'pageViews' => ['home' => 0, 'about' => 0, 'contact' => 0],
+                    'visitors'  => 0,
+                    'sessions'  => 0,
+                ];
+                $ref->set($defaultAnalytics);
+                return $defaultAnalytics;
+            }
+
+            return $analytics;
+        } catch (\Exception $error) {
+            \Log::error("❌ [getAnalytics] Error: " . $error->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Record page view
+     */
+    public function recordPageView($uid, $page)
+    {
+        try {
+            $pageViewsRef = $this->database->getReference("analytics/{$uid}/pageViews/{$page}");
+            $currentViews = $pageViewsRef->getValue() ?? 0;
+            $pageViewsRef->set($currentViews + 1);
+
+            // Also update total visitors/sessions (simplified)
+            $visitorsRef     = $this->database->getReference("analytics/{$uid}/visitors");
+            $currentVisitors = $visitorsRef->getValue() ?? 0;
+            $visitorsRef->set($currentVisitors + 1);
+
+            return ['success' => true];
+        } catch (\Exception $error) {
+            \Log::error("❌ [recordPageView] Error: " . $error->getMessage());
+            return ['success' => false];
+        }
+    }
+
+/**
+ * Upload image to Publitio and save to Firebase
+ */
+    public function uploadGalleryImage($uid, $file, $imageData = [])
+    {
+        try {
+            // Initialize Publitio service
+            $publitioService = new \App\Services\PublitioService();
+
+            // Upload to Publitio
+            $uploadResult = $publitioService->uploadFile($file);
+
+            if (! $uploadResult['success']) {
+                \Log::error("❌ Publitio upload failed: " . $uploadResult['error']);
+                return ['success' => false, 'error' => $uploadResult['error']];
+            }
+
+            // Prepare image data for Firebase
+            $galleryImage = [
+                'url'         => $uploadResult['url'],
+                'publitio_id' => $uploadResult['publitio_id'],
+                'caption'     => $imageData['caption'] ?? 'Adventure Photo',
+                'location'    => $imageData['location'] ?? '',
+                'uploaded_at' => date('c'),
+                'bytes'       => $uploadResult['bytes'],
+                'type'        => $uploadResult['type'],
+            ];
+
+            // Save to Firebase under user's gallery
+            $galleryRef  = $this->database->getReference("websites/{$uid}/pages/gallery/images");
+            $newImageRef = $galleryRef->push($galleryImage);
+
+            \Log::info("✅ Gallery image uploaded and saved", [
+                'user_id'      => $uid,
+                'publitio_id'  => $uploadResult['publitio_id'],
+                'firebase_key' => $newImageRef->getKey(),
+            ]);
+
+            return [
+                'success'      => true,
+                'image'        => $galleryImage,
+                'firebase_key' => $newImageRef->getKey(),
+            ];
+
+        } catch (\Exception $error) {
+            \Log::error("❌ Gallery image upload failed: " . $error->getMessage());
+            return ['success' => false, 'error' => $error->getMessage()];
+        }
+    }
+
+/**
+ * Delete gallery image from Publitio and Firebase
+ */
+    public function deleteGalleryImage($uid, $publitioId, $firebaseKey = null)
+    {
+        try {
+            // Delete from Publitio
+            $publitioService = new \App\Services\PublitioService();
+            $deleteResult    = $publitioService->deleteFile($publitioId);
+
+            if (! $deleteResult['success']) {
+                \Log::error("❌ Publitio deletion failed: " . $deleteResult['error']);
+                // Continue with Firebase deletion even if Publitio fails
+            }
+
+            // Delete from Firebase
+            if ($firebaseKey) {
+                // Delete using specific key
+                $this->database->getReference("websites/{$uid}/pages/gallery/images/{$firebaseKey}")->remove();
+            } else {
+                // Find and delete by publitio_id
+                $imagesRef = $this->database->getReference("websites/{$uid}/pages/gallery/images");
+                $query     = $imagesRef->orderByChild('publitio_id')->equalTo($publitioId);
+                $snapshot  = $query->getSnapshot();
+
+                if ($snapshot->hasChildren()) {
+                    foreach ($snapshot->getValue() as $key => $value) {
+                        $this->database->getReference("websites/{$uid}/pages/gallery/images/{$key}")->remove();
+                    }
+                }
+            }
+
+            \Log::info("✅ Gallery image deleted", [
+                'user_id'     => $uid,
+                'publitio_id' => $publitioId,
+            ]);
+
+            return ['success' => true];
+
+        } catch (\Exception $error) {
+            \Log::error("❌ Gallery image deletion failed: " . $error->getMessage());
+            return ['success' => false, 'error' => $error->getMessage()];
+        }
+    }
+
+/**
+ * Get gallery images with proper structure
+ */
+    public function getGalleryImages($uid)
+    {
+        try {
+            $ref    = $this->database->getReference("websites/{$uid}/pages/gallery/images");
+            $images = $ref->getValue();
+
+            if (empty($images)) {
+                return [];
+            }
+
+            // Convert to array and ensure proper structure
+            $galleryImages = [];
+            foreach ($images as $key => $image) {
+                $galleryImages[] = [
+                    'id'          => $key,
+                    'url'         => $image['url'] ?? '',
+                    'publitio_id' => $image['publitio_id'] ?? '',
+                    'caption'     => $image['caption'] ?? 'Adventure Photo',
+                    'location'    => $image['location'] ?? '',
+                    'uploaded_at' => $image['uploaded_at'] ?? date('c'),
+                ];
+            }
+
+            return $galleryImages;
+
+        } catch (\Exception $error) {
+            \Log::error("❌ Get gallery images failed: " . $error->getMessage());
+            return [];
+        }
+    }
+
+/**
+ * Update gallery image metadata
+ */
+    public function updateGalleryImage($uid, $imageId, $updates)
+    {
+        try {
+            $this->database->getReference("websites/{$uid}/pages/gallery/images/{$imageId}")
+                ->update($updates);
+
+            return ['success' => true];
+        } catch (\Exception $error) {
+            \Log::error("❌ Update gallery image failed: " . $error->getMessage());
+            return ['success' => false, 'error' => $error->getMessage()];
+        }
+    }
+
+/**
+ * Get default page structure matching wowlogbook.com style
+ */
+    private function getDefaultPageContent($page)
+    {
+        $defaults = [
+            'home'    => [
+                'title'     => 'My Adventure Log',
+                'published' => true,
+                'sections'  => [
+                    'hero'     => [
+                        'title'    => 'Welcome to My Adventure Log',
+                        'subtitle' => 'Documenting my journeys and experiences',
+                        'image'    => '/images/hero-default.jpg',
+                        'text'     => 'Start your adventure and share your stories with the world.',
+                    ],
+                    'features' => [
+                        'title' => 'What I Do',
+                        'items' => [
+                            [
+                                'title'       => 'Adventure Logging',
+                                'description' => 'Track and share my adventures',
+                                'icon'        => '🚀',
+                            ],
+                            [
+                                'title'       => 'Story Telling',
+                                'description' => 'Share experiences and memories',
+                                'icon'        => '📖',
+                            ],
+                            [
+                                'title'       => 'Photo Journal',
+                                'description' => 'Visual journey through photos',
+                                'icon'        => '📷',
+                            ],
+                        ],
+                    ],
+                    'recent'   => [
+                        'title' => 'Recent Adventures',
+                        'posts' => [
+                            [
+                                'title'   => 'Mountain Hiking',
+                                'date'    => '2024-01-15',
+                                'image'   => 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1176&q=80',
+                                'excerpt' => 'Amazing views from the summit...',
+                            ],
+                            [
+                                'title'   => 'Beach Vacation',
+                                'date'    => '2024-01-10',
+                                'image'   => 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1173&q=80',
+                                'excerpt' => 'Relaxing days by the ocean...',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            // In your getDefaultPageContent method, update the 'about' section:
+            'about'   => [
+                'title'     => 'About Our Adventure',
+                'published' => true,
+                'sections'  => [
+                    'hero'         => [
+                        'title'    => 'About Us',
+                        'subtitle' => 'Discover the story behind Adventure Log and the passionate team dedicated to helping you document and share your journeys with the world.',
+                    ],
+                    'mission'      => [
+                        'title'       => 'OUR MISSION',
+                        'heading'     => 'Empowering Adventurers Worldwide',
+                        'points'      => [
+                            'Born from a passion for exploration and storytelling, Adventure Log was created to bridge the gap between memorable experiences and lasting documentation.',
+                            'We understand that every journey, whether it\'s climbing mountains or exploring local hidden gems, deserves to be remembered and shared in a beautiful, meaningful way.',
+                            'Our platform combines intuitive design with powerful features to help you create stunning visual narratives of your adventures.',
+                        ],
+                        'quote'       => '"Every adventure is a story waiting to be told. We\'re here to help you tell yours in the most beautiful way possible."',
+                        'quoteAuthor' => '— The Adventure Log Team',
+                    ],
+                    'featureCards' => [
+                        [
+                            'title'       => 'Global Community',
+                            'description' => 'Join adventurers from around the world sharing their incredible stories and inspiring others to explore.',
+                            'icon'        => 'faGlobeAmericas',
+                        ],
+                        [
+                            'title'       => 'Innovative Platform',
+                            'description' => 'Cutting-edge tools and features designed specifically for documenting and sharing your adventures beautifully.',
+                            'icon'        => 'faCompass',
+                        ],
+                        [
+                            'title'       => 'Built with Passion',
+                            'description' => 'Created by adventurers, for adventurers. We live and breathe exploration and understand your needs.',
+                            'icon'        => 'faHeart',
+                        ],
+                    ],
+                ],
+                'stats'     => [
+                    'team_members'      => '5K+',
+                    'countries_reached' => '50+',
+                    'years_of_passion'  => '3+',
+                ],
+            ],
+            'gallery' => [
+                'title'     => 'Adventure Gallery',
+                'published' => true,
+                'images'    => [],
+            ],
+            // In your FirebaseService.php, update the contact page defaults
+            'contact' => [
+                'title'     => 'Get In Touch',
+                'published' => true,
+                'email'     => 'hello@example.com',
+                'social'    => [
+                    'instagram' => '@myadventures',
+                    'twitter'   => '@adventurelog',
+                    'facebook'  => 'myadventurepage',
+                ],
+                'sections'  => [
+                    'hero'   => [
+                        'title'    => 'Get In Touch',
+                        'subtitle' => 'We\'d love to hear about your adventures and help you share them with the world',
+                    ],
+                    'info'   => [
+                        'title'       => 'Let\'s Start a Conversation',
+                        'description' => 'Whether you have questions about documenting your adventures, need technical support, or just want to share an amazing story, we\'re here to help.',
+                    ],
+                    'social' => [
+                        'title' => 'Follow Our Adventures',
+                    ],
+                    'faq'    => [
+                        'title'       => 'Frequently Asked Questions',
+                        'description' => 'Quick answers to common questions',
+                        'items'       => [
+                            [
+                                'q'    => 'How do I start documenting my adventures?',
+                                'a'    => 'Simply create an account and start adding your first adventure story with photos and descriptions.',
+                                'icon' => 'faMapMarkedAlt',
+                            ],
+                            [
+                                'q'    => 'Is there a mobile app?',
+                                'a'    => 'Yes! Our mobile app lets you document adventures on the go with real-time photo uploads.',
+                                'icon' => 'faMobileAlt',
+                            ],
+                            [
+                                'q'    => 'Can I collaborate with friends?',
+                                'a'    => 'Absolutely! You can create shared adventure logs with multiple contributors.',
+                                'icon' => 'faUsers',
+                            ],
+                            [
+                                'q'    => 'Is my data secure?',
+                                'a'    => 'We use enterprise-grade security to protect your stories and personal information.',
+                                'icon' => 'faShieldAlt',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        return $defaults[$page] ?? ['title' => 'New Page', 'content' => 'Content coming soon...', 'published' => false];
+    }
+
+/**
+ * Publish/unpublish page
+ */
+    public function togglePublishPage($uid, $page, $published)
+    {
+        try {
+            $this->database->getReference("websites/{$uid}/pages/{$page}/published")
+                ->set($published);
+            return ['success' => true];
+        } catch (\Exception $error) {
+            \Log::error("❌ [togglePublishPage] Error: " . $error->getMessage());
+            return ['success' => false, 'error' => $error->getMessage()];
+        }
+    }
+
+    /**
+     * Get available color palettes
+     */
+    public function getColorPalettes()
+    {
+        return [
+            'default' => [
+                'name'   => 'Classic',
+                'colors' => [
+                    'primary'     => '#000000',
+                    'secondary'   => '#8B4513',
+                    'accent'      => '#FFFFFF',
+                    'header_text' => '#000000', // Dark text for light backgrounds
+                    'header_bg'   => '#FFFFFF', // Light background
+                ],
+            ],
+            'modern'  => [
+                'name'   => 'Modern',
+                'colors' => [
+                    'primary'     => '#2D3748',
+                    'secondary'   => '#4A5568',
+                    'accent'      => '#F7FAFC',
+                    'header_text' => '#2D3748', // Dark text
+                    'header_bg'   => '#F7FAFC', // Light background
+                ],
+            ],
+            'warm'    => [
+                'name'   => 'Warm',
+                'colors' => [
+                    'primary'     => '#744210',
+                    'secondary'   => '#B7791F',
+                    'accent'      => '#FEF5E7',
+                    'header_text' => '#744210', // Warm dark text
+                    'header_bg'   => '#FEF5E7', // Warm light background
+                ],
+            ],
+            'cool'    => [
+                'name'   => 'Cool',
+                'colors' => [
+                    'primary'     => '#2C5282',
+                    'secondary'   => '#4C7AA7',
+                    'accent'      => '#EBF8FF',
+                    'header_text' => '#2C5282', // Cool dark text
+                    'header_bg'   => '#EBF8FF', // Cool light background
+                ],
+            ],
+            'dark'    => [
+                'name'   => 'Dark',
+                'colors' => [
+                    'primary'     => '#FFFFFF', // Light text for dark mode
+                    'secondary'   => '#CBD5E0',
+                    'accent'      => '#1A202C',
+                    'header_text' => '#FFFFFF', // Light text
+                    'header_bg'   => '#1A202C', // Dark background
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Get user-specific page content
+     */
+    public function getUserPageContent($uid, $page)
+    {
+        try {
+            $ref     = $this->database->getReference("websites/{$uid}/pages/{$page}");
+            $content = $ref->getValue();
+
+            if (empty($content)) {
+                // Create default page content for this user
+                $defaultContent = $this->getDefaultPageContent($page);
+                $ref->set($defaultContent);
+                return $defaultContent;
+            }
+
+            return $content;
+        } catch (\Exception $error) {
+            \Log::error("❌ [getUserPageContent] Error: " . $error->getMessage());
+            return $this->getDefaultPageContent($page);
+        }
+    }
+
+    /**
+     * Get user-specific recent adventures/posts
+     */
+    public function getUserAdventures($uid, $limit = 10)
+    {
+        try {
+            $ref = $this->database->getReference("websites/{$uid}/adventures")
+                ->orderByChild('createdAt')
+                ->limitToLast($limit);
+
+            $adventures = $ref->getValue();
+
+            if (empty($adventures)) {
+                return [];
+            }
+
+            // Convert to array and reverse to show latest first
+            $adventuresArray = [];
+            foreach ($adventures as $key => $adventure) {
+                $adventuresArray[] = [
+                    'id' => $key,
+                    ...$adventure,
+                ];
+            }
+
+            return array_reverse($adventuresArray);
+        } catch (\Exception $error) {
+            \Log::error("❌ [getUserAdventures] Error: " . $error->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Create a new adventure/post for user
+     */
+    public function createAdventure($uid, $adventureData)
+    {
+        try {
+            $adventureRef = $this->database->getReference("websites/{$uid}/adventures");
+
+            $newAdventure = [
+                'title'     => $adventureData['title'],
+                'excerpt'   => $adventureData['excerpt'],
+                'content'   => $adventureData['content'] ?? '',
+                'image'     => $adventureData['image'],
+                'date'      => $adventureData['date'] ?? date('Y-m-d'),
+                'location'  => $adventureData['location'] ?? '',
+                'tags'      => $adventureData['tags'] ?? [],
+                'createdAt' => date('c'),
+                'updatedAt' => date('c'),
+                'published' => $adventureData['published'] ?? true,
+            ];
+
+            $newRef = $adventureRef->push($newAdventure);
+
+            return [
+                'success'   => true,
+                'id'        => $newRef->getKey(),
+                'adventure' => $newAdventure,
+            ];
+        } catch (\Exception $error) {
+            \Log::error("❌ [createAdventure] Error: " . $error->getMessage());
+            return ['success' => false, 'error' => $error->getMessage()];
+        }
+    }
+
+    /**
+     * Update user adventure
+     */
+    public function updateAdventure($uid, $adventureId, $adventureData)
+    {
+        try {
+            $adventureRef = $this->database->getReference("websites/{$uid}/adventures/{$adventureId}");
+
+            $updateData = [
+                 ...$adventureData,
+                'updatedAt' => date('c'),
+            ];
+
+            $adventureRef->update($updateData);
+
+            return ['success' => true];
+        } catch (\Exception $error) {
+            \Log::error("❌ [updateAdventure] Error: " . $error->getMessage());
+            return ['success' => false, 'error' => $error->getMessage()];
+        }
+    }
+
+    /**
+     * Delete user adventure
+     */
+    public function deleteAdventure($uid, $adventureId)
+    {
+        try {
+            $this->database->getReference("websites/{$uid}/adventures/{$adventureId}")->remove();
+            return ['success' => true];
+        } catch (\Exception $error) {
+            \Log::error("❌ [deleteAdventure] Error: " . $error->getMessage());
+            return ['success' => false, 'error' => $error->getMessage()];
+        }
+    }
+
+}
