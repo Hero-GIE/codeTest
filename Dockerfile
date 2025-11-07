@@ -61,8 +61,8 @@ RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 RUN touch /var/www/html/database/database.sqlite
 RUN chown www-data:www-data /var/www/html/database/database.sqlite
 
-# Laravel Optimizations and Database Setup (FIXED - no key generation needed)
-RUN php artisan session:table
+# Laravel Optimizations and Database Setup
+# RUN php artisan session:table  # <-- REMOVE THIS LINE
 RUN php artisan migrate --force
 RUN php artisan config:cache
 RUN php artisan route:cache
