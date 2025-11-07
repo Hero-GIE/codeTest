@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y \
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions (now with SQLite dev libraries)
+# Install PHP extensions (with SQLite)
 RUN docker-php-ext-install pdo_sqlite mbstring exif pcntl bcmath gd
 
 # Install Composer
@@ -37,8 +37,8 @@ COPY . .
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Install Node.js dependencies and build Vite assets
-RUN npm install && npm run build
+# Install Node.js dependencies and build Vite assets (FIXED)
+RUN npm install --legacy-peer-deps && npm run build
 
 # Change document root for Apache
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
