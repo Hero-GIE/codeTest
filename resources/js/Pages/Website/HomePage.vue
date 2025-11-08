@@ -221,7 +221,7 @@ const editAdventure = (adventureId) => {
                         <!-- Mission Points -->
                         <div class="space-y-4">
                             <div class="flex items-center space-x-4 p-4 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
-                                <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center flex-shrink-0">
+                                <div class="w-12 h-12 bg-black rounded-xl flex items-center justify-center flex-shrink-0">
                                     <FontAwesomeIcon :icon="faRoute" class="text-white text-lg" />
                                 </div>
                                 <div>
@@ -230,7 +230,7 @@ const editAdventure = (adventureId) => {
                                 </div>
                             </div>
                             <div class="flex items-center space-x-4 p-4 rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300">
-                                <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center flex-shrink-0">
+                                <div class="w-12 h-12 bg-black rounded-xl flex items-center justify-center flex-shrink-0">
                                     <FontAwesomeIcon :icon="faBinoculars" class="text-white text-lg" />
                                 </div>
                                 <div>
@@ -322,142 +322,144 @@ const editAdventure = (adventureId) => {
             </div>
         </section>
 
-        <!-- Recent Adventures with Enhanced Cards -->
-        <section class="py-20 bg-gradient-to-br from-gray-50 via-accent to-gray-50 relative overflow-hidden">
-            <!-- Background Pattern -->
-            <div class="absolute inset-0 opacity-5">
-                <div
-                    class="absolute inset-0"
-                    style="
-                        background-image: radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0);
-                        background-size: 40px 40px;
-                    "
-                ></div>
+ <!-- Recent Adventures with Enhanced Cards -->
+<section class="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-gray-50 via-accent to-gray-50 relative overflow-hidden">
+    <!-- Background Pattern -->
+    <div class="absolute inset-0 opacity-5">
+        <div
+            class="absolute inset-0"
+            style="
+                background-image: radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0);
+                background-size: 40px 40px;
+            "
+        ></div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <!-- Section Header -->
+        <div class="text-center mb-12 sm:mb-16">
+            <div class="inline-block mb-4 sm:mb-6">
+                <span class="bg-secondary/10 text-secondary px-4 sm:px-5 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-bold flex items-center justify-center space-x-1 sm:space-x-2">
+                    <FontAwesomeIcon :icon="faChartLine" class="text-xs sm:text-sm" />
+                    <span>MY RECENT ADVENTURES</span>
+                </span>
             </div>
+            <h2 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-primary mb-4 sm:mb-6 lg:mb-8 leading-tight">
+                {{ pageData.sections.recent.title }}
+            </h2>
+            <p class="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed px-2 sm:px-0">
+                My latest journeys and experiences from around the world
+            </p>
+        </div>
 
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                <!-- Section Header -->
-                <div class="text-center mb-16">
-                    <div class="inline-block mb-6">
-                        <span class="bg-secondary/10 text-secondary px-5 py-2 rounded-full text-sm font-bold flex items-center space-x-2">
-                            <FontAwesomeIcon :icon="faChartLine" />
-                            <span>MY RECENT ADVENTURES</span>
-                        </span>
-                    </div>
-                    <h2 class="text-5xl md:text-6xl font-black text-primary mb-8 leading-tight">
-                        {{ pageData.sections.recent.title }}
-                    </h2>
-                    <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                        My latest journeys and experiences from around the world
-                    </p>
-                </div>
-
-                <!-- Adventure Cards Grid -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
-                    <div 
-                        v-for="(post, index) in pageData.sections.recent.posts" 
-                        :key="post.id || index"
-                        class="group bg-white rounded-3xl shadow-xl overflow-hidden hover:shadow-3xl transition-all duration-500 hover:-translate-y-2 cursor-pointer"
-                        @click="editAdventure(post.id)"
-                    >
-                        <!-- Image with Overlay -->
-                        <div class="relative h-64 bg-gradient-to-br from-primary via-secondary to-primary overflow-hidden">
-                            <img 
-                                :src="post.image" 
-                                :alt="post.title"
-                                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                            />
-                            <div class="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
-                            
-                            <!-- Floating Icon -->
-                            <div class="absolute inset-0 flex items-center justify-center">
-                                <div class="text-6xl text-accent/80 transform group-hover:scale-110 transition-transform">
-                                    <FontAwesomeIcon :icon="faMountainSun" />
-                                </div>
-                            </div>
-
-                            <!-- Date Badge -->
-                            <div class="absolute top-6 right-6 bg-accent/95 backdrop-blur-sm text-primary px-4 py-2 rounded-xl text-sm font-bold shadow-lg flex items-center space-x-2">
-                                <span>📅</span>
-                                <span>{{ post.date }}</span>
-                            </div>
-
-                            <!-- Like Badge -->
-                            <div class="absolute bottom-6 left-6 bg-accent/95 backdrop-blur-sm text-primary px-4 py-2 rounded-xl text-sm font-bold shadow-lg flex items-center space-x-2">
-                                <FontAwesomeIcon :icon="faHeart" class="text-red-500" />
-                                <span>{{ 100 + index * 50 }}</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Content -->
-                        <div class="p-8">
-                            <h3 class="text-2xl font-bold text-primary mb-4 group-hover:text-secondary transition-colors leading-tight">
-                                {{ post.title }}
-                            </h3>
-                            <p class="text-gray-600 mb-6 leading-relaxed">
-                                {{ post.excerpt }}
-                            </p>
-                            
-                            <!-- Read More Button -->
-                            <button class="group/btn inline-flex items-center space-x-3 text-primary font-bold hover:text-secondary transition-colors">
-                                <span>Read Full Story</span>
-                                <FontAwesomeIcon :icon="faArrowRight" class="transform group-hover/btn:translate-x-2 transition-transform" />
-                            </button>
-                        </div>
-                    </div>
+        <!-- Adventure Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16">
+            <div 
+                v-for="(post, index) in pageData.sections.recent.posts" 
+                :key="post.id || index"
+                class="group bg-white rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl hover:shadow-2xl sm:hover:shadow-3xl transition-all duration-500 hover:-translate-y-1 sm:hover:-translate-y-2 cursor-pointer"
+                @click="editAdventure(post.id)"
+            >
+                <!-- Image with Overlay -->
+                <div class="relative h-48 sm:h-56 lg:h-64 bg-gradient-to-br from-primary via-secondary to-primary overflow-hidden">
+                    <img 
+                        :src="post.image" 
+                        :alt="post.title"
+                        class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div class="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
                     
-                    <!-- Empty State -->
-                    <div 
-                        v-if="!hasAdventures"
-                        class="col-span-2 text-center py-16"
-                    >
-                        <div class="text-8xl mb-6 text-gray-300">
-                            <FontAwesomeIcon :icon="faCompass" />
+                    <!-- Floating Icon -->
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-4xl sm:text-5xl lg:text-6xl text-accent/80 transform group-hover:scale-105 sm:group-hover:scale-110 transition-transform">
+                            <FontAwesomeIcon :icon="faMountainSun" />
                         </div>
-                        <h3 class="text-3xl font-bold text-gray-500 mb-4">No Adventures Yet</h3>
-                        <p class="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-                            Start documenting your journeys to see them here! Share your stories, photos, and experiences with the world.
-                        </p>
-                        <button 
-                            @click="createNewAdventure"
-                            class="bg-primary text-black px-8 py-4 rounded-2xl font-bold text-lg hover:bg-secondary transition-all duration-300 shadow-lg hover:shadow-xl inline-flex items-center space-x-3"
-                        >
-                            <FontAwesomeIcon :icon="faPlus" />
-                            <span>Create Your First Adventure</span>
-                        </button>
+                    </div>
+
+                    <!-- Date Badge -->
+                    <div class="absolute top-3 sm:top-4 lg:top-6 right-3 sm:right-4 lg:right-6 bg-accent/95 backdrop-blur-sm text-primary px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold shadow-lg flex items-center space-x-1 sm:space-x-2">
+                        <span class="text-xs">📅</span>
+                        <span class="text-xs sm:text-sm">{{ post.date }}</span>
+                    </div>
+
+                    <!-- Like Badge -->
+                    <div class="absolute bottom-3 sm:bottom-4 lg:bottom-6 left-3 sm:left-4 lg:left-6 bg-accent/95 backdrop-blur-sm text-primary px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold shadow-lg flex items-center space-x-1 sm:space-x-2">
+                        <FontAwesomeIcon :icon="faHeart" class="text-red-500 text-xs sm:text-sm" />
+                        <span class="text-xs sm:text-sm">{{ 100 + index * 50 }}</span>
                     </div>
                 </div>
-
-                <!-- CTA Section with Gradient Card -->
-                <div class="relative" v-if="hasAdventures">
-                    <div class="absolute inset-0 bg-gradient-to-br from-primary via-secondary to-primary rounded-3xl blur-2xl opacity-20"></div>
-                    <div class="relative bg-gradient-to-br from-primary via-secondary to-primary text-accent rounded-3xl p-12 md:p-16 max-w-5xl mx-auto overflow-hidden">
-                        <!-- Decorative Circles -->
-                        <div class="absolute top-0 right-0 w-64 h-64 bg-accent/10 rounded-full -mr-32 -mt-32"></div>
-                        <div class="absolute bottom-0 left-0 w-48 h-48 bg-accent/10 rounded-full -ml-24 -mb-24"></div>
-                        
-                        <div class="relative z-10 text-center">
-                            <div class="inline-block mb-6">
-                                <FontAwesomeIcon :icon="faMapMarkedAlt" class="text-5xl" />
-                            </div>
-                            <h3 class="text-3xl md:text-4xl font-black mb-6 leading-tight">
-                                Ready to Share Your Next Story?
-                            </h3>
-                            <p class="text-lg md:text-xl opacity-95 mb-10 max-w-2xl mx-auto leading-relaxed">
-                                Keep building your adventure log and inspire others with your journeys
-                            </p>
-                            <button 
-                                @click="createNewAdventure"
-                                class="group bg-accent text-primary px-12 py-5 rounded-2xl font-black text-lg hover:scale-105 transition-all duration-300 shadow-2xl inline-flex items-center space-x-4"
-                            >
-                                <FontAwesomeIcon :icon="faPlus" class="text-xl group-hover:translate-x-1 transition-transform" />
-                                <span>Add New Adventure</span>
-                            </button>
-                        </div>
-                    </div>
+                
+                <!-- Content -->
+                <div class="p-4 sm:p-6 lg:p-8">
+                    <h3 class="text-lg sm:text-xl lg:text-2xl font-bold text-primary mb-2 sm:mb-3 lg:mb-4 group-hover:text-secondary transition-colors leading-tight line-clamp-2">
+                        {{ post.title }}
+                    </h3>
+                    <p class="text-gray-600 mb-3 sm:mb-4 lg:mb-6 leading-relaxed text-sm sm:text-base line-clamp-3">
+                        {{ post.excerpt }}
+                    </p>
+                    
+                    <!-- Read More Button -->
+                    <button class="group/btn inline-flex items-center space-x-2 sm:space-x-3 text-primary font-bold hover:text-secondary transition-colors text-sm sm:text-base">
+                        <span>Read Full Story</span>
+                        <FontAwesomeIcon :icon="faArrowRight" class="transform group-hover/btn:translate-x-1 sm:group-hover/btn:translate-x-2 transition-transform text-xs sm:text-sm" />
+                    </button>
                 </div>
             </div>
-        </section>
+            
+            <!-- Empty State -->
+            <div 
+                v-if="!hasAdventures"
+                class="col-span-1 sm:col-span-2 text-center py-8 sm:py-12 lg:py-16 px-4"
+            >
+                <div class="text-6xl sm:text-7xl lg:text-8xl mb-4 sm:mb-6 text-gray-300">
+                    <FontAwesomeIcon :icon="faCompass" />
+                </div>
+                <h3 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-500 mb-3 sm:mb-4">No Adventures Yet</h3>
+                <p class="text-base sm:text-lg lg:text-xl text-gray-400 mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
+                    Start documenting your journeys to see them here! Share your stories, photos, and experiences with the world.
+                </p>
+                <button 
+                    @click="createNewAdventure"
+                    class="bg-black text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg hover:bg-secondary transition-all duration-300 shadow-lg hover:shadow-xl inline-flex items-center space-x-2 sm:space-x-3 w-full sm:w-auto justify-center"
+                >
+                    <FontAwesomeIcon :icon="faPlus" class="text-white text-sm sm:text-base" />
+                    <span>Create Your First Adventure</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- CTA Section with Gradient Card -->
+        <div class="relative" v-if="hasAdventures">
+            <div class="absolute inset-0 bg-gradient-to-br from-primary via-secondary to-primary rounded-2xl sm:rounded-3xl blur-xl sm:blur-2xl opacity-20"></div>
+            <div class="relative bg-gradient-to-br from-primary via-secondary to-primary text-accent rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 lg:p-16 max-w-5xl mx-auto overflow-hidden">
+                <!-- Decorative Circles -->
+                <div class="absolute top-0 right-0 w-32 h-32 sm:w-48 sm:h-48 lg:w-64 lg:h-64 bg-accent/10 rounded-full -mr-16 sm:-mr-24 lg:-mr-32 -mt-16 sm:-mt-24 lg:-mt-32"></div>
+                <div class="absolute bottom-0 left-0 w-24 h-24 sm:w-32 sm:h-32 lg:w-48 lg:h-48 bg-accent/10 rounded-full -ml-12 sm:-ml-16 lg:-ml-24 -mb-12 sm:-mb-16 lg:-mb-24"></div>
+                
+                <div class="relative z-10 text-center">
+                    <div class="inline-block mb-4 sm:mb-6">
+                        <FontAwesomeIcon :icon="faMapMarkedAlt" class="text-3xl sm:text-4xl lg:text-5xl" />
+                    </div>
+                    <h3 class="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-4 sm:mb-6 leading-tight px-2 sm:px-0">
+                        Ready to Share Your Next Story?
+                    </h3>
+                    <p class="text-sm sm:text-base lg:text-lg md:text-xl opacity-95 mb-6 sm:mb-8 lg:mb-10 max-w-2xl mx-auto leading-relaxed px-2 sm:px-0">
+                        Keep building your adventure log and inspire others with your journeys
+                    </p>
+                    <button 
+                        @click="createNewAdventure"
+                        class="group bg-accent text-primary px-6 sm:px-8 lg:px-12 py-3 sm:py-4 lg:py-5 rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base lg:text-lg hover:scale-105 transition-all duration-300 shadow-lg sm:shadow-xl hover:shadow-2xl inline-flex items-center space-x-2 sm:space-x-3 lg:space-x-4 w-full sm:w-auto justify-center"
+                    >
+                        <FontAwesomeIcon :icon="faPlus" class="text-lg group-hover:translate-x-1 transition-transform" />
+                        <span>Add New Adventure</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
     </div>
 </template>
 

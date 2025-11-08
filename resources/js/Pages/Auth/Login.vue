@@ -27,145 +27,142 @@ const submit = () => {
 <template>
     <Head title="Log in" />
 
-    <div class="min-h-screen flex items-center justify-center bg-white p-4 relative overflow-hidden">
-        <!-- Animated Background Elements -->
-     <div class="absolute inset-0 opacity-20">
-    <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-r from-black to-gray-800 rounded-full blur-3xl animate-pulse"></div>
-    <div class="absolute bottom-1/3 right-1/4 w-96 h-96 bg-gradient-to-r from-gray-800 to-gray-900 rounded-full blur-3xl"></div>
-    <div class="absolute top-1/2 right-1/3 w-96 h-96 bg-gradient-to-r from-gray-900 to-black rounded-full blur-2xl animate-bounce"></div>
-</div>
+    <div class="min-h-screen flex items-center justify-center bg-white px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+        <!-- Responsive Animated Background Elements -->
+        <div class="absolute inset-0 opacity-20">
+            <div class="absolute top-1/4 left-1/4 w-32 h-32 sm:w-48 sm:h-48 lg:w-64 lg:h-64 bg-gradient-to-r from-black to-gray-800 rounded-full blur-2xl sm:blur-3xl animate-pulse"></div>
+            <div class="absolute bottom-1/3 right-1/4 w-48 h-48 sm:w-64 sm:h-64 lg:w-96 lg:h-96 bg-gradient-to-r from-gray-800 to-gray-900 rounded-full blur-2xl sm:blur-3xl"></div>
+            <div class="absolute top-1/2 right-1/3 w-48 h-48 sm:w-64 sm:h-64 lg:w-96 lg:h-96 bg-gradient-to-r from-gray-900 to-black rounded-full blur-xl sm:blur-2xl animate-bounce"></div>
+        </div>
 
-
-<div class="w-full max-w-md relative z-10">
-    <div class="bg-white rounded-3xl shadow-2xl shadow-black/50 border border-gray-300 p-8 transition-all duration-500 hover:shadow-3xl hover:shadow-black/20 hover:border-gray-400">
-        
-        <!-- Header -->
-        <div class="text-center mb-8">
-            <div class="flex justify-center mb-4">
-                <div class="w-20 h-20 bg-gradient-to-br from-black to-gray-800 rounded-2xl flex items-center justify-center shadow-lg shadow-black/30 animate-float">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                    </svg>
+        <div class="w-full max-w-xs sm:max-w-sm md:max-w-md relative z-10">
+            <div class="bg-white rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-2xl shadow-black/40 sm:shadow-black/50 border border-gray-300 p-6 sm:p-8 transition-all duration-500 hover:shadow-xl sm:hover:shadow-3xl hover:shadow-black/20 hover:border-gray-400">
+                
+                <!-- Header -->
+                <div class="text-center mb-6 sm:mb-8">
+                    <div class="flex justify-center mb-3 sm:mb-4">
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-black to-gray-800 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-black/30 animate-float">
+                            <svg class="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-black to-gray-800 bg-clip-text text-transparent mb-2">
+                        Adventure Awaits
+                    </h1>
+                    <p class="text-xs sm:text-sm text-gray-600 font-light">
+                        Sign in to continue your journey
+                    </p>
                 </div>
-            </div>
-            <h1 class="text-4xl font-bold bg-gradient-to-r from-black to-gray-800 bg-clip-text text-transparent mb-2">
-                Adventure Awaits
-            </h1>
-            <p class="text-gray-600 font-light">
-                Sign in to continue your journey
-            </p>
-        </div>
 
-        <!-- Show session errors -->
-        <div v-if="flashError" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-            <div class="flex items-center space-x-2">
-                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span>{{ flashError }}</span>
-            </div>
-        </div>
-
-        <!-- Show session success -->
-        <div v-if="flashSuccess" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
-            <div class="flex items-center space-x-2">
-                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span>{{ flashSuccess }}</span>
-            </div>
-        </div>
-
-        <form @submit.prevent="submit" class="space-y-6">
-            <!-- Email Field -->
-            <div class="group">
-                <InputLabel for="email" value="Email" class="mb-3 text-sm font-medium text-gray-700" />
-                <div class="relative">
-                    <TextInput
-                        id="email"
-                        type="email"
-                        class="mt-1 block w-full pl-12 pr-4 py-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-black transition-all duration-300 group-hover:shadow-lg group-hover:shadow-black/5 group-hover:border-gray-400 text-gray-900 placeholder-gray-500"
-                        v-model="form.email"
-                        required
-                        autocomplete="username"
-                        placeholder="Enter your email"
-                    />
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none mt-1">
-                        <svg class="h-5 w-5 text-gray-500 group-focus-within:text-black transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
+                <!-- Show session errors -->
+                <div v-if="flashError" class="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg sm:rounded-xl text-red-700 text-xs sm:text-sm">
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
+                        <span>{{ flashError }}</span>
                     </div>
                 </div>
-                <InputError class="mt-2 text-red-600" :message="form.errors.email" />
-            </div>
 
-            <!-- Password Field -->
-            <div class="group">
-                <InputLabel for="password" value="Password" class="mb-3 text-sm font-medium text-gray-700" />
-                <div class="relative">
-                    <TextInput
-                        id="password"
-                        type="password"
-                        class="mt-1 block w-full pl-12 pr-4 py-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-black transition-all duration-300 group-hover:shadow-lg group-hover:shadow-black/5 group-hover:border-gray-400 text-gray-900 placeholder-gray-500"
-                        v-model="form.password"
-                        required
-                        autocomplete="current-password"
-                        placeholder="Enter your password"
-                    />
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none mt-1">
-                        <svg class="h-5 w-5 text-gray-500 group-focus-within:text-black transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                <!-- Show session success -->
+                <div v-if="flashSuccess" class="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg sm:rounded-xl text-green-700 text-xs sm:text-sm">
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
+                        <span>{{ flashSuccess }}</span>
                     </div>
                 </div>
-                <InputError class="mt-2 text-red-600" :message="form.errors.password" />
+
+                <form @submit.prevent="submit" class="space-y-4 sm:space-y-6">
+                    <!-- Email Field -->
+                    <div class="group">
+                        <InputLabel for="email" value="Email" class="mb-2 sm:mb-3 text-xs sm:text-sm font-medium text-gray-700" />
+                        <div class="relative">
+                            <TextInput
+                                id="email"
+                                type="email"
+                                class="mt-1 block w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 bg-white border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-black focus:border-black transition-all duration-300 group-hover:shadow-md sm:group-hover:shadow-lg group-hover:shadow-black/5 group-hover:border-gray-400 text-gray-900 placeholder-gray-500 text-sm sm:text-base"
+                                v-model="form.email"
+                                required
+                                autocomplete="username"
+                                placeholder="Enter your email"
+                            />
+                            <div class="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none mt-1">
+                                <svg class="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 group-focus-within:text-black transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <InputError class="mt-1 sm:mt-2 text-xs sm:text-sm text-red-600" :message="form.errors.email" />
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="group">
+                        <InputLabel for="password" value="Password" class="mb-2 sm:mb-3 text-xs sm:text-sm font-medium text-gray-700" />
+                        <div class="relative">
+                            <TextInput
+                                id="password"
+                                type="password"
+                                class="mt-1 block w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 bg-white border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-black focus:border-black transition-all duration-300 group-hover:shadow-md sm:group-hover:shadow-lg group-hover:shadow-black/5 group-hover:border-gray-400 text-gray-900 placeholder-gray-500 text-sm sm:text-base"
+                                v-model="form.password"
+                                required
+                                autocomplete="current-password"
+                                placeholder="Enter your password"
+                            />
+                            <div class="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none mt-1">
+                                <svg class="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 group-focus-within:text-black transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <InputError class="mt-1 sm:mt-2 text-xs sm:text-sm text-red-600" :message="form.errors.password" />
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="pt-3 sm:pt-4">
+                        <PrimaryButton
+                            class="w-full flex items-center justify-center gap-2 sm:gap-3 py-3 sm:py-4 px-4 sm:px-6 bg-gradient-to-r from-black to-gray-800 hover:from-gray-800 hover:to-gray-900 focus:ring-2 focus:ring-black focus:ring-offset-2 focus:ring-offset-white text-white font-semibold rounded-lg sm:rounded-xl shadow-lg shadow-black/25 hover:shadow-xl hover:shadow-black/30 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] border border-gray-800/20 text-sm sm:text-base"
+                            :class="{ 'opacity-50 cursor-not-allowed': form.processing, 'hover:scale-100': form.processing }"
+                            :disabled="form.processing"
+                        >
+                            <svg v-if="form.processing" class="animate-spin -ml-1 mr-2 h-4 w-4 sm:h-5 sm:w-5 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <svg v-else class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                            </svg>
+                            {{ form.processing ? 'Signing in...' : 'Continue Journey' }}
+                        </PrimaryButton>
+                    </div>
+
+                    <!-- Sign Up Link -->
+                    <div class="text-center pt-4 sm:pt-6 border-t border-gray-200">
+                        <p class="text-xs sm:text-sm text-gray-600">
+                            New adventurer?
+                            <Link
+                                :href="route('register')"
+                                class="font-semibold text-black hover:text-gray-800 transition-all duration-200 hover:underline ml-1 group"
+                            >
+                                Begin your journey
+                                <svg class="w-3 h-3 sm:w-4 sm:h-4 inline-block ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                                </svg>
+                            </Link>
+                        </p>
+                    </div>
+                </form>
             </div>
 
-            <!-- Submit Button -->
-            <div class="pt-4">
-                <PrimaryButton
-                    class="w-full flex items-center justify-center gap-3 py-4 px-6 bg-gradient-to-r from-black to-gray-800 hover:from-gray-800 hover:to-gray-900 focus:ring-2 focus:ring-black focus:ring-offset-2 focus:ring-offset-white text-white font-semibold rounded-xl shadow-lg shadow-black/25 hover:shadow-xl hover:shadow-black/30 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] border border-gray-800/20"
-                    :class="{ 'opacity-50 cursor-not-allowed': form.processing, 'hover:scale-100': form.processing }"
-                    :disabled="form.processing"
-                >
-                    <svg v-if="form.processing" class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-                    </svg>
-                    {{ form.processing ? 'Signing in...' : 'Continue Journey' }}
-                </PrimaryButton>
-            </div>
-
-            <!-- Sign Up Link -->
-            <div class="text-center pt-6 border-t border-gray-200">
-                <p class="text-sm text-gray-600">
-                    New adventurer?
-                    <Link
-                        :href="route('register')"
-                        class="font-semibold text-black hover:text-gray-800 transition-all duration-200 hover:underline ml-1 group"
-                    >
-                        Begin your journey
-                        <svg class="w-4 h-4 inline-block ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                        </svg>
-                    </Link>
+            <!-- Footer Note -->
+            <div class="text-center mt-4 sm:mt-6">
+                <p class="text-xs text-gray-500">
+                    Your adventure log awaits. Secure and private.
                 </p>
             </div>
-        </form>
-    </div>
-
-    <!-- Footer Note -->
-    <div class="text-center mt-6">
-        <p class="text-xs text-gray-500">
-            Your adventure log awaits. Secure and private.
-        </p>
-    </div>
-</div>
-
-
+        </div>
     </div>
 </template>
 
@@ -176,7 +173,7 @@ const submit = () => {
         transform: translateY(0px);
     }
     50% {
-        transform: translateY(-10px);
+        transform: translateY(-8px);
     }
 }
 
@@ -184,9 +181,16 @@ const submit = () => {
     animation: float 3s ease-in-out infinite;
 }
 
+/* Enhanced mobile responsiveness */
+@media (max-width: 640px) {
+    .animate-float {
+        animation-duration: 4s;
+    }
+}
+
 /* Custom scrollbar for dark mode */
 ::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -195,7 +199,7 @@ const submit = () => {
 
 ::-webkit-scrollbar-thumb {
     background: #4b5563;
-    border-radius: 4px;
+    border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -209,14 +213,27 @@ const submit = () => {
     transition-duration: 200ms;
 }
 
-/* Enhanced focus styles */
+/* Enhanced focus styles for mobile */
 input:focus {
     outline: none;
     ring: 2px;
 }
 
-/* Glass morphism effect enhancement */
-.backdrop-blur-xl {
-    backdrop-filter: blur(24px);
+/* Prevent zoom on iOS for inputs */
+@media (max-width: 768px) {
+    input, select, textarea {
+        font-size: 16px !important;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .hover\:scale-\[1\.02\]:hover {
+        transform: scale(1);
+    }
+    
+    .group-hover\:shadow-lg:hover {
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    }
 }
 </style>

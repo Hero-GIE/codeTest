@@ -1,7 +1,7 @@
 <template>
     <!-- Logout Dialog -->
-    <div v-if="showDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-all duration-300">
-        <div class="bg-white rounded-2xl p-8 mx-4 max-w-md w-full transform transition-all duration-300 scale-100 ">
+    <div v-if="showDialog" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] transition-all duration-300">
+        <div class="bg-white rounded-2xl p-6 sm:p-8 mx-4 max-w-md w-full transform transition-all duration-300 scale-100" @click.stop>
             <!-- Dialog Header -->
             <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -12,14 +12,13 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex space-x-4">
-       <button
-    @click="closeDialog"
-    class="flex-1  text-black hover:bg-gray-600 hover:text-white py-3 px-4 rounded-xl font-semibold transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2 border border-black"
->
-    <span>Cancel</span>
-</button>
-
+            <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+                <button
+                    @click="closeDialog"
+                    class="flex-1 text-black hover:bg-gray-600 hover:text-white py-3 px-4 rounded-xl font-semibold transition-all duration-300 hover:scale-105 flex items-center justify-center space-x-2 border border-black"
+                >
+                    <span>Cancel</span>
+                </button>
 
                 <button
                     @click="handleLogout"
@@ -98,6 +97,4 @@ const handleLogout = async () => {
         alert('Logout failed. Please try again.');
     }
 };
-
-
 </script>
