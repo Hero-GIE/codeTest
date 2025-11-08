@@ -34,14 +34,6 @@ WORKDIR /var/www/html
 # Copy existing application directory (excluding .env via .dockerignore)
 COPY . .
 
-# Create .env file with basic configuration
-RUN echo "APP_NAME=WowLogBook" > .env && \
-    echo "APP_ENV=production" >> .env && \
-    echo "APP_DEBUG=false" >> .env && \
-    echo "APP_URL=https://codetest-sbbz.onrender.com" >> .env && \
-    echo "SESSION_DRIVER=database" >> .env && \
-    echo "CACHE_STORE=database" >> .env
-
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader
 
@@ -57,16 +49,17 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Create SQLite database file if it doesn't exist (for sessions)
+# Create SQLite database file and directory with proper permissions
+RUN mkdir -p /var/www/html/database
 RUN touch /var/www/html/database/database.sqlite
-RUN chown www-data:www-data /var/www/html/database/database.sqlite
+RUN chown -R www-data:www-data /var/www/html/database
+RUN chmod -R 775 /var/www/html/database
 
-# Laravel Optimizations and Database Setup
-# RUN php artisan session:table  # <-- REMOVE THIS LINE
+# Run migrations (sessions, cache, queue tables)
 RUN php artisan migrate --force
-RUN php artisan config:cache
-RUN php artisan route:cache
-RUN php artisan view:cache
+
+# Set Apache ServerName to suppress warning
+RUN echo "ServerName codetest-sbbz.onrender.com" >> /etc/apache2/apache2.conf
 
 EXPOSE 80
 
