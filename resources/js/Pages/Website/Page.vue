@@ -185,7 +185,7 @@ const getPageRoute = (pageName) => {
                                 class="text-xl sm:text-2xl font-bold cursor-pointer hover:opacity-80 transition-opacity"
                                 :style="{ color: `var(--header-text-color, var(--color-primary))` }"
                             >
-                                {{ websiteSettings?.siteName || 'WowLogBook' }}
+                                {{ websiteSettings?.siteName || 'Adventure Log' }}
                             </h1>
                         </Link>
                     </div>
@@ -217,7 +217,7 @@ const getPageRoute = (pageName) => {
                             :href="route('dashboard')"
                             class="px-3 lg:px-4 py-2 rounded-lg hover:opacity-90 transition-all duration-300 transform hover:scale-105 text-sm font-medium shadow-lg"
                             :style="{
-                                backgroundColor: `var(--color-primary, #000000)`,
+                                backgroundColor: 'black',
                                 color: `var(--color-accent, #FFFFFF)`
                             }"
                         >
@@ -289,7 +289,7 @@ const getPageRoute = (pageName) => {
                                 @click="closeMobileMenu"
                                 class="block w-full text-center px-4 py-3 rounded-xl font-medium shadow-lg transition-all duration-300"
                                 :style="{
-                                    backgroundColor: `var(--color-primary, #000000)`,
+                                    backgroundColor: 'black',
                                     color: `var(--color-accent, #FFFFFF)`
                                 }"
                             >
@@ -302,7 +302,7 @@ const getPageRoute = (pageName) => {
                                 @click="closeMobileMenu"
                                 class="block w-full text-center px-4 py-3 rounded-xl font-medium border-2 transition-all duration-300"
                                 :style="{
-                                    borderColor: `var(--color-primary, #000000)`,
+                                    borderColor:'black',
                                     color: `var(--color-primary, #000000)`
                                 }"
                             >

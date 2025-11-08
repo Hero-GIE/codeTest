@@ -19,6 +19,7 @@ import {
     faCheckCircle,
     faBars,
     faTimes,
+     faSpinner, faCompass, faMountainSun,
     faPlus,
     faTrash,
     faChartBar,
@@ -30,7 +31,7 @@ import {
     faGlobe,
     faLightbulb,
     faImages,
-    faSpinner 
+   
 } from '@fortawesome/free-solid-svg-icons';
 import DeleteImageConfirmationDialog from '../Auth/DeleteImageConfirmationDialog.vue';
 
@@ -225,6 +226,103 @@ const saveContent = async () => {
     }
 };
 
+// Add these reactive variables
+const showAdventureModal = ref(false)
+const savingAdventure = ref(false)
+const editingAdventureIndex = ref(null)
+
+const newAdventure = ref({
+    title: '',
+    excerpt: '',
+    image: '',
+    date: '',
+    location: ''
+})
+
+// Adventure methods
+const openAdventureModal = () => {
+    showAdventureModal.value = true
+    editingAdventureIndex.value = null
+    resetAdventureForm()
+}
+
+const closeAdventureModal = () => {
+    showAdventureModal.value = false
+    editingAdventureIndex.value = null
+    resetAdventureForm()
+}
+
+const resetAdventureForm = () => {
+    newAdventure.value = {
+        title: '',
+        excerpt: '',
+        image: '',
+        date: '',
+        location: ''
+    }
+}
+
+const editAdventure = (adventure, index) => {
+    newAdventure.value = { ...adventure }
+    editingAdventureIndex.value = index
+    showAdventureModal.value = true
+}
+
+const saveAdventure = async () => {
+    if (!newAdventure.value.title || !newAdventure.value.excerpt || !newAdventure.value.image || !newAdventure.value.date) {
+        alert('Please fill in all required fields')
+        return
+    }
+
+    savingAdventure.value = true
+
+    try {
+        // Ensure recent posts array exists
+        if (!editedContent.sections.recent.posts) {
+            editedContent.sections.recent.posts = []
+        }
+
+        if (editingAdventureIndex.value !== null) {
+            // Update existing adventure
+            editedContent.sections.recent.posts[editingAdventureIndex.value] = {
+                ...newAdventure.value,
+                id: editedContent.sections.recent.posts[editingAdventureIndex.value].id || Date.now().toString()
+            }
+        } else {
+            // Add new adventure
+            const adventureWithId = {
+                ...newAdventure.value,
+                id: Date.now().toString()
+            }
+            editedContent.sections.recent.posts.unshift(adventureWithId)
+        }
+
+        // Save to backend
+        await saveContent()
+        
+        // Close modal and reset form
+        closeAdventureModal()
+        
+    } catch (error) {
+        console.error('Error saving adventure:', error)
+        alert('Failed to save adventure: ' + error.message)
+    } finally {
+        savingAdventure.value = false
+    }
+}
+
+const deleteAdventure = async (index) => {
+    if (confirm('Are you sure you want to delete this adventure?')) {
+        editedContent.sections.recent.posts.splice(index, 1)
+        await saveContent()
+    }
+}
+
+// Update the createNewAdventure method to use the modal
+const createNewAdventure = () => {
+    showAdventureModal.value = true
+}
+
 // Add to your editor component script
 const newImage = ref({
     caption: '',
@@ -403,6 +501,7 @@ const openDeleteDialog = (image) => {
     imageToDelete.value = image;
     showDeleteDialog.value = true;
 };
+
 
 const deleteImage = async () => {
     if (!imageToDelete.value?.publitio_id || !imageToDelete.value?.id) {
@@ -639,6 +738,8 @@ const initializeAboutPage = () => {
     saveContent();
 };
 
+
+
 const pageTitle = computed(() => {
     return props.page.charAt(0).toUpperCase() + props.page.slice(1) + ' Page Editor';
 });
@@ -698,14 +799,7 @@ const pageTitle = computed(() => {
                         </Link>
                     </div>
 
-                    <!-- Mobile Save Button -->
-                    <button
-                        @click="saveContent"
-                        :disabled="saving"
-                        class="lg:hidden bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg transition-all duration-300 flex items-center space-x-2 font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                    >
-                        <FontAwesomeIcon :icon="saving ? faSpinner : faSave" class="text-sm" :class="{ 'animate-spin': saving }" />
-                    </button>
+               
                 </div>
             </div>
 
@@ -769,222 +863,447 @@ const pageTitle = computed(() => {
                             />
                         </div>
 
-                        <!-- Home Page Sections -->
-                        <div v-if="page === 'home'">
-                            <!-- Hero Section -->
-                            <div v-if="editedContent.sections.hero" class="p-3 sm:p-4 lg:p-5 border-2 border-purple-200 rounded-lg sm:rounded-xl hover:border-purple-400 transition-all duration-300 bg-purple-50/30">
-                                <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center space-x-2">
-                                    <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <FontAwesomeIcon :icon="faPalette" class="text-white text-xs sm:text-sm" />
-                                    </div>
-                                    <span>Hero Section</span>
-                                </h3>
-                                
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Hero Title</label>
-                                        <input
-                                            type="text"
-                                            v-model="editedContent.sections.hero.title"
-                                            @blur="saveContent"
-                                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                                            placeholder="Enter hero title..."
-                                        />
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Hero Subtitle</label>
-                                        <textarea
-                                            v-model="editedContent.sections.hero.subtitle"
-                                            @blur="saveContent"
-                                            rows="3"
-                                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm resize-vertical"
-                                            placeholder="Enter hero subtitle..."
-                                        />
-                                    </div>
-                                </div>
-                            </div>
+                     <!-- Home Page Sections -->
+<div v-if="page === 'home'">
+    <!-- Hero Section -->
+    <div v-if="editedContent.sections.hero" class="p-3 sm:p-4 lg:p-5 border-2 border-purple-200 rounded-lg sm:rounded-xl hover:border-purple-400 transition-all duration-300 bg-purple-50/30">
+        <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center space-x-2">
+            <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <FontAwesomeIcon :icon="faPalette" class="text-white text-xs sm:text-sm" />
+            </div>
+            <span>Hero Section</span>
+        </h3>
+        
+        <div class="space-y-3">
+            <div>
+                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Hero Title</label>
+                <input
+                    type="text"
+                    v-model="editedContent.sections.hero.title"
+                    @blur="saveContent"
+                    class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                    placeholder="Enter hero title..."
+                />
+            </div>
+            <div>
+                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Hero Subtitle</label>
+                <textarea
+                    v-model="editedContent.sections.hero.subtitle"
+                    @blur="saveContent"
+                    rows="3"
+                    class="w-full px-3 sm:p-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm resize-vertical"
+                    placeholder="Enter hero subtitle..."
+                />
+            </div>
+        </div>
+    </div>
 
-                            <!-- Features Section -->
-                            <div v-if="editedContent.sections.features" class="p-3 sm:p-4 lg:p-5 border-2 border-blue-200 rounded-lg sm:rounded-xl hover:border-blue-400 transition-all duration-300 bg-blue-50/30">
-                                <div class="flex items-center justify-between mb-3 sm:mb-4">
-                                    <h3 class="text-base sm:text-lg font-bold text-gray-900 flex items-center space-x-2">
-                                        <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                            <FontAwesomeIcon :icon="faList" class="text-white text-xs sm:text-sm" />
-                                        </div>
-                                        <span>Features Section</span>
-                                    </h3>
-                                    <button
-                                        @click="addFeatureItem"
-                                        class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1"
-                                    >
-                                        <FontAwesomeIcon :icon="faPlus" class="text-xs" />
-                                        <span>Add Feature</span>
-                                    </button>
-                                </div>
-                                
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Section Title</label>
-                                        <input
-                                            type="text"
-                                            v-model="editedContent.sections.features.title"
-                                            @blur="saveContent"
-                                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                            placeholder="Enter features section title..."
-                                        />
-                                    </div>
-                                    
-                                    <div class="space-y-3">
-                                        <div 
-                                            v-for="(item, index) in editedContent.sections.features.items" 
-                                            :key="index"
-                                            class="p-3 sm:p-4 border-2 border-gray-200 rounded-lg bg-white relative"
-                                        >
-                                            <button
-                                                @click="removeFeatureItem(index)"
-                                                class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition-all"
-                                            >
-                                                <FontAwesomeIcon :icon="faTrash" class="text-xs" />
-                                            </button>
-                                            
-                                            <div class="space-y-2 pr-8">
-                                                <div>
-                                                    <label class="block text-xs text-gray-600 mb-1 font-medium">Feature Title</label>
-                                                    <input
-                                                        type="text"
-                                                        v-model="item.title"
-                                                        @blur="saveContent"
-                                                        class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
-                                                        placeholder="Feature title..."
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label class="block text-xs text-gray-600 mb-1 font-medium">Description</label>
-                                                    <textarea
-                                                        v-model="item.description"
-                                                        @blur="saveContent"
-                                                        rows="2"
-                                                        class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm resize-vertical"
-                                                        placeholder="Feature description..."
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+    <!-- Features Section -->
+    <div v-if="editedContent.sections.features" class="p-3 sm:p-4 lg:p-5 border-2 border-blue-200 rounded-lg sm:rounded-xl hover:border-blue-400 transition-all duration-300 bg-blue-50/30">
+        <div class="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 class="text-base sm:text-lg font-bold text-gray-900 flex items-center space-x-2">
+                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FontAwesomeIcon :icon="faList" class="text-white text-xs sm:text-sm" />
+                </div>
+                <span>Features Section</span>
+            </h3>
+            <button
+                @click="addFeatureItem"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1"
+            >
+                <FontAwesomeIcon :icon="faPlus" class="text-xs" />
+                <span>Add Feature</span>
+            </button>
+        </div>
+        
+        <div class="space-y-3">
+            <div>
+                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Section Title</label>
+                <input
+                    type="text"
+                    v-model="editedContent.sections.features.title"
+                    @blur="saveContent"
+                    class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    placeholder="Enter features section title..."
+                />
+            </div>
+            
+            <div class="space-y-3">
+                <div 
+                    v-for="(item, index) in editedContent.sections.features.items" 
+                    :key="index"
+                    class="p-3 sm:p-4 border-2 border-gray-200 rounded-lg bg-white relative"
+                >
+                    <button
+                        @click="removeFeatureItem(index)"
+                        class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition-all"
+                    >
+                        <FontAwesomeIcon :icon="faTrash" class="text-xs" />
+                    </button>
+                    
+                    <div class="space-y-2 pr-8">
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1 font-medium">Feature Title</label>
+                            <input
+                                type="text"
+                                v-model="item.title"
+                                @blur="saveContent"
+                                class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
+                                placeholder="Feature title..."
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1 font-medium">Description</label>
+                            <textarea
+                                v-model="item.description"
+                                @blur="saveContent"
+                                rows="2"
+                                class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm resize-vertical"
+                                placeholder="Feature description..."
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                            <!-- Mission Section -->
-                            <div v-if="editedContent.sections.mission" class="p-3 sm:p-4 lg:p-5 border-2 border-green-200 rounded-lg sm:rounded-xl hover:border-green-400 transition-all duration-300 bg-green-50/30">
-                                <div class="flex items-center justify-between mb-3 sm:mb-4">
-                                    <h3 class="text-base sm:text-lg font-bold text-gray-900 flex items-center space-x-2">
-                                        <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                            <FontAwesomeIcon :icon="faChartBar" class="text-white text-xs sm:text-sm" />
-                                        </div>
-                                        <span>Mission Section</span>
-                                    </h3>
-                                    <button
-                                        @click="addMissionStat"
-                                        class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1"
-                                    >
-                                        <FontAwesomeIcon :icon="faPlus" class="text-xs" />
-                                        <span>Add Stat</span>
-                                    </button>
-                                </div>
-                                
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Mission Title</label>
-                                        <input
-                                            type="text"
-                                            v-model="editedContent.sections.mission.title"
-                                            @blur="saveContent"
-                                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                                            placeholder="Enter mission title..."
-                                        />
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Mission Content</label>
-                                        <textarea
-                                            v-model="editedContent.sections.mission.content"
-                                            @blur="saveContent"
-                                            rows="3"
-                                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm resize-vertical"
-                                            placeholder="Enter mission content..."
-                                        />
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Mission Stats</label>
-                                        <div class="space-y-2">
-                                            <div 
-                                                v-for="(stat, index) in editedContent.sections.mission.stats" 
-                                                :key="index"
-                                                class="p-3 border-2 border-gray-200 rounded-lg bg-white relative"
-                                            >
-                                                <button
-                                                    @click="removeMissionStat(index)"
-                                                    class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition-all"
-                                                >
-                                                    <FontAwesomeIcon :icon="faTrash" class="text-xs" />
-                                                </button>
-                                                
-                                                <div class="grid grid-cols-2 gap-2 pr-8">
-                                                    <div>
-                                                        <label class="block text-xs text-gray-600 mb-1 font-medium">Number</label>
-                                                        <input
-                                                            type="text"
-                                                            v-model="stat.number"
-                                                            @blur="saveContent"
-                                                            class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-xs"
-                                                            placeholder="e.g., 100+"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label class="block text-xs text-gray-600 mb-1 font-medium">Label</label>
-                                                        <input
-                                                            type="text"
-                                                            v-model="stat.label"
-                                                            @blur="saveContent"
-                                                            class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-xs"
-                                                            placeholder="e.g., Adventures"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+    <!-- Mission Section -->
+    <div v-if="editedContent.sections.mission" class="p-3 sm:p-4 lg:p-5 border-2 border-green-200 rounded-lg sm:rounded-xl hover:border-green-400 transition-all duration-300 bg-green-50/30">
+        <div class="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 class="text-base sm:text-lg font-bold text-gray-900 flex items-center space-x-2">
+                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FontAwesomeIcon :icon="faChartBar" class="text-white text-xs sm:text-sm" />
+                </div>
+                <span>Mission Section</span>
+            </h3>
+            <button
+                @click="addMissionStat"
+                class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1"
+            >
+                <FontAwesomeIcon :icon="faPlus" class="text-xs" />
+                <span>Add Stat</span>
+            </button>
+        </div>
+        
+        <div class="space-y-3">
+            <div>
+                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Mission Title</label>
+                <input
+                    type="text"
+                    v-model="editedContent.sections.mission.title"
+                    @blur="saveContent"
+                    class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                    placeholder="Enter mission title..."
+                />
+            </div>
+            <div>
+                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Mission Content</label>
+                <textarea
+                    v-model="editedContent.sections.mission.content"
+                    @blur="saveContent"
+                    rows="3"
+                    class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm resize-vertical"
+                    placeholder="Enter mission content..."
+                />
+            </div>
+            
+            <div>
+                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Mission Stats</label>
+                <div class="space-y-2">
+                    <div 
+                        v-for="(stat, index) in editedContent.sections.mission.stats" 
+                        :key="index"
+                        class="p-3 border-2 border-gray-200 rounded-lg bg-white relative"
+                    >
+                        <button
+                            @click="removeMissionStat(index)"
+                            class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition-all"
+                        >
+                            <FontAwesomeIcon :icon="faTrash" class="text-xs" />
+                        </button>
+                        
+                        <div class="grid grid-cols-2 gap-2 pr-8">
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-1 font-medium">Number</label>
+                                <input
+                                    type="text"
+                                    v-model="stat.number"
+                                    @blur="saveContent"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-xs"
+                                    placeholder="e.g., 100+"
+                                />
                             </div>
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-1 font-medium">Label</label>
+                                <input
+                                    type="text"
+                                    v-model="stat.label"
+                                    @blur="saveContent"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-xs"
+                                    placeholder="e.g., Adventures"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                            <!-- Recent Adventures Section -->
-                            <div v-if="editedContent.sections.recent" class="p-3 sm:p-4 lg:p-5 border-2 border-orange-200 rounded-lg sm:rounded-xl hover:border-orange-400 transition-all duration-300 bg-orange-50/30">
-                                <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center space-x-2">
-                                    <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <FontAwesomeIcon :icon="faImage" class="text-white text-xs sm:text-sm" />
-                                    </div>
-                                    <span>Recent Adventures</span>
-                                </h3>
-                                
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Section Title</label>
-                                        <input
-                                            type="text"
-                                            v-model="editedContent.sections.recent.title"
-                                            @blur="saveContent"
-                                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                                            placeholder="Enter recent adventures title..."
-                                        />
-                                    </div>
-                                    <div class="p-3 bg-orange-100/50 rounded-lg">
-                                        <p class="text-xs text-gray-600">
-                                            Note: Your actual recent adventures will be displayed automatically from your adventure posts. This section title controls the heading.
-                                        </p>
-                                    </div>
+    <!-- Recent Adventures Section -->
+    <div class="p-3 sm:p-4 lg:p-5 border-2 border-orange-200 rounded-lg sm:rounded-xl hover:border-orange-400 transition-all duration-300 bg-orange-50/30">
+        <div class="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 class="text-base sm:text-lg font-bold text-gray-900 flex items-center space-x-2">
+                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <FontAwesomeIcon :icon="faImage" class="text-white text-xs sm:text-sm" />
+                </div>
+                <span>Recent Adventures</span>
+            </h3>
+            <button
+                @click="showAdventureModal = true"
+                class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1"
+            >
+                <FontAwesomeIcon :icon="faPlus" class="text-xs" />
+                <span>Create Adventure</span>
+            </button>
+        </div>
+        
+        <div class="space-y-3">
+            <div>
+                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Section Title</label>
+                <input
+                    type="text"
+                    v-model="editedContent.sections.recent.title"
+                    @blur="saveContent"
+                    class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                    placeholder="Enter recent adventures title..."
+                />
+            </div>
+
+            <!-- Adventures List -->
+            <div class="space-y-4">
+                <h4 class="text-sm font-semibold text-gray-700">Your Adventures ({{ editedContent.sections.recent.posts?.length || 0 }})</h4>
+                
+                <!-- No Adventures State -->
+                <div 
+                    v-if="!editedContent.sections.recent.posts?.length" 
+                    class="text-center py-8 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50/50"
+                >
+                    <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <FontAwesomeIcon :icon="faCompass" class="text-orange-500 text-2xl" />
+                    </div>
+                    <h5 class="text-lg font-semibold text-gray-700 mb-2">No Adventures Yet</h5>
+                    <p class="text-gray-500 text-sm max-w-md mx-auto mb-4">
+                        Create your first adventure to showcase on your homepage
+                    </p>
+                    <button 
+                        @click="showAdventureModal = true"
+                        class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-all flex items-center space-x-2 mx-auto"
+                    >
+                        <FontAwesomeIcon :icon="faPlus" />
+                        <span>Create First Adventure</span>
+                    </button>
+                </div>
+
+                <!-- Adventures Grid -->
+                <div v-else class="grid grid-cols-1 gap-4 max-h-96 overflow-y-auto p-2">
+                    <div 
+                        v-for="(adventure, index) in editedContent.sections.recent.posts" 
+                        :key="adventure.id || index"
+                        class="bg-white border-2 border-gray-200 rounded-xl p-4 hover:border-orange-300 transition-all duration-300 relative group"
+                    >
+                        <div class="flex items-start space-x-4">
+                            <!-- Adventure Image -->
+                            <div class="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden">
+                                <img 
+                                    :src="adventure.image" 
+                                    :alt="adventure.title"
+                                    class="w-full h-full object-cover"
+                                />
+                            </div>
+                            
+                            <!-- Adventure Details -->
+                            <div class="flex-1 min-w-0">
+                                <h5 class="font-semibold text-gray-900 text-sm mb-1 truncate">
+                                    {{ adventure.title }}
+                                </h5>
+                                <p class="text-gray-600 text-xs mb-2 line-clamp-2">
+                                    {{ adventure.excerpt }}
+                                </p>
+                                <div class="flex items-center justify-between text-xs text-gray-500">
+                                    <span>{{ adventure.date }}</span>
+                                    <span>{{ adventure.location || 'No location' }}</span>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Action Buttons -->
+                        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex space-x-1">
+                            <button
+                                @click="editAdventure(adventure, index)"
+                                class="bg-blue-500 text-white p-1.5 rounded-lg hover:bg-blue-600 transition-colors"
+                                title="Edit Adventure"
+                            >
+                                <FontAwesomeIcon :icon="faEdit" class="text-xs" />
+                            </button>
+                            <button
+                                @click="deleteAdventure(index)"
+                                class="bg-red-500 text-white p-1.5 rounded-lg hover:bg-red-600 transition-colors"
+                                title="Delete Adventure"
+                            >
+                                <FontAwesomeIcon :icon="faTrash" class="text-xs" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Adventure Creation/Edit Modal -->
+<div v-if="showAdventureModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <!-- Modal Header -->
+        <div class="border-b border-gray-200 p-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-bold text-gray-900">
+                    {{ editingAdventureIndex !== null ? 'Edit Adventure' : 'Create New Adventure' }}
+                </h3>
+                <button
+                    @click="closeAdventureModal"
+                    class="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                    <FontAwesomeIcon :icon="faTimes" class="text-lg" />
+                </button>
+            </div>
+        </div>
+
+        <!-- Adventure Form -->
+        <div class="p-4 space-y-4">
+            <!-- Adventure Title -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    Adventure Title *
+                </label>
+                <input
+                    v-model="newAdventure.title"
+                    type="text"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300"
+                    placeholder="e.g., Mountain Hiking in the Alps"
+                />
+            </div>
+
+            <!-- Adventure Excerpt -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    Short Description *
+                </label>
+                <textarea
+                    v-model="newAdventure.excerpt"
+                    required
+                    rows="2"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 resize-vertical"
+                    placeholder="Brief description of your adventure..."
+                />
+            </div>
+
+            <!-- Adventure Image -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    Adventure Image URL *
+                </label>
+                <input
+                    v-model="newAdventure.image"
+                    type="url"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300"
+                    placeholder="https://images.unsplash.com/photo-1469474968028-56623f02e42e"
+                />
+                <p class="text-xs text-gray-500 mt-1">
+                    Pro tip: Use high-quality images from <a href="https://unsplash.com" target="_blank" class="text-orange-600 hover:underline">Unsplash</a>
+                </p>
+            </div>
+
+            <!-- Date and Location -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Adventure Date *
+                    </label>
+                    <input
+                        v-model="newAdventure.date"
+                        type="date"
+                        required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300"
+                    />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Location
+                    </label>
+                    <input
+                        v-model="newAdventure.location"
+                        type="text"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300"
+                        placeholder="e.g., Swiss Alps, Switzerland"
+                    />
+                </div>
+            </div>
+
+            <!-- Preview -->
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-3 bg-gray-50">
+                <h4 class="text-sm font-semibold text-gray-700 mb-2">Preview</h4>
+                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <div v-if="newAdventure.image" class="h-24 bg-gradient-to-br from-orange-500 to-orange-600 overflow-hidden">
+                        <img 
+                            :src="newAdventure.image" 
+                            :alt="newAdventure.title"
+                            class="w-full h-full object-cover"
+                        />
+                    </div>
+                    <div v-else class="h-24 bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                        <FontAwesomeIcon :icon="faMountainSun" class="text-white text-xl" />
+                    </div>
+                    <div class="p-2">
+                        <h5 class="font-semibold text-gray-900 text-sm mb-1">
+                            {{ newAdventure.title || 'Adventure Title' }}
+                        </h5>
+                        <p class="text-gray-600 text-xs line-clamp-2">
+                            {{ newAdventure.excerpt || 'Adventure description...' }}
+                        </p>
+                        <div class="flex justify-between items-center text-xs text-gray-500 mt-1">
+                            <span>{{ newAdventure.date || 'Date' }}</span>
+                            <span>{{ newAdventure.location || 'Location' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="border-t border-gray-200 p-4">
+            <div class="flex flex-col sm:flex-row gap-2">
+                <button
+                    @click="saveAdventure"
+                    :disabled="!newAdventure.title || !newAdventure.excerpt || !newAdventure.image || !newAdventure.date"
+                    class="flex-1 bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                >
+                    <FontAwesomeIcon v-if="savingAdventure" :icon="faSpinner" class="animate-spin" />
+                    <span class="text-sm">{{ editingAdventureIndex !== null ? 'Update Adventure' : 'Create Adventure' }}</span>
+                </button>
+                <button
+                    @click="closeAdventureModal"
+                    class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-600 transition-all duration-300"
+                >
+                    <span class="text-sm">Cancel</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
                         <!-- About Page Sections -->
                         <div v-if="page === 'about'">
