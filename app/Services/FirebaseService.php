@@ -19,16 +19,6 @@ class FirebaseService
 
     private function initializeFirebase()
     {
-        $firebaseConfig = [
-            'apiKey'            => env('FIREBASE_API_KEY'),
-            'authDomain'        => env('FIREBASE_AUTH_DOMAIN'),
-            'databaseURL'       => env('FIREBASE_DATABASE_URL'),
-            'projectId'         => env('FIREBASE_PROJECT_ID'),
-            'storageBucket'     => env('FIREBASE_STORAGE_BUCKET'),
-            'messagingSenderId' => env('FIREBASE_MESSAGING_SENDER_ID'),
-            'appId'             => env('FIREBASE_APP_ID'),
-        ];
-
         $serviceAccount = [
             "type"                        => "service_account",
             "project_id"                  => env('FIREBASE_PROJECT_ID'),
@@ -42,33 +32,54 @@ class FirebaseService
             "client_x509_cert_url"        => env('FIREBASE_CLIENT_CERT_URL'),
         ];
 
-        // ✅ CHANGE THIS LINE - use the $serviceAccount array instead of file path
         $this->firebase = (new Factory)
-            ->withServiceAccount($serviceAccount) // ← Use array, not file path!
+            ->withServiceAccount($serviceAccount)
             ->withDatabaseUri(env('FIREBASE_DATABASE_URL'));
 
         $this->auth     = $this->firebase->createAuth();
         $this->database = $this->firebase->createDatabase();
     }
 
-    /**
-     * Check if user exists in Realtime Database
-     */
+/**
+ * Check if user exists in Realtime Database - FIXED with fallback
+ */
     public function checkUserExists($email)
     {
         try {
             \Log::info("🔍 [checkUserExists] Starting check for: " . $email);
 
             $usersRef = $this->database->getReference('users');
-            $query    = $usersRef->orderByChild('email')->equalTo($email);
 
-            $snapshot = $query->getSnapshot();
-            $data     = $snapshot->getValue();
+            // Try with index first
+            try {
+                $query    = $usersRef->orderByChild('email')->equalTo($email);
+                $snapshot = $query->getSnapshot();
+                $data     = $snapshot->getValue();
 
-            \Log::info("📊 [checkUserExists] Query result: " . json_encode($data));
-            \Log::info("✅ [checkUserExists] User exists: " . (! empty($data) ? 'true' : 'false'));
+                \Log::info("📊 [checkUserExists] Query result: " . json_encode($data));
 
-            return ! empty($data);
+                $userExists = ! empty($data);
+                \Log::info("✅ [checkUserExists] User exists: " . ($userExists ? 'true' : 'false'));
+
+                return $userExists;
+            } catch (\Exception $indexError) {
+                \Log::warning("⚠️ [checkUserExists] Index query failed, falling back to manual scan: " . $indexError->getMessage());
+
+                // Fallback: Get all users and filter manually
+                $allUsers   = $usersRef->getValue() ?? [];
+                $userExists = false;
+
+                foreach ($allUsers as $userData) {
+                    if (isset($userData['email']) && $userData['email'] === $email) {
+                        $userExists = true;
+                        break;
+                    }
+                }
+
+                \Log::info("✅ [checkUserExists] Manual scan result: " . ($userExists ? 'found' : 'not found'));
+                return $userExists;
+            }
+
         } catch (\Exception $error) {
             \Log::error("❌ [checkUserExists] Error: " . $error->getMessage());
             return false;
@@ -235,9 +246,9 @@ class FirebaseService
         }
     }
 
-    /**
-     * Login user
-     */
+/**
+ * Login user with better error handling and UI feedback
+ */
     public function login($email, $password)
     {
         \Log::info("\n🔐 ========== LOGIN START ==========");
@@ -253,28 +264,19 @@ class FirebaseService
             \Log::info("✅ Firebase Auth sign in successful");
             \Log::info("🆔 User UID: " . $user['localId']);
 
-            // Optional: Check if user profile exists in Realtime Database
+            // ✅ Check if user exists in our database (with fallback)
             \Log::info("📍 STEP 2: Checking user profile in Realtime DB...");
             $userProfile = $this->getUserProfile($user['localId']);
 
             if (empty($userProfile['data'])) {
-                \Log::info("⚠️ User exists in Auth but not in Realtime DB - creating profile...");
-
-                // Create basic profile if missing
-                $basicProfile = [
-                    'uid'       => $user['localId'],
-                    'email'     => $user['email'],
-                    'name'      => explode('@', $user['email'])[0],
-                    'createdAt' => date('c'),
-                    'updatedAt' => date('c'),
+                \Log::warning("⚠️ User authenticated but not in our database", ['uid' => $user['localId']]);
+                return [
+                    'success' => false,
+                    'error'   => 'Account not properly registered. Please register first.',
                 ];
-
-                $this->database->getReference('users/' . $user['localId'])->set($basicProfile);
-                \Log::info("✅ Created missing user profile in Realtime DB");
-            } else {
-                \Log::info("✅ User profile found in Realtime DB");
             }
 
+            \Log::info("✅ User profile verified in database");
             \Log::info("✅ LOGIN SUCCESS");
 
             return [
@@ -285,30 +287,38 @@ class FirebaseService
                 ],
             ];
 
-        } catch (AuthException $error) {
+        } catch (\Kreait\Firebase\Auth\SignIn\FailedToSignIn $error) {
             \Log::error("\n❌ ========== LOGIN FAILED ==========");
             \Log::error("❌ Error: " . $error->getMessage());
 
             $errorMessage = $error->getMessage();
 
-            if (strpos($errorMessage, 'INVALID_LOGIN_CREDENTIALS') !== false) {
-                $errorMessage = "Invalid email or password";
+            // Better error message mapping for UI
+            if (strpos($errorMessage, 'INVALID_LOGIN_CREDENTIALS') !== false ||
+                strpos($errorMessage, 'EMAIL_NOT_FOUND') !== false ||
+                strpos($errorMessage, 'INVALID_PASSWORD') !== false) {
+                $errorMessage = "Invalid email or password. Please check your credentials.";
             } elseif (strpos($errorMessage, 'USER_NOT_FOUND') !== false) {
-                $errorMessage = "No user found with this email";
+                $errorMessage = "No account found with this email. Please register first.";
             } elseif (strpos($errorMessage, 'TOO_MANY_ATTEMPTS_TRY_LATER') !== false) {
-                $errorMessage = "Too many failed attempts. Please try again later.";
+                $errorMessage = "Too many failed attempts. Please try again in a few minutes.";
+            } elseif (strpos($errorMessage, 'USER_DISABLED') !== false) {
+                $errorMessage = "This account has been disabled. Please contact support.";
+            } else {
+                $errorMessage = "Login failed. Please try again.";
             }
 
             return ['success' => false, 'error' => $errorMessage];
         } catch (\Exception $error) {
             \Log::error("\n❌ ========== LOGIN FAILED ==========");
             \Log::error("❌ Error: " . $error->getMessage());
-            return ['success' => false, 'error' => 'Login failed. Please try again.'];
+            \Log::error("❌ Stack trace: " . $error->getTraceAsString());
+            return ['success' => false, 'error' => 'An unexpected error occurred. Please try again.'];
         }
     }
 
     /**
-     * Get user profile from Realtime Database
+     * Get user profile with fallback
      */
     public function getUserProfile($uid)
     {
@@ -322,7 +332,7 @@ class FirebaseService
             return ['success' => true, 'data' => $data];
         } catch (\Exception $error) {
             \Log::error("❌ [getUserProfile] Error: " . $error->getMessage());
-            return ['success' => false, 'error' => $error->getMessage()];
+            return ['success' => false, 'error' => $error->getMessage(), 'data' => null];
         }
     }
 

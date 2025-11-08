@@ -151,7 +151,7 @@ defineProps({
                         <div class="group relative bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden hover:-translate-y-2">
                             <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full"></div>
                             <div class="relative">
-                                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl mb-6 text-accent text-3xl shadow-lg group-hover:scale-110 transition-transform">
+                                <div class="inline-flex items-center justify-center w-16 h-16 bg-black rounded-2xl mb-6 text-accent text-3xl shadow-lg group-hover:scale-110 transition-transform">
                                     <FontAwesomeIcon :icon="faGlobeAmericas" />
                                 </div>
                                 <h3 class="text-2xl font-bold text-primary mb-3 group-hover:text-secondary transition-colors">
@@ -167,7 +167,7 @@ defineProps({
                         <div class="group relative bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden hover:-translate-y-2">
                             <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-secondary/10 to-transparent rounded-bl-full"></div>
                             <div class="relative">
-                                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-secondary to-primary rounded-2xl mb-6 text-accent text-3xl shadow-lg group-hover:scale-110 transition-transform">
+                                <div class="inline-flex items-center justify-center w-16 h-16 bg-black rounded-2xl mb-6 text-accent text-3xl shadow-lg group-hover:scale-110 transition-transform">
                                     <FontAwesomeIcon :icon="faCompass" />
                                 </div>
                                 <h3 class="text-2xl font-bold text-primary mb-3 group-hover:text-secondary transition-colors">
@@ -183,7 +183,7 @@ defineProps({
                         <div class="group relative bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden hover:-translate-y-2">
                             <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full"></div>
                             <div class="relative">
-                                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl mb-6 text-accent text-3xl shadow-lg group-hover:scale-110 transition-transform">
+                                <div class="inline-flex items-center justify-center w-16 h-16 bg-black rounded-2xl mb-6 text-accent text-3xl shadow-lg group-hover:scale-110 transition-transform">
                                     <FontAwesomeIcon :icon="faHeart" />
                                 </div>
                                 <h3 class="text-2xl font-bold text-primary mb-3 group-hover:text-secondary transition-colors">

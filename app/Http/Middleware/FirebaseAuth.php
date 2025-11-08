@@ -27,8 +27,7 @@ class FirebaseAuth
             'register',
         ];
 
-                                           // Check if current path is a public route
-        $currentPath   = $request->path(); // returns 'about', 'login', etc.
+        $currentPath   = $request->path();
         $isPublicRoute = in_array($currentPath, $publicRoutes);
 
         // If it's a public route, allow access without authentication
@@ -41,14 +40,15 @@ class FirebaseAuth
             return redirect('/login')->with('error', 'Please login to access this page.');
         }
 
-        // Optional: Verify the user still exists in Firebase
+        // ✅ ADDED: Verify user exists in our database, not just Firebase Auth
         $user = session('firebase_user');
         if ($user) {
-            $firebaseUser = $this->firebaseService->getUser($user['uid']);
-            if (! $firebaseUser['success']) {
-                // User no longer exists in Firebase
+            $userProfile = $this->firebaseService->getUserProfile($user['uid']);
+
+            if (empty($userProfile['data'])) {
+                // User authenticated but not in our database - invalid session
                 $request->session()->invalidate();
-                return redirect('/login')->with('error', 'Session expired. Please login again.');
+                return redirect('/login')->with('error', 'Account not found. Please register first.');
             }
         }
 

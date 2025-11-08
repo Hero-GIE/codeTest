@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
@@ -30,9 +29,15 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         return [
-            ...parent::share($request),
-            'auth' => [
+             ...parent::share($request),
+            'auth'       => [
                 'user' => $request->user(),
+            ],
+            // ✅ ADD CSRF TOKEN HERE
+            'csrf_token' => csrf_token(),
+            'flash'      => [
+                'success' => fn() => $request->session()->get('success'),
+                'error'   => fn()   => $request->session()->get('error'),
             ],
         ];
     }

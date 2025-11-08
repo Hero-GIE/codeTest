@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useForm, Head, Link, usePage } from '@inertiajs/vue3';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
@@ -8,18 +8,52 @@ import TextInput from '@/Components/TextInput.vue';
 
 const page = usePage();
 
+// Get CSRF token from page props
+const csrfToken = computed(() => page.props.csrf_token);
+
 const form = useForm({
     email: '',
     password: '',
+   
 });
 
 // Safely access flash messages
 const flashError = computed(() => page.props.flash?.error || '');
 const flashSuccess = computed(() => page.props.flash?.success || '');
 
+// Watch for form errors and log them
+watch(() => form.errors, (errors) => {
+    if (Object.keys(errors).length > 0) {
+        console.log('Form errors detected:', errors);
+    }
+}, { deep: true });
+
+// Update token when component mounts
+onMounted(() => {
+    form._token = csrfToken.value;
+    console.log('Login component mounted, CSRF token:', !!csrfToken.value);
+});
+
 const submit = () => {
+    console.log('Submitting login form...', {
+        email: form.email,
+        hasToken: !!csrfToken.value,
+        token: csrfToken.value
+    });
+    
+    // ✅ The token will be automatically included by Inertia
     form.post('/login', {
-        onFinish: () => form.reset('password'),
+        preserveScroll: true,
+        onFinish: () => {
+            form.reset('password');
+            console.log('Login request finished');
+        },
+        onError: (errors) => {
+            console.log('Login form errors:', errors);
+        },
+        onSuccess: () => {
+            console.log('Login successful - should redirect to dashboard');
+        },
     });
 };
 </script>
@@ -28,7 +62,7 @@ const submit = () => {
     <Head title="Log in" />
 
     <div class="min-h-screen flex items-center justify-center bg-white px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        <!-- Responsive Animated Background Elements -->
+        <!-- Background Elements -->
         <div class="absolute inset-0 opacity-20">
             <div class="absolute top-1/4 left-1/4 w-32 h-32 sm:w-48 sm:h-48 lg:w-64 lg:h-64 bg-gradient-to-r from-black to-gray-800 rounded-full blur-2xl sm:blur-3xl animate-pulse"></div>
             <div class="absolute bottom-1/3 right-1/4 w-48 h-48 sm:w-64 sm:h-64 lg:w-96 lg:h-96 bg-gradient-to-r from-gray-800 to-gray-900 rounded-full blur-2xl sm:blur-3xl"></div>
@@ -55,27 +89,39 @@ const submit = () => {
                     </p>
                 </div>
 
-                <!-- Show session errors -->
-                <div v-if="flashError" class="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg sm:rounded-xl text-red-700 text-xs sm:text-sm">
+                <!-- ✅ IMPROVED: Show session errors with better visibility -->
+                <div v-if="flashError" class="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-300 rounded-lg sm:rounded-xl text-red-800 text-xs sm:text-sm animate-pulse">
                     <div class="flex items-center space-x-2">
-                        <svg class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>{{ flashError }}</span>
+                        <span class="font-medium">{{ flashError }}</span>
                     </div>
                 </div>
 
                 <!-- Show session success -->
-                <div v-if="flashSuccess" class="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-50 border border-green-200 rounded-lg sm:rounded-xl text-green-700 text-xs sm:text-sm">
+                <div v-if="flashSuccess" class="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-50 border border-green-300 rounded-lg sm:rounded-xl text-green-800 text-xs sm:text-sm">
                     <div class="flex items-center space-x-2">
-                        <svg class="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span>{{ flashSuccess }}</span>
+                        <span class="font-medium">{{ flashSuccess }}</span>
+                    </div>
+                </div>
+
+                <!-- Show form validation errors -->
+                <div v-if="form.hasErrors" class="mb-4 sm:mb-6 p-3 sm:p-4 bg-yellow-50 border border-yellow-300 rounded-lg sm:rounded-xl text-yellow-800 text-xs sm:text-sm">
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                        </svg>
+                        <span class="font-medium">Please check your credentials and try again.</span>
                     </div>
                 </div>
 
                 <form @submit.prevent="submit" class="space-y-4 sm:space-y-6">
+                  
+
                     <!-- Email Field -->
                     <div class="group">
                         <InputLabel for="email" value="Email" class="mb-2 sm:mb-3 text-xs sm:text-sm font-medium text-gray-700" />
@@ -84,6 +130,7 @@ const submit = () => {
                                 id="email"
                                 type="email"
                                 class="mt-1 block w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 bg-white border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-black focus:border-black transition-all duration-300 group-hover:shadow-md sm:group-hover:shadow-lg group-hover:shadow-black/5 group-hover:border-gray-400 text-gray-900 placeholder-gray-500 text-sm sm:text-base"
+                                :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': form.errors.email || flashError }"
                                 v-model="form.email"
                                 required
                                 autocomplete="username"
@@ -106,6 +153,7 @@ const submit = () => {
                                 id="password"
                                 type="password"
                                 class="mt-1 block w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 bg-white border border-gray-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-black focus:border-black transition-all duration-300 group-hover:shadow-md sm:group-hover:shadow-lg group-hover:shadow-black/5 group-hover:border-gray-400 text-gray-900 placeholder-gray-500 text-sm sm:text-base"
+                                :class="{ 'border-red-300 focus:border-red-500 focus:ring-red-500': form.errors.password || flashError }"
                                 v-model="form.password"
                                 required
                                 autocomplete="current-password"
@@ -165,7 +213,6 @@ const submit = () => {
         </div>
     </div>
 </template>
-
 <style scoped>
 /* Custom animations */
 @keyframes float {

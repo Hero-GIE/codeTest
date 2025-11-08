@@ -139,7 +139,7 @@ const getFAQIcon = (iconName) => {
                                 <div class="absolute top-0 right-0 w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-br from-primary/5 to-transparent rounded-bl-full"></div>
                                 <div class="flex items-start space-x-3 sm:space-x-5">
                                     <div class="flex-shrink-0">
-                                        <div class="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-primary to-secondary rounded-lg sm:rounded-xl flex items-center justify-center text-accent shadow-lg group-hover:scale-105 sm:group-hover:scale-110 transition-transform">
+                                        <div class="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-black rounded-lg sm:rounded-xl flex items-center justify-center text-accent shadow-lg group-hover:scale-105 sm:group-hover:scale-110 transition-transform">
                                             <FontAwesomeIcon :icon="faEnvelope" class="text-lg sm:text-xl lg:text-2xl" />
                                         </div>
                                     </div>
@@ -159,7 +159,7 @@ const getFAQIcon = (iconName) => {
                                 <div class="absolute top-0 right-0 w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-br from-secondary/5 to-transparent rounded-bl-full"></div>
                                 <div class="flex items-start space-x-3 sm:space-x-5">
                                     <div class="flex-shrink-0">
-                                        <div class="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-secondary to-primary rounded-lg sm:rounded-xl flex items-center justify-center text-accent shadow-lg group-hover:scale-105 sm:group-hover:scale-110 transition-transform">
+                                        <div class="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-black rounded-lg sm:rounded-xl flex items-center justify-center text-accent shadow-lg group-hover:scale-105 sm:group-hover:scale-110 transition-transform">
                                             <FontAwesomeIcon :icon="faPhone" class="text-lg sm:text-xl lg:text-2xl" />
                                         </div>
                                     </div>
