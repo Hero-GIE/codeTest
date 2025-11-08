@@ -454,4 +454,36 @@ class WebsiteController extends Controller
             'colorPalettes'   => $colorPalettes,
         ]);
     }
+
+    /**
+     * Check if a user exists in Firebase
+     */
+    private function userExists($uid)
+    {
+        try {
+            $result = $this->firebaseService->getUser($uid);
+            return $result['success'] ?? false;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+/**
+ * Get first user UID from Firebase (fallback)
+ */
+    private function getFirstUserUid()
+    {
+        try {
+            // Try to get the DEFAULT_WEBSITE_UID from env
+            if (env('DEFAULT_WEBSITE_UID')) {
+                return env('DEFAULT_WEBSITE_UID');
+            }
+
+            // If no default is set, return null and show generic content
+            return null;
+        } catch (\Exception $e) {
+            \Log::error("Error getting first user UID: " . $e->getMessage());
+            return null;
+        }
+    }
 }
