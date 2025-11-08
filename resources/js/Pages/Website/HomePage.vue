@@ -49,7 +49,7 @@ const getCssVariable = (variableName) => {
 // Emit events for saving changes
 const emit = defineEmits(['update:pageContent', 'save'])
 
-// Local editable content
+// Local editable content - MOVED UP before computed properties
 const editableContent = ref({})
 const editingSection = ref(null)
 const editingField = ref(null)
@@ -80,10 +80,7 @@ const defaultPageContent = {
                 }
             ]
         },
-        recent: {
-            title: 'Recent Adventures',
-            posts: []
-        },
+       
         mission: {
             title: 'Our Mission',
             content: 'We believe every adventure has a story worth telling. Our mission is to provide the tools and platform for adventurers to document, share, and inspire others with their journeys.',
@@ -97,24 +94,22 @@ const defaultPageContent = {
     }
 }
 
-// Deep merge function to properly handle nested objects
-function deepMerge(target, source) {
-    const result = { ...target }
+// Initialize with props only - no conflicting defaults
+function initializeEditableContent() {
+    editableContent.value = {...props.pageContent}
     
-    for (const key in source) {
-        if (source[key] instanceof Object && key in target && target[key] instanceof Object) {
-            result[key] = deepMerge(target[key], source[key])
-        } else {
-            result[key] = source[key]
-        }
+    // Ensure sections exist but don't override with empty arrays
+    if (!editableContent.value.sections) {
+        editableContent.value.sections = {}
     }
     
-    return result
-}
-
-// Initialize editable content
-function initializeEditableContent() {
-    editableContent.value = deepMerge(defaultPageContent, props.pageContent || {})
+    // Only set empty recent posts if they don't exist at all
+    if (!editableContent.value.sections.recent) {
+        editableContent.value.sections.recent = {
+            title: 'Recent Adventures',
+            posts: []
+        }
+    }
 }
 
 // Watch for changes in pageContent prop
@@ -122,10 +117,49 @@ watch(() => props.pageContent, () => {
     initializeEditableContent()
 }, { immediate: true })
 
+// ✅ MOVED: Now these computed properties can safely access editableContent
+const adventuresPerPage = ref(4)
+const currentAdventurePage = ref(1)
+const loadingMore = ref(false)
+
+// Computed properties for pagination
+const displayedAdventures = computed(() => {
+    const allAdventures = editableContent.value.sections?.recent?.posts || []
+    const startIndex = 0
+    const endIndex = currentAdventurePage.value * adventuresPerPage.value
+    return allAdventures.slice(startIndex, endIndex)
+})
+
+const hasMoreAdventures = computed(() => {
+    const allAdventures = editableContent.value.sections?.recent?.posts || []
+    return displayedAdventures.value.length < allAdventures.length
+})
+
+const totalAdventures = computed(() => {
+    return editableContent.value.sections?.recent?.posts?.length || 0
+})
+
 // Computed property to check if user has any adventures
 const hasAdventures = computed(() => {
-    return editableContent.value.sections?.recent?.posts && editableContent.value.sections.recent.posts.length > 0
+    const posts = editableContent.value.sections?.recent?.posts
+    return posts && posts.length > 0
 })
+
+// Load more adventures method
+const loadMoreAdventures = () => {
+    loadingMore.value = true
+    
+    // Simulate loading delay for better UX
+    setTimeout(() => {
+        currentAdventurePage.value++
+        loadingMore.value = false
+    }, 500)
+}
+
+// Reset pagination when adventures change
+watch(() => editableContent.value.sections?.recent?.posts, () => {
+    currentAdventurePage.value = 1
+}, { deep: true })
 
 // Editing methods
 const startEditing = (section, field = null, index = null) => {
@@ -206,11 +240,9 @@ const isEditing = (section, field = null, index = null) => {
 
 // ✅ ADD: Apply theme colors when component mounts
 onMounted(() => {
-    // Debug: Check if theme colors are being applied
     console.log('HomePage theme colors:', themeColors.value);
 });
 </script>
-
 <template>
     <div class="overflow-hidden relative theme-page" :class="{ 'editing-mode': isEditMode }">
         <!-- Edit Mode Indicator -->
@@ -608,156 +640,285 @@ onMounted(() => {
             </div>
         </section>
 
-        <!-- Recent Adventures Section - UPDATED to use theme classes -->
-        <section class="py-12 sm:py-16 lg:py-20 theme-bg-primary relative overflow-hidden">
-            <!-- Background Pattern -->
-            <div class="absolute inset-0 opacity-5">
-                <div
-                    class="absolute inset-0"
-                    style="
-                        background-image: radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0);
-                        background-size: 40px 40px;
-                    "
-                ></div>
+
+<!-- Recent Adventures Section - Elegant Black & White Design -->
+<section class="py-16 sm:py-20 lg:py-24 bg-white relative overflow-hidden">
+    <!-- Subtle Background Pattern -->
+    <div class="absolute inset-0 opacity-[0.03]">
+        <div class="absolute inset-0" style="background-image: radial-gradient(circle at 2px 2px, #000000 1px, transparent 0); background-size: 32px 32px;"></div>
+    </div>
+
+    <!-- Decorative Elements -->
+    <div class="absolute top-0 right-0 w-96 h-96 bg-black/5 rounded-full blur-3xl -mr-48 -mt-48"></div>
+    <div class="absolute bottom-0 left-0 w-96 h-96 bg-black/5 rounded-full blur-3xl -ml-48 -mb-48"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <!-- Section Header -->
+        <div class="text-center mb-12 sm:mb-16 lg:mb-20">
+            <!-- Badge -->
+            <div class="inline-block mb-6" :class="{ 'editable-section': isEditMode }">
+                <span 
+                    class="inline-flex items-center space-x-2 bg-black text-white px-6 py-2.5 rounded-full text-xs sm:text-sm font-bold uppercase tracking-wider shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                    @click="isEditMode && startEditing('recentBadge')"
+                >
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>
+                    </svg>
+                    <span>Recent Adventures</span>
+                </span>
+            </div>
+            
+            <!-- Main Title -->
+            <h2 
+                class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-black mb-6 leading-tight relative"
+                :class="{ 'editable-section': isEditMode }"
+                @click="isEditMode && startEditing('recent', 'title')"
+            >
+                <span v-if="!isEditing('recent', 'title')" class="relative inline-block">
+                    {{ editableContent.sections?.recent?.title }}
+                    <!-- Underline accent -->
+                    <span class="absolute -bottom-2 left-0 w-full h-1 bg-black transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></span>
+                </span>
+                <input
+                    v-else
+                    v-model="editableContent.sections.recent.title"
+                    @blur="stopEditing"
+                    @keyup.enter="stopEditing"
+                    class="bg-transparent border-b-2 border-black outline-none text-center w-full"
+                    autofocus
+                />
+            </h2>
+            
+            <!-- Subtitle -->
+            <p class="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed font-light">
+                Explore my latest journeys and experiences from around the world
+            </p>
+
+            <!-- Adventure Count -->
+            <div class="mt-4 text-sm text-gray-500 font-medium">
+                Showing {{ displayedAdventures.length }} of {{ totalAdventures }} adventures
             </div>
 
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                <!-- Section Header -->
-                <div class="text-center mb-12 sm:mb-16">
-                    <div class="inline-block mb-4 sm:mb-6 relative" :class="{ 'editable-section': isEditMode }">
-                        <span 
-                            class="theme-bg-secondary/10 theme-text-secondary px-4 sm:px-5 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-bold flex items-center justify-center space-x-1 sm:space-x-2"
-                            @click="isEditMode && startEditing('recentBadge')"
-                        >
-                            <FontAwesomeIcon :icon="faChartLine" class="text-xs sm:text-sm" />
-                            <span>MY RECENT ADVENTURES</span>
-                        </span>
-                    </div>
-                    
-                    <h2 
-                        class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black theme-text-primary mb-4 sm:mb-6 lg:mb-8 leading-tight relative"
-                        :class="{ 'editable-section': isEditMode }"
-                        @click="isEditMode && startEditing('recent', 'title')"
-                    >
-                        <span v-if="!isEditing('recent', 'title')">{{ editableContent.sections?.recent?.title }}</span>
-                        <input
-                            v-else
-                            v-model="editableContent.sections.recent.title"
-                            @blur="stopEditing"
-                            @keyup.enter="stopEditing"
-                            class="bg-transparent border-b-2 theme-border-primary outline-none text-center w-full"
-                            autofocus
+            <!-- Divider -->
+            <div class="flex items-center justify-center mt-8 space-x-4">
+                <div class="w-12 h-px bg-black"></div>
+                <div class="w-2 h-2 bg-black rotate-45"></div>
+                <div class="w-12 h-px bg-black"></div>
+            </div>
+        </div>
+
+        <!-- Adventure Cards Grid -->
+        <div class="mb-12 sm:mb-16">
+            <!-- Show Adventure Cards when there ARE adventures -->
+            <div v-if="hasAdventures" class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10">
+                <div 
+                    v-for="(post, index) in displayedAdventures" 
+                    :key="post.id || index"
+                    class="group bg-white border-2 border-black rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 cursor-pointer"
+                    @click="editAdventure(post.id)"
+                >
+                    <!-- Image Container -->
+                    <div class="relative h-72 sm:h-80 lg:h-96 overflow-hidden bg-black">
+                        <img 
+                            :src="post.image" 
+                            :alt="post.title"
+                            class="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
                         />
-                    </h2>
-                    
-                    <p class="text-base sm:text-lg lg:text-xl theme-text-secondary max-w-3xl mx-auto leading-relaxed px-2 sm:px-0">
-                        My latest journeys and experiences from around the world
-                    </p>
-                </div>
-
-                <!-- Adventure Cards Grid - Show either cards OR empty state -->
-                <div class="mb-12 sm:mb-16">
-                    <!-- Show Adventure Cards when there ARE adventures -->
-                    <div v-if="hasAdventures" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-                        <div 
-                            v-for="(post, index) in editableContent.sections?.recent?.posts" 
-                            :key="post.id || index"
-                            class="group theme-bg-accent rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl hover:shadow-2xl sm:hover:shadow-3xl transition-all duration-500 hover:-translate-y-1 sm:hover:-translate-y-2 cursor-pointer"
-                            @click="editAdventure(post.id)"
-                        >
-                            <!-- Image with Overlay -->
-                            <div class="relative h-48 sm:h-56 lg:h-64 theme-gradient-primary overflow-hidden">
-                                <img 
-                                    :src="post.image" 
-                                    :alt="post.title"
-                                    class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                />
-                                <div class="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
-                                
-                                <!-- Floating Icon -->
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    <div class="text-4xl sm:text-5xl lg:text-6xl text-white transform group-hover:scale-105 sm:group-hover:scale-110 transition-transform">
-                                        <FontAwesomeIcon :icon="faMountainSun" />
-                                    </div>
-                                </div>
-
-                                <!-- Date Badge -->
-                                <div class="absolute top-3 sm:top-4 lg:top-6 right-3 sm:right-4 lg:right-6 theme-bg-accent backdrop-blur-sm theme-text-primary px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold shadow-lg flex items-center space-x-1 sm:space-x-2">
-                                    <span class="text-sm">📅</span>
-                                    <span class="text-xs sm:text-sm">{{ post.date }}</span>
-                                </div>
-
-                                <!-- Like Badge -->
-                                <div class="absolute bottom-3 sm:bottom-4 lg:bottom-6 left-3 sm:left-4 lg:left-6 theme-bg-accent/95 backdrop-blur-sm theme-text-primary px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold shadow-lg flex items-center space-x-1 sm:space-x-2">
-                                    <FontAwesomeIcon :icon="faHeart" class="text-red-500 text-xs sm:text-sm" />
-                                    <span class="text-xs sm:text-sm">{{ 100 + index * 50 }}</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Content -->
-                            <div class="p-4 sm:p-6 lg:p-8">
-                                <h3 class="text-lg sm:text-xl lg:text-2xl font-bold theme-text-primary mb-2 sm:mb-3 lg:mb-4 group-hover:theme-text-secondary transition-colors leading-tight line-clamp-2">
-                                    {{ post.title }}
-                                </h3>
-                                <p class="theme-text-secondary mb-3 sm:mb-4 lg:mb-6 leading-relaxed text-sm sm:text-base line-clamp-3">
-                                    {{ post.excerpt }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Show Empty State when there are NO adventures -->
-                    <div 
-                        v-else
-                        class="text-center py-8 sm:py-12 lg:py-16 px-4"
-                    >
-                        <div class="text-6xl sm:text-7xl lg:text-8xl mb-4 sm:mb-6 text-gray-300">
-                            <FontAwesomeIcon :icon="faCompass" />
-                        </div>
-                        <h3 class="text-xl sm:text-2xl lg:text-3xl font-bold theme-text-secondary mb-3 sm:mb-4">No Adventures Yet</h3>
-                        <p class="text-base sm:text-lg lg:text-xl theme-text-secondary mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
-                            Start documenting your journeys to see them here! Share your stories, photos, and experiences with the world.
-                        </p>
-                        <button 
-                            @click="createNewAdventure"
-                            class="theme-bg-primary theme-text-accent px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg hover:theme-bg-secondary transition-all duration-300 shadow-lg hover:shadow-xl inline-flex items-center space-x-2 sm:space-x-3 w-full sm:w-auto justify-center"
-                        >
-                            <FontAwesomeIcon :icon="faPlus" class="theme-text-accent text-sm sm:text-base" />
-                            <span>Create Your First Adventure</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- CTA Section (shown when there ARE adventures) -->
-                <div class="relative" v-if="hasAdventures">
-                    <div class="absolute inset-0 theme-gradient-primary rounded-2xl sm:rounded-3xl blur-xl sm:blur-2xl opacity-20"></div>
-                    <div class="relative theme-gradient-primary theme-text-accent rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 lg:p-16 max-w-5xl mx-auto overflow-hidden">
-                        <!-- Decorative Circles -->
-                        <div class="absolute top-0 right-0 w-32 h-32 sm:w-48 sm:h-48 lg:w-64 lg:h-64 bg-white/10 rounded-full -mr-16 sm:-mr-24 lg:-mr-32 -mt-16 sm:-mt-24 lg:-mt-32"></div>
-                        <div class="absolute bottom-0 left-0 w-24 h-24 sm:w-32 sm:h-32 lg:w-48 lg:h-48 bg-white/10 rounded-full -ml-12 sm:-ml-16 lg:-ml-24 -mb-12 sm:-mb-16 lg:-mb-24"></div>
                         
-                        <div class="relative z-10 text-center">
-                            <div class="inline-block mb-4 sm:mb-6">
-                                <FontAwesomeIcon :icon="faMapMarkedAlt" class="text-3xl sm:text-4xl lg:text-5xl" />
+                        <!-- Gradient Overlay -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                        
+                        <!-- Date Badge - Top Right -->
+                        <div class="absolute top-4 right-4 bg-white text-black px-4 py-2 rounded-lg font-bold text-sm shadow-lg">
+                            {{ new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}
+                        </div>
+
+                        <!-- Location Badge - Bottom Left (if exists) -->
+                        <div v-if="post.location" class="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm text-white px-4 py-2 rounded-lg text-sm font-medium border border-white/20">
+                            📍 {{ post.location }}
+                        </div>
+                    </div>
+                    
+                    <!-- Content Container -->
+                    <div class="p-6 sm:p-8 bg-white">
+                        <!-- Title -->
+                        <h3 class="text-2xl sm:text-3xl font-black text-black mb-4 leading-tight group-hover:text-gray-700 transition-colors line-clamp-2">
+                            {{ post.title }}
+                        </h3>
+                        
+                        <!-- Excerpt -->
+                        <p class="text-gray-600 text-base sm:text-lg leading-relaxed mb-6 line-clamp-3">
+                            {{ post.excerpt }}
+                        </p>
+
+                        <!-- Read More Link -->
+                        <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                            <span class="text-sm font-bold text-black uppercase tracking-wider group-hover:translate-x-2 transition-transform">
+                                Read Story
+                            </span>
+                            <svg class="w-6 h-6 text-black group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Number Badge -->
+                    <div class="absolute top-0 left-0 w-16 h-16 bg-black text-white flex items-center justify-center font-black text-2xl">
+                        {{ String(index + 1).padStart(2, '0') }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Show Empty State when there are NO adventures -->
+            <div 
+                v-else
+                class="text-center py-16 sm:py-20 lg:py-24"
+            >
+                <!-- Icon -->
+                <div class="mb-8 inline-block">
+                    <div class="w-32 h-32 sm:w-40 sm:h-40 bg-black/5 rounded-full flex items-center justify-center">
+                        <svg class="w-16 h-16 sm:w-20 sm:h-20 text-black/20" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Title -->
+                <h3 class="text-3xl sm:text-4xl font-black text-black mb-4">No Adventures Yet</h3>
+                
+                <!-- Description -->
+                <p class="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto mb-8 leading-relaxed">
+                    Start documenting your journeys to see them here. Share your stories, photos, and experiences with the world.
+                </p>
+
+                <!-- CTA Button -->
+                <button 
+                    @click="createNewAdventure"
+                    class="group inline-flex items-center space-x-3 bg-black text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-900 transition-all duration-300 shadow-lg hover:shadow-2xl hover:scale-105"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    <span>Create Your First Adventure</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Load More Button -->
+        <div v-if="hasMoreAdventures" class="text-center mb-12 sm:mb-16">
+            <button 
+                @click="loadMoreAdventures"
+                :disabled="loadingMore"
+                class="group inline-flex items-center space-x-3 bg-transparent border-2 border-black text-black px-8 py-4 rounded-xl font-bold text-lg hover:bg-black hover:text-white transition-all duration-300 shadow-lg hover:shadow-2xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                <svg 
+                    v-if="loadingMore" 
+                    class="w-6 h-6 animate-spin" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                <svg 
+                    v-else 
+                    class="w-6 h-6 group-hover:translate-y-1 transition-transform" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                </svg>
+                <span>{{ loadingMore ? 'Loading...' : `Load More (${totalAdventures - displayedAdventures.length} remaining)` }}</span>
+            </button>
+            
+            <!-- Progress indicator -->
+            <div class="mt-4 max-w-md mx-auto">
+                <div class="bg-gray-200 rounded-full h-2">
+                    <div 
+                        class="bg-black h-2 rounded-full transition-all duration-500"
+                        :style="{ width: `${(displayedAdventures.length / totalAdventures) * 100}%` }"
+                    ></div>
+                </div>
+                <p class="text-sm text-gray-600 mt-2">
+                    {{ displayedAdventures.length }} of {{ totalAdventures }} adventures shown
+                </p>
+            </div>
+        </div>
+
+        <!-- CTA Section (shown when there ARE adventures) -->
+        <div v-if="hasAdventures && !hasMoreAdventures" class="relative mt-8">
+            <!-- Background -->
+            <div class="absolute inset-0 bg-black rounded-3xl"></div>
+            
+            <!-- Pattern Overlay -->
+            <div class="absolute inset-0 opacity-10 rounded-3xl" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 24px 24px;"></div>
+            
+            <!-- Content -->
+            <div class="relative p-8 sm:p-12 lg:p-16 text-center">
+                <!-- Icon -->
+                <div class="inline-block mb-6">
+                    <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center">
+                        <svg class="w-10 h-10 text-black" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Title -->
+                <h3 class="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-6 leading-tight">
+                    All Adventures Loaded!
+                </h3>
+                
+                <!-- Description -->
+                <p class="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto mb-8 leading-relaxed">
+                    You've explored all {{ totalAdventures }} adventures. Ready to create your next journey?
+                </p>
+
+                <!-- CTA Button -->
+                <button 
+                    @click="createNewAdventure"
+                    class="group inline-flex items-center space-x-3 bg-white text-black px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-100 transition-all duration-300 shadow-lg hover:shadow-2xl hover:scale-105"
+                >
+                    <svg class="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    <span>Add New Adventure</span>
+                </button>
+
+                <!-- Stats -->
+                <div class="mt-12 pt-12 border-t border-white/20">
+                    <div class="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
+                        <div class="text-center">
+                            <div class="text-3xl sm:text-4xl font-black text-white mb-2">
+                                {{ totalAdventures }}+
                             </div>
-                            <h3 class="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-4 sm:mb-6 leading-tight px-2 sm:px-0">
-                                Ready to Share Your Next Story?
-                            </h3>
-                            <p class="text-sm sm:text-base lg:text-lg md:text-xl opacity-95 mb-6 sm:mb-8 lg:mb-10 max-w-2xl mx-auto leading-relaxed px-2 sm:px-0">
-                                Keep building your adventure log and inspire others with your journeys
-                            </p>
-                            <button 
-                                @click="createNewAdventure"
-                                class="group theme-bg-accent theme-text-primary px-6 sm:px-8 lg:px-12 py-3 sm:py-4 lg:py-5 rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base lg:text-lg hover:scale-105 transition-all duration-300 shadow-lg sm:shadow-xl hover:shadow-2xl inline-flex items-center space-x-2 sm:space-x-3 lg:space-x-4 w-full sm:w-auto justify-center"
-                            >
-                                <FontAwesomeIcon :icon="faPlus" class="text-lg group-hover:translate-x-1 transition-transform" />
-                                <span>Add New Adventure</span>
-                            </button>
+                            <div class="text-sm text-white/60 uppercase tracking-wider">
+                                Adventures
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl sm:text-4xl font-black text-white mb-2">
+                                {{ new Set(editableContent.sections?.recent?.posts?.map(p => p.location).filter(Boolean)).size || 0 }}+
+                            </div>
+                            <div class="text-sm text-white/60 uppercase tracking-wider">
+                                Locations
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl sm:text-4xl font-black text-white mb-2">
+                                {{ new Date().getFullYear() }}
+                            </div>
+                            <div class="text-sm text-white/60 uppercase tracking-wider">
+                                Year
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+    </div>
+</section>
 
         <!-- Save Button (only in edit mode) -->
         <div v-if="isEditMode" class="fixed bottom-4 right-4 z-50">

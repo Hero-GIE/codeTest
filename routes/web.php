@@ -1,11 +1,11 @@
 <?php
 
+use App\Http\Controllers\AdventureController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\WebsiteController;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -44,63 +44,10 @@ Route::middleware(['firebase.auth'])->group(function () {
         Route::get('/images', [GalleryController::class, 'getImages'])->name('gallery.images');
     });
 
-    // ✅ Migration route
-    Route::get('/migrate-adventures', function () {
-        Log::info('🧭 Migration route called.');
+    // ✅ Adventure routes (only for authenticated users)
+    Route::post('/adventures/create', [AdventureController::class, 'create']);
 
-        $user = session('firebase_user');
-
-        if (! $user) {
-            Log::warning('⚠️ Migration aborted: no Firebase user found in session.');
-            return redirect('/login');
-        }
-
-        Log::info('👤 Authenticated Firebase user detected.', [
-            'uid'   => $user['uid'] ?? null,
-            'email' => $user['email'] ?? null,
-        ]);
-
-        try {
-            $firebaseService = app(\App\Services\FirebaseService::class);
-            Log::info('🚀 Starting adventure migration for user.', ['uid' => $user['uid']]);
-            $result = $firebaseService->migrateAdventures($user['uid']);
-
-            if ($result['success']) {
-                Log::info('✅ Migration successful.', [
-                    'uid'      => $user['uid'],
-                    'migrated' => $result['migrated'],
-                ]);
-
-                return response()->json([
-                    'success' => true,
-                    'message' => "Successfully migrated {$result['migrated']} adventures!",
-                    'migrated' => $result['migrated'],
-                ]);
-            }
-
-            Log::error('❌ Migration failed.', [
-                'uid'   => $user['uid'],
-                'error' => $result['error'] ?? 'Unknown error',
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'error'   => $result['error'] ?? 'Migration failed',
-            ], 500);
-        } catch (\Throwable $e) {
-            Log::critical('🔥 Exception during adventure migration.', [
-                'uid'     => $user['uid'] ?? null,
-                'message' => $e->getMessage(),
-                'trace'   => $e->getTraceAsString(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'error'   => 'Unexpected error during migration.',
-            ], 500);
-        }
-    });
-}); // ✅ <-- this closing brace was missing
+});
 
 // Public website routes - SPECIFIC ROUTES FIRST
 Route::get('/', [WebsiteController::class, 'showPage'])->defaults('page', 'home')->name('website.home');

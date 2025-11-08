@@ -88,17 +88,19 @@ class FirebaseService
 
     // In FirebaseService.php - Update this method
 
-    public function getUserAdventuresForHomepage($uid, $limit = 4)
+    public function getUserAdventuresForHomepage($uid)
     {
         try {
             \Log::info("🔍 [getUserAdventuresForHomepage] Fetching adventures for UID: {$uid}");
 
-            $ref = $this->database->getReference("websites/{$uid}/adventures");
+            // ✅ CORRECT PATH: Adventures are stored in home page sections
+            $ref = $this->database->getReference("websites/{$uid}/pages/home/sections/recent/posts");
 
-            // Get all adventures first
+            // Get all adventures
             $allAdventures = $ref->getValue();
 
             \Log::info("📊 [getUserAdventuresForHomepage] Raw adventures data", [
+                'path' => "websites/{$uid}/pages/home/sections/recent/posts",
                 'count' => $allAdventures ? count($allAdventures) : 0,
                 'data'  => $allAdventures,
             ]);
@@ -111,34 +113,53 @@ class FirebaseService
             // Convert to array and process
             $adventuresArray = [];
             foreach ($allAdventures as $key => $adventure) {
-                // Only include published adventures
-                if ($adventure['published'] ?? true) {
-                    $adventuresArray[] = [
-                        'id'        => $key,
-                        'title'     => $adventure['title'] ?? 'Untitled Adventure',
-                        'excerpt'   => $adventure['excerpt'] ?? '',
-                        'image'     => $adventure['image'] ?? '',
-                        'date'      => $adventure['date'] ?? '',
-                        'location'  => $adventure['location'] ?? '',
-                        'createdAt' => $adventure['createdAt'] ?? '',
-                    ];
+                // Skip if adventure is not an array
+                if (! is_array($adventure)) {
+                    \Log::warning("⚠️ [getUserAdventuresForHomepage] Skipping non-array adventure: " . $key);
+                    continue;
                 }
+
+                // All adventures in recent/posts are considered published
+                $adventuresArray[] = [
+                    'id'        => $key, // Use Firebase key as ID
+                    'title'     => $adventure['title'] ?? 'Untitled Adventure',
+                    'excerpt'   => $adventure['excerpt'] ?? '',
+                    'image'     => $adventure['image'] ?? '',
+                    'date'      => $adventure['date'] ?? '',
+                    'location'  => $adventure['location'] ?? '',
+                    'createdAt' => $adventure['createdAt'] ?? '',
+                    'published' => true, // All adventures in recent section are published
+                ];
             }
 
             \Log::info("✅ [getUserAdventuresForHomepage] Processed adventures", [
                 'total_found' => count($adventuresArray),
+                'titles'      => array_column($adventuresArray, 'title'),
             ]);
+
+            if (empty($adventuresArray)) {
+                \Log::info("ℹ️ [getUserAdventuresForHomepage] No adventures after processing");
+                return [];
+            }
 
             // Sort by date descending (newest first)
             usort($adventuresArray, function ($a, $b) {
                 $dateA = $a['date'] ?: $a['createdAt'];
                 $dateB = $b['date'] ?: $b['createdAt'];
+
+                // Handle empty dates
+                if (empty($dateA)) {
+                    return 1;
+                }
+
+                if (empty($dateB)) {
+                    return -1;
+                }
+
                 return strtotime($dateB) - strtotime($dateA);
             });
 
-            // Limit the results
-            $adventuresArray = array_slice($adventuresArray, 0, $limit);
-
+            // ✅ REMOVED THE LIMIT - return all adventures
             \Log::info("✅ [getUserAdventuresForHomepage] Final adventures to return", [
                 'count'      => count($adventuresArray),
                 'adventures' => $adventuresArray,
@@ -151,7 +172,6 @@ class FirebaseService
             return [];
         }
     }
-
     /**
      * Register new user
      */

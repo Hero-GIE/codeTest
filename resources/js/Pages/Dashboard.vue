@@ -9,7 +9,8 @@ import {
     faChartBar,
     faCheckCircle,
     faEdit,
-    faGlobe,
+    faExternalLinkAlt,
+    faTimes,
     faToggleOn,
     faToggleOff,
     faPalette,
@@ -19,16 +20,13 @@ import {
     faImages,
     faEnvelope,
     faSignOutAlt,
-    faExternalLinkAlt,
     faDownload,
-    faCalendar,
     faUsers,
     faChartLine,
     faArrowUp,
-    faArrowDown,
     faSpinner,
     faBars,
-    faTimes
+  
 } from '@fortawesome/free-solid-svg-icons';
 import LogoutDialog from './Auth/Logout.vue';
 
@@ -206,75 +204,176 @@ onMounted(() => {
 
     <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
         <!-- Navigation -->
-        <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-                            <FontAwesomeIcon :icon="faHome" class="text-white text-sm" />
-                        </div>
-                        <h1 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                            Dashboard
-                        </h1>
-                    </div>
-                    
-                    <!-- Desktop Navigation -->
-                    <div class="hidden md:flex items-center space-x-4">
-                        <Link 
-                            :href="route('website.home')" 
-                            class="group flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
-                            target="_blank"
-                        >
-                            <FontAwesomeIcon :icon="faExternalLinkAlt" class="text-sm" />
-                            <span>View Live Site</span>
-                        </Link>
-                        <button 
-                            @click="openLogoutDialog"
-                            class="group flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
-                        >
-                            <FontAwesomeIcon :icon="faSignOutAlt" class="text-sm" />
-                            <span>Logout</span>
-                        </button>
-                    </div>
-
-                    <!-- Mobile Menu Button -->
-                    <button
-                        @click="mobileMenuOpen = !mobileMenuOpen"
-                        class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    >
-                        <FontAwesomeIcon 
-                            :icon="mobileMenuOpen ? faTimes : faBars" 
-                            class="w-5 h-5 text-gray-600 dark:text-gray-300"
-                        />
-                    </button>
+     <!-- Navigation -->
+<nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+                    <FontAwesomeIcon :icon="faHome" class="text-white text-sm" />
                 </div>
+                <h1 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                    Dashboard
+                </h1>
             </div>
-
-                  <!-- Mobile Navigation Menu -->
-            <div 
-                v-if="mobileMenuOpen && !showLogoutDialog"
-                class="md:hidden absolute top-16 left-0 w-full bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-lg z-50"
-            >
-                <div class="px-4 py-3 space-y-2">
-                    <Link 
-                        :href="route('website.home')" 
-                        @click="mobileMenuOpen = false"
-                        class="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
-                        target="_blank"
-                    >
-                        <FontAwesomeIcon :icon="faExternalLinkAlt" class="text-sm" />
-                        <span>View Live Site</span>
-                    </Link>
+            
+            <!-- Desktop Navigation -->
+            <div class="hidden md:flex items-center space-x-2">
+                <!-- User Profile Dropdown -->
+                <div class="relative" x-data="{ open: false }">
                     <button 
-                        @click="openLogoutDialog"
-                        class="w-full flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
+                        @click="open = !open"
+                        class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 border border-gray-200 dark:border-gray-600"
                     >
-                        <FontAwesomeIcon :icon="faSignOutAlt" class="text-sm" />
-                        <span>Logout</span>
+                        <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center">
+                            <FontAwesomeIcon :icon="faUser" class="text-white text-sm" />
+                        </div>
+                        <span class="text-sm font-medium text-gray-700 dark:text-gray-200 max-w-32 truncate">
+                            {{ user?.name || user?.email || 'User' }}
+                        </span>
+                        <svg 
+                            class="w-4 h-4 text-gray-500 transition-transform duration-200" 
+                            :class="{ 'rotate-180': open }"
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                        >
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
                     </button>
+
+                    <!-- Dropdown Menu -->
+                    <div 
+                        v-if="open"
+                        class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl z-50 animate-fade-in"
+                        @click.outside="open = false"
+                    >
+                        <!-- Header -->
+                        <div class="p-4 border-b border-gray-100 dark:border-gray-700">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-black rounded-full flex items-center justify-center flex-shrink-0">
+                                    <FontAwesomeIcon :icon="faUser" class="text-white text-base" />
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                                        {{ user?.name || 'User' }}
+                                    </p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                        {{ user?.email || 'No email' }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User Info -->
+                        <div class="p-4 space-y-3">
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-500 dark:text-gray-400">Member since</span>
+                                <span class="font-medium text-gray-900 dark:text-white">
+                                    {{ user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A' }}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-500 dark:text-gray-400">Status</span>
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                    <div class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></div>
+                                    Active
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="p-3 border-t border-gray-100 dark:border-gray-700 space-y-1">
+                            <Link 
+                                :href="route('profile.edit')"
+                                class="flex items-center space-x-2 w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                            >
+                                <FontAwesomeIcon :icon="faEdit" class="text-gray-400 text-sm" />
+                                <span>Edit Profile</span>
+                            </Link>
+                            <Link 
+                                :href="route('website.home')" 
+                                target="_blank"
+                                class="flex items-center space-x-2 w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                            >
+                                <FontAwesomeIcon :icon="faExternalLinkAlt" class="text-gray-400 text-sm" />
+                                <span>View Live Site</span>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logout Button -->
+                <button 
+                    @click="openLogoutDialog"
+                    class="group flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-lg transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm border border-gray-200 dark:border-gray-600"
+                >
+                    <FontAwesomeIcon :icon="faSignOutAlt" class="text-sm group-hover:scale-110 transition-transform" />
+                    <span>Logout</span>
+                </button>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button
+                @click="mobileMenuOpen = !mobileMenuOpen"
+                class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-600"
+            >
+                <FontAwesomeIcon 
+                    :icon="mobileMenuOpen ? faTimes : faBars" 
+                    class="w-5 h-5 text-gray-600 dark:text-gray-300"
+                />
+            </button>
+        </div>
+    </div>
+
+    <!-- Mobile Navigation Menu -->
+    <div 
+        v-if="mobileMenuOpen && !showLogoutDialog"
+        class="md:hidden absolute top-16 left-0 w-full bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-lg z-50"
+    >
+        <div class="px-4 py-3 space-y-3">
+            <!-- Mobile User Info -->
+            <div class="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center flex-shrink-0">
+                    <FontAwesomeIcon :icon="faUser" class="text-white text-sm" />
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                        {{ user?.name || 'User' }}
+                    </p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {{ user?.email || 'No email' }}
+                    </p>
                 </div>
             </div>
-        </nav>
+
+            <Link 
+                :href="route('website.home')" 
+                @click="mobileMenuOpen = false"
+                class="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
+                target="_blank"
+            >
+                <FontAwesomeIcon :icon="faExternalLinkAlt" class="text-sm" />
+                <span>View Live Site</span>
+            </Link>
+            <Link 
+                :href="route('profile.edit')"
+                @click="mobileMenuOpen = false"
+                class="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
+            >
+                <FontAwesomeIcon :icon="faEdit" class="text-sm" />
+                <span>Edit Profile</span>
+            </Link>
+            <button 
+                @click="openLogoutDialog"
+                class="w-full flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-left"
+            >
+                <FontAwesomeIcon :icon="faSignOutAlt" class="text-sm" />
+                <span>Logout</span>
+            </button>
+        </div>
+    </div>
+</nav>
 
         <!-- Mobile Menu Overlay -->
         <div 

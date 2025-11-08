@@ -280,7 +280,7 @@ const saveAdventure = async () => {
         // ✅ FIX: Save to the correct Firebase path
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
         
-        const response = await fetch('/api/adventures/create', {
+        const response = await fetch('/adventures/create', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -300,19 +300,24 @@ const saveAdventure = async () => {
         console.log('✅ Adventure created:', result);
 
         if (result.success) {
+            // ✅ FIX: Declare adventureWithId BEFORE using it
+            const adventureWithId = {
+                ...newAdventure.value,
+                id: result.id || result.adventure?.id || Date.now().toString(),
+                createdAt: new Date().toISOString()
+            };
+
+            // Add debug logging - NOW adventureWithId is defined
+            console.log('✅ Adventure saved to Firebase path:');
+            console.log('/websites/iIYNp0xgmIRoOs9RwG7b9F6W4vv1/pages/home/sections/recent/posts');
+            console.log('New adventure data:', adventureWithId);
+            
             // Ensure posts array exists
             if (!editedContent.sections.recent.posts) {
                 editedContent.sections.recent.posts = [];
             }
 
             // Add the new adventure with its ID to local state
-            const adventureWithId = {
-                ...newAdventure.value,
-                id: result.id || result.adventure?.id || Date.now().toString(),
-                createdAt: new Date().toISOString()
-            };
-            
-            // Add to beginning of array (newest first)
             editedContent.sections.recent.posts.unshift(adventureWithId);
 
             console.log('✅ Adventure added to local state, total:', editedContent.sections.recent.posts.length);
@@ -525,8 +530,7 @@ const openDeleteDialog = (image) => {
     showDeleteDialog.value = true;
 };
 
-
-const deleteImage = async () => {
+  const deleteImage = async () => {
     if (!imageToDelete.value?.publitio_id || !imageToDelete.value?.id) {
         console.warn('Delete aborted: missing image identifiers.', imageToDelete.value);
         showDeleteDialog.value = false;
