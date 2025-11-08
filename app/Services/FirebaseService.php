@@ -42,13 +42,13 @@ class FirebaseService
             "client_x509_cert_url"        => env('FIREBASE_CLIENT_CERT_URL'),
         ];
 
+        // ✅ CHANGE THIS LINE - use the $serviceAccount array instead of file path
         $this->firebase = (new Factory)
-            ->withServiceAccount(storage_path('firebase/firebase-adminsdk.json'))
+            ->withServiceAccount($serviceAccount) // ← Use array, not file path!
             ->withDatabaseUri(env('FIREBASE_DATABASE_URL'));
 
         $this->auth     = $this->firebase->createAuth();
         $this->database = $this->firebase->createDatabase();
-
     }
 
     /**
