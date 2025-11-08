@@ -75,6 +75,72 @@ class FirebaseService
         }
     }
 
+    // In FirebaseService.php - Update this method
+
+    public function getUserAdventuresForHomepage($uid, $limit = 4)
+    {
+        try {
+            \Log::info("🔍 [getUserAdventuresForHomepage] Fetching adventures for UID: {$uid}");
+
+            $ref = $this->database->getReference("websites/{$uid}/adventures");
+
+            // Get all adventures first
+            $allAdventures = $ref->getValue();
+
+            \Log::info("📊 [getUserAdventuresForHomepage] Raw adventures data", [
+                'count' => $allAdventures ? count($allAdventures) : 0,
+                'data'  => $allAdventures,
+            ]);
+
+            if (empty($allAdventures)) {
+                \Log::info("ℹ️ [getUserAdventuresForHomepage] No adventures found for user: {$uid}");
+                return [];
+            }
+
+            // Convert to array and process
+            $adventuresArray = [];
+            foreach ($allAdventures as $key => $adventure) {
+                // Only include published adventures
+                if ($adventure['published'] ?? true) {
+                    $adventuresArray[] = [
+                        'id'        => $key,
+                        'title'     => $adventure['title'] ?? 'Untitled Adventure',
+                        'excerpt'   => $adventure['excerpt'] ?? '',
+                        'image'     => $adventure['image'] ?? '',
+                        'date'      => $adventure['date'] ?? '',
+                        'location'  => $adventure['location'] ?? '',
+                        'createdAt' => $adventure['createdAt'] ?? '',
+                    ];
+                }
+            }
+
+            \Log::info("✅ [getUserAdventuresForHomepage] Processed adventures", [
+                'total_found' => count($adventuresArray),
+            ]);
+
+            // Sort by date descending (newest first)
+            usort($adventuresArray, function ($a, $b) {
+                $dateA = $a['date'] ?: $a['createdAt'];
+                $dateB = $b['date'] ?: $b['createdAt'];
+                return strtotime($dateB) - strtotime($dateA);
+            });
+
+            // Limit the results
+            $adventuresArray = array_slice($adventuresArray, 0, $limit);
+
+            \Log::info("✅ [getUserAdventuresForHomepage] Final adventures to return", [
+                'count'      => count($adventuresArray),
+                'adventures' => $adventuresArray,
+            ]);
+
+            return $adventuresArray;
+        } catch (\Exception $error) {
+            \Log::error("❌ [getUserAdventuresForHomepage] Error: " . $error->getMessage());
+            \Log::error("❌ Stack trace: " . $error->getTraceAsString());
+            return [];
+        }
+    }
+
     /**
      * Register new user
      */
@@ -465,6 +531,9 @@ class FirebaseService
     /**
      * Get page content
      */
+    /**
+     * Get page content
+     */
     public function getPageContent($uid, $page)
     {
         try {
@@ -478,6 +547,8 @@ class FirebaseService
                 return $defaultContent;
             }
 
+            // Return content as-is
+            // Adventures will be loaded separately by the controller
             return $content;
         } catch (\Exception $error) {
             \Log::error("❌ [getPageContent] Error: " . $error->getMessage());
@@ -984,10 +1055,15 @@ class FirebaseService
 
     /**
      * Create a new adventure/post for user
+     * ✅ FIXED: Save to the correct Firebase location
      */
     public function createAdventure($uid, $adventureData)
     {
         try {
+            \Log::info("📝 [createAdventure] Creating adventure for UID: {$uid}");
+            \Log::info("📝 [createAdventure] Adventure data: " . json_encode($adventureData));
+
+            // Use the adventures collection (separate from pages)
             $adventureRef = $this->database->getReference("websites/{$uid}/adventures");
 
             $newAdventure = [
@@ -1003,19 +1079,95 @@ class FirebaseService
                 'published' => $adventureData['published'] ?? true,
             ];
 
-            $newRef = $adventureRef->push($newAdventure);
+            $newRef      = $adventureRef->push($newAdventure);
+            $adventureId = $newRef->getKey();
+
+            \Log::info("✅ [createAdventure] Adventure created successfully", [
+                'id'    => $adventureId,
+                'title' => $newAdventure['title'],
+            ]);
 
             return [
                 'success'   => true,
-                'id'        => $newRef->getKey(),
-                'adventure' => $newAdventure,
+                'id'        => $adventureId,
+                'adventure' => array_merge(['id' => $adventureId], $newAdventure),
             ];
         } catch (\Exception $error) {
             \Log::error("❌ [createAdventure] Error: " . $error->getMessage());
+            \Log::error("❌ Stack trace: " . $error->getTraceAsString());
             return ['success' => false, 'error' => $error->getMessage()];
         }
     }
 
+    /**
+     * Migrate adventures from old location to new location
+     * Call this once to move existing adventures
+     */
+    public function migrateAdventures($uid)
+    {
+        try {
+            \Log::info("🔄 [migrateAdventures] Starting migration for UID: {$uid}");
+
+            // Get adventures from old location (in pages/home/sections/recent/posts)
+            $oldRef        = $this->database->getReference("websites/{$uid}/pages/home/sections/recent/posts");
+            $oldAdventures = $oldRef->getValue();
+
+            if (empty($oldAdventures)) {
+                \Log::info("ℹ️ [migrateAdventures] No old adventures to migrate");
+                return ['success' => true, 'migrated' => 0];
+            }
+
+            \Log::info("📊 [migrateAdventures] Found adventures to migrate", [
+                'count' => count($oldAdventures),
+            ]);
+
+            // Get new location reference
+            $newRef = $this->database->getReference("websites/{$uid}/adventures");
+
+            $migratedCount = 0;
+
+            // Convert array structure and migrate each adventure
+            foreach ($oldAdventures as $index => $adventure) {
+                // Skip if not a valid adventure object
+                if (! is_array($adventure) || empty($adventure['title'])) {
+                    continue;
+                }
+
+                // Prepare adventure data
+                $adventureData = [
+                    'title'     => $adventure['title'] ?? 'Untitled',
+                    'excerpt'   => $adventure['excerpt'] ?? '',
+                    'content'   => $adventure['content'] ?? '',
+                    'image'     => $adventure['image'] ?? '',
+                    'date'      => $adventure['date'] ?? date('Y-m-d'),
+                    'location'  => $adventure['location'] ?? '',
+                    'tags'      => $adventure['tags'] ?? [],
+                    'createdAt' => $adventure['createdAt'] ?? date('c'),
+                    'updatedAt' => date('c'),
+                    'published' => $adventure['published'] ?? true,
+                ];
+
+                // Push to new location
+                $newRef->push($adventureData);
+                $migratedCount++;
+
+                \Log::info("✅ [migrateAdventures] Migrated: {$adventure['title']}");
+            }
+
+            \Log::info("✅ [migrateAdventures] Migration complete", [
+                'migrated' => $migratedCount,
+            ]);
+
+            return [
+                'success'  => true,
+                'migrated' => $migratedCount,
+            ];
+
+        } catch (\Exception $error) {
+            \Log::error("❌ [migrateAdventures] Error: " . $error->getMessage());
+            return ['success' => false, 'error' => $error->getMessage()];
+        }
+    }
     /**
      * Update user adventure
      */

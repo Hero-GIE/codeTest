@@ -15,15 +15,17 @@ import {
     faBook
 } from '@fortawesome/free-solid-svg-icons'
 
+// Add websiteSettings prop
 defineProps({
     pageContent: Object,
     user: Object,
-    isEditMode: Boolean
+    isEditMode: Boolean,
+    websiteSettings: Object // Add this
 });
 </script>
 
 <template>
-    <div class="overflow-hidden">
+    <div class="overflow-hidden theme-page">
         <!-- Hero Section with Modern Gradient & Floating Elements - Matching Home Page -->
       <section class="relative bg-gradient-to-br from-secondary via-primary to-secondary text-white py-16 md:py-24 overflow-hidden">
     <!-- Background Image with Dark Overlay -->
@@ -346,6 +348,25 @@ defineProps({
 </template>
 
 <style scoped>
+
+.theme-page {
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+}
+
+/* Apply CSS variables to all color classes */
+.text-primary { color: var(--color-primary) !important; }
+.bg-primary { background-color: var(--color-primary) !important; }
+.border-primary { border-color: var(--color-primary) !important; }
+
+.text-secondary { color: var(--color-secondary) !important; }
+.bg-secondary { background-color: var(--color-secondary) !important; }
+.border-secondary { border-color: var(--color-secondary) !important; }
+
+.text-accent { color: var(--color-accent) !important; }
+.bg-accent { background-color: var(--color-accent) !important; }
+.border-accent { border-color: var(--color-accent) !important; }
+
 /* Animations - Matching Home Page */
 @keyframes fade-in-down {
     from {

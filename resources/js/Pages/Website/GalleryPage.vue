@@ -120,7 +120,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="animate-fade-in-up">
+    <div class="animate-fade-in-up theme-page">
         <!-- Gallery Hero -->
         <section class="bg-gradient-to-br from-primary to-secondary text-accent py-20 lg:py-28 relative overflow-hidden">
             <!-- Background Pattern -->
@@ -354,6 +354,23 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+
+.theme-page {
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+}
+
+.text-primary { color: var(--color-primary) !important; }
+.bg-primary { background-color: var(--color-primary) !important; }
+.border-primary { border-color: var(--color-primary) !important; }
+
+.text-secondary { color: var(--color-secondary) !important; }
+.bg-secondary { background-color: var(--color-secondary) !important; }
+.border-secondary { border-color: var(--color-secondary) !important; }
+
+.text-accent { color: var(--color-accent) !important; }
+.bg-accent { background-color: var(--color-accent) !important; }
+.border-accent { border-color: var(--color-accent) !important; }
 .animate-fade-in {
     animation: fadeIn 0.3s ease-out;
 }

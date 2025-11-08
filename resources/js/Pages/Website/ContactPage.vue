@@ -24,19 +24,17 @@ import {
     faFacebook
 } from '@fortawesome/free-brands-svg-icons';
 
+// ✅ CORRECT: Only ONE defineProps call
 defineProps({
     pageContent: Object,
     user: Object,
-    isEditMode: Boolean
-});
-
-const form = ref({
-    name: '',
-    email: '',
-    message: ''
+    isEditMode: Boolean,
+    websiteSettings: Object // Add this
 });
 
 const loading = ref(false);
+
+const form = ref({ name: '', email: '', message: '' }); 
 
 const submitForm = async () => {
     loading.value = true;
@@ -59,7 +57,7 @@ const getFAQIcon = (iconName) => {
 </script>
 
 <template>
-    <div class="overflow-hidden">
+    <div class="overflow-hidden theme-page">
         <!-- Compact Hero Section -->
         <section class="relative h-[40vh] min-h-[300px] sm:min-h-[350px] max-h-[500px] overflow-hidden">
             <!-- Background with Gradient -->
@@ -389,6 +387,22 @@ const getFAQIcon = (iconName) => {
 </template>
 
 <style scoped>
+.theme-page {
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+}
+
+.text-primary { color: var(--color-primary) !important; }
+.bg-primary { background-color: var(--color-primary) !important; }
+.border-primary { border-color: var(--color-primary) !important; }
+
+.text-secondary { color: var(--color-secondary) !important; }
+.bg-secondary { background-color: var(--color-secondary) !important; }
+.border-secondary { border-color: var(--color-secondary) !important; }
+
+.text-accent { color: var(--color-accent) !important; }
+.bg-accent { background-color: var(--color-accent) !important; }
+.border-accent { border-color: var(--color-accent) !important; }
 /* Animations */
 @keyframes fade-in-down {
     from {

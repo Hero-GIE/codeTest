@@ -277,34 +277,57 @@ const saveAdventure = async () => {
     savingAdventure.value = true
 
     try {
-        // Ensure recent posts array exists
-        if (!editedContent.sections.recent.posts) {
-            editedContent.sections.recent.posts = []
+        // ✅ FIX: Save to the correct Firebase path
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        
+        const response = await fetch('/api/adventures/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(newAdventure.value)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Server error:', errorText);
+            throw new Error('Failed to create adventure in database');
         }
 
-        if (editingAdventureIndex.value !== null) {
-            // Update existing adventure
-            editedContent.sections.recent.posts[editingAdventureIndex.value] = {
-                ...newAdventure.value,
-                id: editedContent.sections.recent.posts[editingAdventureIndex.value].id || Date.now().toString()
+        const result = await response.json();
+        console.log('✅ Adventure created:', result);
+
+        if (result.success) {
+            // Ensure posts array exists
+            if (!editedContent.sections.recent.posts) {
+                editedContent.sections.recent.posts = [];
             }
-        } else {
-            // Add new adventure
+
+            // Add the new adventure with its ID to local state
             const adventureWithId = {
                 ...newAdventure.value,
-                id: Date.now().toString()
-            }
-            editedContent.sections.recent.posts.unshift(adventureWithId)
-        }
+                id: result.id || result.adventure?.id || Date.now().toString(),
+                createdAt: new Date().toISOString()
+            };
+            
+            // Add to beginning of array (newest first)
+            editedContent.sections.recent.posts.unshift(adventureWithId);
 
-        // Save to backend
-        await saveContent()
-        
-        // Close modal and reset form
-        closeAdventureModal()
+            console.log('✅ Adventure added to local state, total:', editedContent.sections.recent.posts.length);
+            
+            // Close modal and reset form
+            closeAdventureModal();
+            
+            // Show success message
+            alert('Adventure created successfully!');
+        } else {
+            throw new Error(result.error || 'Failed to create adventure');
+        }
         
     } catch (error) {
-        console.error('Error saving adventure:', error)
+        console.error('❌ Error saving adventure:', error)
         alert('Failed to save adventure: ' + error.message)
     } finally {
         savingAdventure.value = false

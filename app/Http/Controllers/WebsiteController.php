@@ -17,42 +17,6 @@ class WebsiteController extends Controller
         $this->analyticsService = $analyticsService;
     }
 
-    /**
-     * Show public website pages - SIMPLIFIED for localhost
-     */
-    // public function showPage(Request $request, $page = 'home')
-    // {
-    //     // Get current user if logged in
-    //     $user = session('firebase_user');
-
-    //     // 🔥 CORRECT: Determine whose website we're viewing
-    //     $websiteOwnerUid = $this->getWebsiteOwnerUid($request, $user);
-
-    //     // 🔥 RECORD ANALYTICS for the website owner
-    //     if ($websiteOwnerUid) {
-    //         $this->analyticsService->recordVisit($websiteOwnerUid, $page, $request);
-    //     }
-
-    //     // Get content and settings for the website owner
-    //     $pageContent     = $this->getPageContentForOwner($websiteOwnerUid, $page);
-    //     $websiteSettings = $this->getWebsiteSettingsForOwner($websiteOwnerUid);
-
-    //     // Personalize content ONLY if current user is the website owner
-    //     $isOwner = $user && $user['uid'] === $websiteOwnerUid;
-    //     if ($isOwner) {
-    //         $pageContent = $this->personalizeContentForOwner($user, $page, $pageContent);
-    //     }
-
-    //     return Inertia::render('Website/Page', [
-    //         'user'            => $user,
-    //         'page'            => $page,
-    //         'pageContent'     => $pageContent,
-    //         'websiteSettings' => $websiteSettings,
-    //         'isEditMode'      => $request->has('edit') && $isOwner,
-    //         'isOwner'         => $isOwner,
-    //     ]);
-    // }
-
     public function showPage(Request $request, $page = 'home')
     {
         // Get current user if logged in
@@ -65,6 +29,17 @@ class WebsiteController extends Controller
         $pageContent     = $this->getPageContentForOwner($websiteOwnerUid, $page);
         $websiteSettings = $this->getWebsiteSettingsForOwner($websiteOwnerUid);
 
+        // Make sure this includes customColors
+        if (! $websiteSettings || ! isset($websiteSettings['customColors'])) {
+            $websiteSettings = [
+                'customColors' => [
+                    'primary'   => '#000000',
+                    'secondary' => '#8B4513',
+                    'accent'    => '#FFFFFF',
+                ],
+            ];
+        }
+
         // Determine if current user is the owner
         $isOwner = $user && $user['uid'] === $websiteOwnerUid;
 
@@ -74,14 +49,39 @@ class WebsiteController extends Controller
             abort(404, 'Page not found');
         }
 
+        // ✅ FIXED: Load adventures separately and inject them into page content
+        if ($page === 'home' && $websiteOwnerUid) {
+            \Log::info("🏠 Loading adventures for home page", ['uid' => $websiteOwnerUid]);
+
+            // Fetch adventures from the correct location
+            $userAdventures = $this->firebaseService->getUserAdventuresForHomepage($websiteOwnerUid, 4);
+
+            \Log::info("📊 Adventures fetched", [
+                'count'      => count($userAdventures),
+                'adventures' => $userAdventures,
+            ]);
+
+            // Inject adventures into page content
+            if (! isset($pageContent['sections'])) {
+                $pageContent['sections'] = [];
+            }
+            if (! isset($pageContent['sections']['recent'])) {
+                $pageContent['sections']['recent'] = [
+                    'title' => 'Recent Adventures',
+                    'posts' => [],
+                ];
+            }
+
+            $pageContent['sections']['recent']['posts'] = $userAdventures;
+
+            \Log::info("✅ Adventures injected into page content", [
+                'final_count' => count($pageContent['sections']['recent']['posts']),
+            ]);
+        }
+
         // 🔥 RECORD ANALYTICS for the website owner (only for published pages)
         if ($websiteOwnerUid && ($pageContent['published'] ?? false)) {
             $this->analyticsService->recordVisit($websiteOwnerUid, $page, $request);
-        }
-
-        // Personalize content ONLY if current user is the website owner
-        if ($isOwner) {
-            $pageContent = $this->personalizeContentForOwner($user, $page, $pageContent);
         }
 
         // Get list of published pages
@@ -167,26 +167,22 @@ class WebsiteController extends Controller
     private function personalizeContentForOwner($user, $page, $pageContent)
     {
         if ($page === 'home') {
-            $userAdventures = $this->firebaseService->getUserAdventures($user['uid'], 4);
+            $userAdventures = $this->firebaseService->getUserAdventuresForHomepage($user['uid'], 4);
 
             if (! empty($userAdventures)) {
-                $pageContent['sections']['recent']['posts'] = array_map(function ($adventure) {
-                    return [
-                        'title'   => $adventure['title'],
-                        'excerpt' => $adventure['excerpt'],
-                        'date'    => $adventure['date'],
-                        'image'   => $adventure['image'],
-                        'id'      => $adventure['id'],
-                    ];
-                }, $userAdventures);
+                $pageContent['sections']['recent']['posts'] = $userAdventures;
             }
 
-            // Update stats
-            $totalAdventures                                          = count($userAdventures);
-            $pageContent['sections']['mission']['stats'][0]['number'] = $totalAdventures . '+';
+            // Update stats based on actual adventures
+            $totalAdventures = count($userAdventures);
+            if (isset($pageContent['sections']['mission']['stats'][0])) {
+                $pageContent['sections']['mission']['stats'][0]['number'] = $totalAdventures . '+';
+            }
 
-            $uniqueCountries                                          = count(array_unique(array_column($userAdventures, 'location')));
-            $pageContent['sections']['mission']['stats'][1]['number'] = $uniqueCountries . '+';
+            $uniqueCountries = count(array_unique(array_column($userAdventures, 'location')));
+            if (isset($pageContent['sections']['mission']['stats'][1])) {
+                $pageContent['sections']['mission']['stats'][1]['number'] = $uniqueCountries . '+';
+            }
         }
 
         return $pageContent;

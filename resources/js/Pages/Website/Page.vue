@@ -86,33 +86,44 @@ onUnmounted(() => {
     window.removeEventListener('keydown', handleEscape);
 });
 
-// Compute CSS variables for inline styles with smart header colors
-const rootStyles = computed(() => {
+// FIXED: Enhanced global styles with proper variable inheritance
+const globalStyles = computed(() => {
     const customColors = props.websiteSettings?.customColors;
-    const palette = props.websiteSettings?.colorPalette || 'default';
     
-    // Get header colors based on palette
-    let headerTextColor = customColors?.primary || '#000000';
-    let headerBgColor = customColors?.accent || '#FFFFFF';
-    let headerBorderColor = 'rgba(0, 0, 0, 0.1)';
+    // Get colors from custom colors or use defaults
+    const primary = customColors?.primary || '#000000';
+    const secondary = customColors?.secondary || '#8B4513';
+    const accent = customColors?.accent || '#FFFFFF';
+    
+    // Calculate text colors based on background for better contrast
+    const getContrastColor = (backgroundColor) => {
+        const hex = backgroundColor.replace('#', '');
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance > 0.5 ? '#000000' : '#FFFFFF';
+    };
 
-    // Adjust colors for scrolled state
-    if (isScrolled.value) {
-        // When scrolled, ensure good contrast
-        headerBgColor = customColors?.accent || '#FFFFFF';
-        headerTextColor = customColors?.primary || '#000000';
-        headerBorderColor = 'rgba(0, 0, 0, 0.1)';
-    }
-
+    // FIXED: Use simpler, more reliable variable structure
     return {
-        '--color-primary': customColors?.primary || '#000000',
-        '--color-secondary': customColors?.secondary || '#8B4513',
-        '--color-accent': customColors?.accent || '#FFFFFF',
-        '--header-text-color': headerTextColor,
-        '--header-bg-color': headerBgColor,
-        '--header-border-color': headerBorderColor,
+        '--color-primary': primary,
+        '--color-secondary': secondary,
+        '--color-accent': accent,
+        
+        // Use the actual colors for text and backgrounds
+        '--text-primary': primary,
+        '--text-secondary': secondary,
+        '--text-accent': getContrastColor(accent),
+        
+        '--bg-primary': accent,
+        '--bg-secondary': secondary,
+        '--bg-accent': primary,
     };
 });
+
+// Replace rootStyles
+const rootStyles = computed(() => globalStyles.value);
 
 // Helper function to check if a color is light
 const isLightColor = (color) => {
@@ -166,7 +177,7 @@ const getPageRoute = (pageName) => {
 <template>
     <Head :title="pageContent?.title || 'Adventure Log'" />
 
-    <div class="min-h-screen bg-white" :style="rootStyles">
+    <div class="min-h-screen bg-white global-theme" :style="rootStyles">
         <!-- Enhanced Smart Header -->
         <header 
             class="fixed top-0 left-0 w-full backdrop-blur-md shadow-sm border-b z-50 transition-all duration-300"
@@ -322,19 +333,20 @@ const getPageRoute = (pageName) => {
             @click="closeMobileMenu"
         ></div>
 
-        <!-- Main Content -->
-        <main class="flex-grow pt-16">
+       <!-- Main Content -->
+        <main class="flex-grow pt-16 theme-content">
             <component 
                 :is="CurrentPageComponent" 
                 :page-content="pageContent"
                 :user="user"
                 :is-edit-mode="isEditMode"
                 :published-pages="publishedPages"
+                :website-settings="websiteSettings"
             />
         </main>
 
         <!-- Footer - Updated to use availablePages -->
-        <footer class="bg-black text-white py-12 lg:py-16 mt-20 relative overflow-hidden">
+        <footer class="bg-black text-white py-12 lg:py-16 mt-20 relative overflow-hidden theme-footer">
             <!-- Background decoration -->
             <div class="absolute inset-0 opacity-5">
                 <div class="absolute top-10 left-10 w-20 h-20 sm:w-32 sm:h-32 bg-accent rounded-full blur-xl"></div>
@@ -513,23 +525,129 @@ const getPageRoute = (pageName) => {
 </template>
 
 <style scoped>
-/* CSS Variables will be applied via inline styles */
-.text-primary { color: var(--color-primary, #000000); }
-.bg-primary { background-color: var(--color-primary, #000000); }
-.border-primary { border-color: var(--color-primary, #000000); }
+/* Global theme classes that use CSS variables */
+.global-theme {
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+}
 
-.text-secondary { color: var(--color-secondary, #8B4513); }
-.bg-secondary { background-color: var(--color-secondary, #8B4513); }
-.border-secondary { border-color: var(--color-secondary, #8B4513); }
+.theme-header {
+    background-color: var(--header-bg-color);
+    color: var(--header-text-color);
+    border-bottom-color: var(--header-border-color);
+}
 
-.text-accent { color: var(--color-accent, #FFFFFF); }
-.bg-accent { background-color: var(--color-accent, #FFFFFF); }
-.border-accent { border-color: var(--color-accent, #FFFFFF); }
+.theme-content {
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+}
 
-/* Header specific styles */
-.header-text { color: var(--header-text-color, var(--color-primary)); }
-.header-bg { background-color: var(--header-bg-color, var(--color-accent)); }
-.header-border { border-color: var(--header-border-color, rgba(0, 0, 0, 0.1)); }
+.theme-footer {
+    background-color: var(--bg-accent);
+    color: var(--text-accent);
+}
+
+/* Global color utility classes that work in child components */
+:deep(.text-primary) {
+    color: var(--color-primary) !important;
+}
+
+:deep(.bg-primary) {
+    background-color: var(--color-primary) !important;
+}
+
+:deep(.border-primary) {
+    border-color: var(--color-primary) !important;
+}
+
+:deep(.text-secondary) {
+    color: var(--color-secondary) !important;
+}
+
+:deep(.bg-secondary) {
+    background-color: var(--color-secondary) !important;
+}
+
+:deep(.border-secondary) {
+    border-color: var(--color-secondary) !important;
+}
+
+:deep(.text-accent) {
+    color: var(--color-accent) !important;
+}
+
+:deep(.bg-accent) {
+    background-color: var(--color-accent) !important;
+}
+
+:deep(.border-accent) {
+    border-color: var(--color-accent) !important;
+}
+
+/* Gradient classes */
+:deep(.gradient-primary) {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)) !important;
+}
+
+:deep(.gradient-secondary) {
+    background: linear-gradient(135deg, var(--color-secondary), var(--color-primary)) !important;
+}
+
+/* Ensure these work with hover states */
+:deep(.hover\\:text-primary:hover) {
+    color: var(--color-primary) !important;
+}
+
+:deep(.hover\\:bg-primary:hover) {
+    background-color: var(--color-primary) !important;
+}
+
+:deep(.hover\\:border-primary:hover) {
+    border-color: var(--color-primary) !important;
+}
+/* Global theme classes that will use CSS variables */
+.global-theme {
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+}
+
+.theme-header {
+    background-color: var(--header-bg-color);
+    color: var(--header-text-color);
+    border-bottom-color: var(--header-border-color);
+}
+
+.theme-content {
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+}
+
+/* Update existing CSS variable classes to be more global */
+.text-primary { color: var(--color-primary) !important; }
+.bg-primary { background-color: var(--color-primary) !important; }
+.border-primary { border-color: var(--color-primary) !important; }
+
+.text-secondary { color: var(--color-secondary) !important; }
+.bg-secondary { background-color: var(--color-secondary) !important; }
+.border-secondary { border-color: var(--color-secondary) !important; }
+
+.text-accent { color: var(--color-accent) !important; }
+.bg-accent { background-color: var(--color-accent) !important; }
+.border-accent { border-color: var(--color-accent) !important; }
+
+/* Ensure these classes work in child components */
+:deep(.text-primary) { color: var(--color-primary) !important; }
+:deep(.bg-primary) { background-color: var(--color-primary) !important; }
+:deep(.border-primary) { border-color: var(--color-primary) !important; }
+
+:deep(.text-secondary) { color: var(--color-secondary) !important; }
+:deep(.bg-secondary) { background-color: var(--color-secondary) !important; }
+:deep(.border-secondary) { border-color: var(--color-secondary) !important; }
+
+:deep(.text-accent) { color: var(--color-accent) !important; }
+:deep(.bg-accent) { background-color: var(--color-accent) !important; }
+:deep(.border-accent) { border-color: var(--color-accent) !important; }
+
 
 html {
     scroll-behavior: smooth;

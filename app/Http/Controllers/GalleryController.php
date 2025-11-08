@@ -17,66 +17,6 @@ class GalleryController extends Controller
         $this->analyticsService = $analyticsService;
     }
 
-    /**
-     * Show gallery page with images (public)
-     */
-    // public function show(Request $request)
-    // {
-    //     $user = session('firebase_user');
-
-    //     // Determine website owner (same logic as WebsiteController)
-    //     $websiteOwnerUid = $this->getWebsiteOwnerUid($request, $user);
-
-    //     // 🔥 RECORD ANALYTICS for the website owner
-    //     if ($websiteOwnerUid) {
-    //         $this->analyticsService->recordVisit($websiteOwnerUid, 'gallery', $request);
-    //     }
-
-    //     // If no user, show public gallery
-    //     if (! $user && ! $websiteOwnerUid) {
-    //         return Inertia::render('Website/Page', [
-    //             'user'            => null,
-    //             'page'            => 'gallery',
-    //             'pageContent'     => [
-    //                 'title'     => 'Adventure Gallery',
-    //                 'images'    => [],
-    //                 'published' => true,
-    //             ],
-    //             'websiteSettings' => [
-    //                 'colorPalette' => 'default',
-    //                 'customColors' => [
-    //                     'primary'   => '#000000',
-    //                     'secondary' => '#8B4513',
-    //                     'accent'    => '#FFFFFF',
-    //                 ],
-    //             ],
-    //             'isEditMode'      => false,
-    //             'isOwner'         => false,
-    //         ]);
-    //     }
-
-    //     // Determine if current user is the owner
-    //     $isOwner = $user && $user['uid'] === $websiteOwnerUid;
-
-    //     // Get gallery images for the website owner (not necessarily the current user)
-    //     $galleryImages = $this->firebaseService->getGalleryImages($websiteOwnerUid);
-
-    //     // Get page content for the website owner
-    //     $pageContent           = $this->firebaseService->getUserPageContent($websiteOwnerUid, 'gallery');
-    //     $pageContent['images'] = $galleryImages;
-
-    //     $websiteSettings = $this->firebaseService->getWebsiteSettings($websiteOwnerUid);
-
-    //     return Inertia::render('Website/Page', [
-    //         'user'            => $user,
-    //         'page'            => 'gallery',
-    //         'pageContent'     => $pageContent,
-    //         'websiteSettings' => $websiteSettings,
-    //         'isEditMode'      => $request->has('edit') && $isOwner,
-    //         'isOwner'         => $isOwner,
-    //     ]);
-    // }
-
     public function show(Request $request)
     {
         $user = session('firebase_user');
