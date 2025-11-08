@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { 
@@ -9,8 +9,6 @@ import {
     faChartBar,
     faCheckCircle,
     faEdit,
-    faExternalLinkAlt,
-    faTimes,
     faToggleOn,
     faToggleOff,
     faPalette,
@@ -18,15 +16,17 @@ import {
     faHome,
     faUser,
     faImages,
+    faCalendar,
     faEnvelope,
     faSignOutAlt,
+    faExternalLinkAlt,
     faDownload,
     faUsers,
     faChartLine,
     faArrowUp,
     faSpinner,
     faBars,
-  
+    faTimes
 } from '@fortawesome/free-solid-svg-icons';
 import LogoutDialog from './Auth/Logout.vue';
 
@@ -47,14 +47,81 @@ const exportLoading = ref(false);
 const overviewLoading = ref(true); 
 const showLogoutDialog = ref(false);
 const mobileMenuOpen = ref(false);
+const profileDropdownOpen = ref(false);
 
-// Logout dialog methods
+// FIXED: Add the missing reactive variable
+const showProfileEditor = ref(false);
+const editingProfile = ref(false);
+
+
+// Update the profileForm initialization to handle different user data structures
+const profileForm = ref({
+    name: props.user?.name || props.user?.displayName || props.user?.email?.split('@')[0] || '',
+    email: props.user?.email || ''
+});
+
+// Update the editProfile method to keep dropdown open
+const editProfile = () => {
+    profileForm.value = {
+        name: props.user?.name || '',
+        email: props.user?.email || ''
+    };
+    showProfileEditor.value = true;
+    // Keep the dropdown open when switching to editor
+    profileDropdownOpen.value = true;
+    mobileMenuOpen.value = true; // Keep mobile menu open too
+};
+
+// Update the saveProfile method to close dropdown after saving
+const saveProfile = async () => {
+    editingProfile.value = true;
+    try {
+        await router.post('/dashboard/profile', profileForm.value);
+        showProfileEditor.value = false;
+        // Close the dropdown after successful save
+        profileDropdownOpen.value = false;
+        mobileMenuOpen.value = false;
+        
+        // Refresh the page to get updated user data
+        router.reload();
+    } catch (error) {
+        console.error('Error updating profile:', error);
+    } finally {
+        editingProfile.value = false;
+    }
+};
+
+// Add this method to prevent dropdown closing during save
+const handleDropdownClick = (event) => {
+    // If we're in the middle of saving, don't close the dropdown
+    if (editingProfile.value) {
+        event.stopPropagation();
+    }
+};
+
+
+// Update the cancelEdit method to close the entire dropdown
+const cancelEdit = () => {
+    showProfileEditor.value = false;
+    profileForm.value = {
+        name: props.user?.name || '',
+        email: props.user?.email || ''
+    };
+    // Close the entire dropdown
+    profileDropdownOpen.value = false;
+    mobileMenuOpen.value = false;
+};
+
+// Add this method to close the dropdown when clicking outside
+const closeProfileDropdown = () => {
+    profileDropdownOpen.value = false;
+};
+
+// Fix logout dialog method
 const openLogoutDialog = () => {
-    mobileMenuOpen.value = false; // Close mobile menu first
-    // Small delay to ensure mobile menu is closed before showing dialog
-    setTimeout(() => {
-        showLogoutDialog.value = true;
-    }, 50);
+    profileDropdownOpen.value = false; // Close profile dropdown
+    mobileMenuOpen.value = false; // Close mobile menu
+    showLogoutDialog.value = true;
 };
 
 const closeLogoutDialog = () => {
@@ -197,6 +264,23 @@ const totalPagesCount = () => {
 onMounted(() => {
     fetchAnalytics(analyticsPeriod.value);
 });
+
+// Add click outside handler
+const handleClickOutside = (event) => {
+    if (profileDropdownOpen.value && !event.target.closest('.relative')) {
+        profileDropdownOpen.value = false;
+    }
+};
+
+// Add event listener when component mounts
+onMounted(() => {
+    document.addEventListener('click', handleClickOutside);
+});
+
+// Remove event listener when component unmounts
+onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside);
+});
 </script>
 
 <template>
@@ -204,166 +288,410 @@ onMounted(() => {
 
     <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
         <!-- Navigation -->
-     <!-- Navigation -->
-<nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-            <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-                    <FontAwesomeIcon :icon="faHome" class="text-white text-sm" />
+        <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+                            <FontAwesomeIcon :icon="faHome" class="text-white text-sm" />
+                        </div>
+                        <h1 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                            Dashboard
+                        </h1>
+                    </div>
+                    
+<!-- Desktop Navigation -->
+<div class="hidden md:flex items-center space-x-2">
+    <!-- View Live Site Button -->
+    <Link 
+        :href="route('website.home')" 
+        class="group flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-lg transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm border border-gray-200 dark:border-gray-600"
+        target="_blank"
+    >
+        <FontAwesomeIcon :icon="faExternalLinkAlt" class="text-sm group-hover:scale-110 transition-transform" />
+        <span>View Live Site</span>
+    </Link>
+
+
+
+    
+
+<!-- User Profile Dropdown -->
+<div class="relative">
+     <button 
+        @click="profileDropdownOpen = !profileDropdownOpen"
+        class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 border border-gray-200 dark:border-gray-600"
+    >
+        <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center">
+            <FontAwesomeIcon :icon="faUser" class="text-white text-sm" />
+        </div>
+        <span class="text-sm font-medium text-gray-700 dark:text-gray-200 max-w-32 truncate">
+            {{ user?.name || user?.email || 'User' }}
+        </span>
+        <svg 
+            class="w-4 h-4 text-gray-500 transition-transform duration-200" 
+            :class="{ 'rotate-180': profileDropdownOpen }"
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+        >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+    </button>
+
+    <!-- Dropdown Menu -->
+    <div 
+        v-if="profileDropdownOpen"
+        class="absolute right-0 mt-3 w-96 bg-white border-2 border-black rounded-2xl shadow-2xl z-50 overflow-hidden"
+         @click="handleDropdownClick"
+    >
+        <!-- Animated Content Container -->
+        <div class="relative">
+            <!-- Profile View (Default) -->
+            <div 
+                v-show="!showProfileEditor"
+                class="transition-all duration-300 ease-in-out"
+            >
+                <!-- Header -->
+                <div class="p-6 bg-black border-b border-gray-800">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 bg-white rounded-3xl flex items-center justify-center ring-2 ring-white">
+                            <FontAwesomeIcon :icon="faUser" class="text-black text-lg font-bold" />
+                        </div>
+                       <div class="min-w-0 flex-1">
+            <p class="text-lg font-bold text-white truncate">
+                {{ user?.name || user?.displayName || user?.email?.split('@')[0] || 'User' }}
+            </p>
+            <p class="text-sm text-white truncate mt-1">
+                {{ user?.email || 'No email' }}
+            </p>
+        </div>
+                    </div>
                 </div>
-                <h1 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-                    Dashboard
-                </h1>
-            </div>
-            
-            <!-- Desktop Navigation -->
-            <div class="hidden md:flex items-center space-x-2">
-                <!-- User Profile Dropdown -->
-                <div class="relative" x-data="{ open: false }">
-                    <button 
-                        @click="open = !open"
-                        class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 border border-gray-200 dark:border-gray-600"
-                    >
-                        <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-                            <FontAwesomeIcon :icon="faUser" class="text-white text-sm" />
-                        </div>
-                        <span class="text-sm font-medium text-gray-700 dark:text-gray-200 max-w-32 truncate">
-                            {{ user?.name || user?.email || 'User' }}
-                        </span>
-                        <svg 
-                            class="w-4 h-4 text-gray-500 transition-transform duration-200" 
-                            :class="{ 'rotate-180': open }"
-                            fill="none" 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24"
-                        >
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </button>
 
-                    <!-- Dropdown Menu -->
-                    <div 
-                        v-if="open"
-                        class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl z-50 animate-fade-in"
-                        @click.outside="open = false"
-                    >
-                        <!-- Header -->
-                        <div class="p-4 border-b border-gray-100 dark:border-gray-700">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-10 h-10 bg-black rounded-full flex items-center justify-center flex-shrink-0">
-                                    <FontAwesomeIcon :icon="faUser" class="text-white text-base" />
-                                </div>
-                                <div class="min-w-0 flex-1">
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                                        {{ user?.name || 'User' }}
-                                    </p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                        {{ user?.email || 'No email' }}
-                                    </p>
-                                </div>
+                <!-- User Stats -->
+                <div class="p-6 bg-gray-50 border-b border-gray-200">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="text-center">
+                            <div class="w-10 h-10 bg-black rounded-lg flex items-center justify-center mx-auto mb-2">
+                                <FontAwesomeIcon :icon="faCalendar" class="text-white text-sm" />
                             </div>
+                            <p class="text-xs font-medium text-gray-600 uppercase tracking-wide">Member Since</p>
+                            <p class="text-sm font-bold text-black mt-1">
+                                {{ user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'N/A' }}
+                            </p>
                         </div>
-
-                        <!-- User Info -->
-                        <div class="p-4 space-y-3">
-                            <div class="flex items-center justify-between text-sm">
-                                <span class="text-gray-500 dark:text-gray-400">Member since</span>
-                                <span class="font-medium text-gray-900 dark:text-white">
-                                    {{ user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A' }}
-                                </span>
+                        <div class="text-center">
+                            <div class="w-10 h-10 bg-black rounded-lg flex items-center justify-center mx-auto mb-2">
+                                <FontAwesomeIcon :icon="faCheckCircle" class="text-white text-sm" />
                             </div>
-                            <div class="flex items-center justify-between text-sm">
-                                <span class="text-gray-500 dark:text-gray-400">Status</span>
-                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                    <div class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></div>
-                                    Active
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Actions -->
-                        <div class="p-3 border-t border-gray-100 dark:border-gray-700 space-y-1">
-                            <Link 
-                                :href="route('profile.edit')"
-                                class="flex items-center space-x-2 w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                            >
-                                <FontAwesomeIcon :icon="faEdit" class="text-gray-400 text-sm" />
-                                <span>Edit Profile</span>
-                            </Link>
-                            <Link 
-                                :href="route('website.home')" 
-                                target="_blank"
-                                class="flex items-center space-x-2 w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                            >
-                                <FontAwesomeIcon :icon="faExternalLinkAlt" class="text-gray-400 text-sm" />
-                                <span>View Live Site</span>
-                            </Link>
+                            <p class="text-xs font-medium text-gray-600 uppercase tracking-wide">Status</p>
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-black text-white mt-1">
+                                <div class="w-2 h-2 bg-white rounded-full mr-2"></div>
+                                Verified
+                            </span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Logout Button -->
-                <button 
-                    @click="openLogoutDialog"
-                    class="group flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-lg transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm border border-gray-200 dark:border-gray-600"
-                >
-                    <FontAwesomeIcon :icon="faSignOutAlt" class="text-sm group-hover:scale-110 transition-transform" />
-                    <span>Logout</span>
-                </button>
+                <!-- Quick Actions -->
+                <div class="p-2">
+                    <div class="space-y-1">
+                        <button
+                            @click="editProfile"
+                            class="flex items-center space-x-3 w-full px-4 py-3 text-sm font-bold text-black hover:bg-black hover:text-white rounded-xl transition-all duration-300 group"
+                        >
+                            <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center group-hover:bg-white group-hover:scale-110 transition-all duration-300">
+                                <FontAwesomeIcon :icon="faEdit" class="text-gray-600 text-xs group-hover:text-black transition-colors duration-300" />
+                            </div>
+                            <span>Edit Profile</span>
+                            <FontAwesomeIcon :icon="faExternalLinkAlt" class="text-gray-400 text-xs ml-auto group-hover:text-white transition-colors duration-300" />
+                        </button>
+                        
+                        <Link 
+                            :href="route('website.home')" 
+                            target="_blank"
+                            @click="profileDropdownOpen = false; mobileMenuOpen = false;"
+                            class="flex items-center space-x-3 w-full px-4 py-3 text-sm font-bold text-black hover:bg-black hover:text-white rounded-xl transition-all duration-300 group"
+                        >
+                            <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center group-hover:bg-white group-hover:scale-110 transition-all duration-300">
+                                <FontAwesomeIcon :icon="faExternalLinkAlt" class="text-gray-600 text-xs group-hover:text-black transition-colors duration-300" />
+                            </div>
+                            <span>View Live Site</span>
+                            <FontAwesomeIcon :icon="faExternalLinkAlt" class="text-gray-400 text-xs ml-auto group-hover:text-white transition-colors duration-300" />
+                        </Link>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="p-4 bg-gray-50 border-t border-gray-200">
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-gray-600 font-medium">Account ID</span>
+                        <span class="font-mono font-bold text-black bg-gray-200 px-2 py-1 rounded">
+                            {{ user?.uid?.substring(0, 8) || 'N/A' }}
+                        </span>
+                    </div>
+                </div>
             </div>
 
-            <!-- Mobile Menu Button -->
-            <button
-                @click="mobileMenuOpen = !mobileMenuOpen"
-                class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-600"
+            <!-- Profile Editor -->
+            <div 
+                v-show="showProfileEditor"
+                class="transition-all duration-300 ease-in-out"
             >
-                <FontAwesomeIcon 
-                    :icon="mobileMenuOpen ? faTimes : faBars" 
-                    class="w-5 h-5 text-gray-600 dark:text-gray-300"
-                />
-            </button>
+                <!-- Editor Header -->
+                <div class="p-6 bg-black border-b border-gray-800">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                                <FontAwesomeIcon :icon="faEdit" class="text-black text-sm font-bold" />
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-white">Edit Profile</h3>
+                                <p class="text-sm text-white mt-1">Update your personal information</p>
+                            </div>
+                        </div>
+                        <button 
+                            @click="cancelEdit"
+                            class="text-gray-400 hover:text-white transition-all duration-300 p-2 rounded-lg hover:bg-gray-800"
+                        >
+                            <FontAwesomeIcon :icon="faTimes" class="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Editor Form -->
+                <form @submit.prevent="saveProfile" class="p-6 space-y-6 bg-white">
+                    <!-- Name Field -->
+                    <div class="group">
+                        <label class="block text-sm font-bold text-black mb-3 uppercase tracking-wide text-xs">
+                            Your Name
+                        </label>
+                        <div class="relative">
+                            <input
+                                type="text"
+                                v-model="profileForm.name"
+                                class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 bg-white text-black placeholder-gray-500 focus:border-black focus:ring-2 focus:ring-black focus:ring-opacity-20 transition-all duration-300 text-base font-medium"
+                                placeholder="Enter your full name"
+                                required
+                            />
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                <FontAwesomeIcon :icon="faUser" class="text-gray-400 text-sm" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Email Field -->
+                    <div class="group">
+                        <label class="block text-sm font-bold text-black mb-3 uppercase tracking-wide text-xs">
+                            Email Address
+                        </label>
+                        <div class="relative">
+                            <input
+                                type="email"
+                                v-model="profileForm.email"
+                                class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 bg-white text-black placeholder-gray-500 focus:border-black focus:ring-2 focus:ring-black focus:ring-opacity-20 transition-all duration-300 text-base font-medium"
+                                placeholder="your@email.com"
+                                required
+                            />
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                <FontAwesomeIcon :icon="faEnvelope" class="text-gray-400 text-sm" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex space-x-3 pt-4">
+                        <button
+                            type="button"
+                            @click="cancelEdit"
+                            class="flex-1 px-6 py-3 border-2 border-black text-black rounded-xl hover:bg-black hover:text-white transition-all duration-300 font-bold text-sm uppercase tracking-wide flex items-center justify-center space-x-2 group"
+                        >
+                            <FontAwesomeIcon :icon="faTimes" class="w-3 h-3 group-hover:rotate-90 transition-transform duration-300" />
+                            <span>Cancel</span>
+                        </button>
+                    <button
+    type="submit"
+    :disabled="editingProfile"
+    class="flex-1 px-6 py-3 bg-black text-white rounded-xl hover:bg-gray-800 transition-all duration-300 font-bold text-sm uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 group"
+    :class="{
+        'hover:scale-105': !editingProfile,
+        'opacity-70 cursor-wait': editingProfile
+    }"
+>
+    <FontAwesomeIcon 
+        v-if="editingProfile" 
+        :icon="faSpinner" 
+        class="animate-spin w-3 h-3" 
+    />
+    <FontAwesomeIcon 
+        v-else 
+        :icon="faSave" 
+        class="w-3 h-3 group-hover:scale-110 transition-transform duration-300" 
+    />
+    <span>{{ editingProfile ? 'Saving...' : 'Save' }}</span>
+</button>
+                    </div>
+
+                    <!-- Quick Tips -->
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-5 h-5 bg-black rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <FontAwesomeIcon :icon="faCheckCircle" class="text-white text-xs" />
+                            </div>
+                            <div>
+                                <p class="text-xs font-medium text-gray-800">Your profile information helps personalize your experience across the platform.</p>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
+</div>
 
-    <!-- Mobile Navigation Menu -->
-    <div 
-        v-if="mobileMenuOpen && !showLogoutDialog"
-        class="md:hidden absolute top-16 left-0 w-full bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-lg z-50"
+    <!-- Logout Button -->
+    <button 
+        @click="openLogoutDialog"
+        class="group flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-lg transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm border border-gray-200 dark:border-gray-600"
     >
-        <div class="px-4 py-3 space-y-3">
-            <!-- Mobile User Info -->
-            <div class="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center flex-shrink-0">
-                    <FontAwesomeIcon :icon="faUser" class="text-white text-sm" />
-                </div>
-                <div class="min-w-0 flex-1">
-                    <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                        {{ user?.name || 'User' }}
-                    </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {{ user?.email || 'No email' }}
-                    </p>
+        <FontAwesomeIcon :icon="faSignOutAlt" class="text-sm group-hover:scale-110 transition-transform" />
+        <span>Logout</span>
+    </button>
+</div>
+
+                    <!-- Mobile Menu Button -->
+                    <button
+                        @click="mobileMenuOpen = !mobileMenuOpen"
+                        class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        <FontAwesomeIcon 
+                            :icon="mobileMenuOpen ? faTimes : faBars" 
+                            class="w-5 h-5 text-gray-600 dark:text-gray-300"
+                        />
+                    </button>
                 </div>
             </div>
 
-            <Link 
-                :href="route('website.home')" 
-                @click="mobileMenuOpen = false"
-                class="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
-                target="_blank"
+
+<!-- Mobile Navigation Menu -->
+<div 
+    v-if="mobileMenuOpen && !showLogoutDialog"
+    class="md:hidden absolute top-16 left-0 w-full bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-lg z-50"
+>
+    <div class="px-4 py-3 space-y-3">
+        <!-- Mobile User Info with Editor -->
+        <div class="relative">
+            <!-- Profile View -->
+            <div 
+                v-show="!showProfileEditor"
+                class="transition-all duration-300 ease-in-out"
             >
-                <FontAwesomeIcon :icon="faExternalLinkAlt" class="text-sm" />
-                <span>View Live Site</span>
-            </Link>
-            <Link 
-                :href="route('profile.edit')"
-                @click="mobileMenuOpen = false"
-                class="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
+                <div class="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div class="w-8 h-8 bg-black rounded-full flex items-center justify-center flex-shrink-0">
+                        <FontAwesomeIcon :icon="faUser" class="text-white text-sm" />
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                            {{ user?.name || 'User' }}
+                        </p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                            {{ user?.email || 'No email' }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Editor for Mobile -->
+            <div 
+                v-show="showProfileEditor"
+                class="transition-all duration-300 ease-in-out"
+            >
+                <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Edit Profile</h3>
+                        <button 
+                            @click="cancelEdit"
+                            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded"
+                        >
+                            <FontAwesomeIcon :icon="faTimes" class="w-4 h-4" />
+                        </button>
+                    </div>
+                    
+                    <form @submit.prevent="saveProfile" class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Name
+                            </label>
+                            <input
+                                type="text"
+                                v-model="profileForm.name"
+                                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 text-sm"
+                                placeholder="Your name"
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Email
+                            </label>
+                            <input
+                                type="email"
+                                v-model="profileForm.email"
+                                class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 text-sm"
+                                placeholder="your@email.com"
+                                required
+                            />
+                        </div>
+
+                        <div class="flex space-x-2 pt-1">
+                            <button
+    type="submit"
+    :disabled="editingProfile"
+    class="flex-1 px-6 py-3 bg-black text-white rounded-xl hover:bg-gray-800 transition-all duration-300 font-bold text-sm uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 group"
+    :class="{
+        'hover:scale-105': !editingProfile,
+        'opacity-70 cursor-wait': editingProfile
+    }"
+>
+    <FontAwesomeIcon 
+        v-if="editingProfile" 
+        :icon="faSpinner" 
+        class="animate-spin w-3 h-3" 
+    />
+    <FontAwesomeIcon 
+        v-else 
+        :icon="faSave" 
+        class="w-3 h-3 group-hover:scale-110 transition-transform duration-300" 
+    />
+    <span>{{ editingProfile ? 'Saving...' : 'Save' }}</span>
+</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Only show these buttons when NOT editing profile -->
+        <div v-show="!showProfileEditor" class="space-y-2">
+         <!-- In Mobile Navigation Menu - update View Live Site link -->
+<Link 
+    :href="route('website.home')" 
+    @click="mobileMenuOpen = false; profileDropdownOpen = false;"
+    class="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm"
+    target="_blank"
+>
+    <FontAwesomeIcon :icon="faExternalLinkAlt" class="text-sm" />
+    <span>View Live Site</span>
+</Link>
+            <button 
+                @click="editProfile"
+                class="w-full flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-left"
             >
                 <FontAwesomeIcon :icon="faEdit" class="text-sm" />
                 <span>Edit Profile</span>
-            </Link>
+            </button>
             <button 
                 @click="openLogoutDialog"
                 class="w-full flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-left"
@@ -373,7 +701,8 @@ onMounted(() => {
             </button>
         </div>
     </div>
-</nav>
+</div>
+        </nav>
 
         <!-- Mobile Menu Overlay -->
         <div 
@@ -952,5 +1281,21 @@ html {
 img, svg {
     max-width: 100%;
     height: auto;
+}
+
+/* Add smooth transitions for the profile editor */
+.profile-transition-enter-active,
+.profile-transition-leave-active {
+    transition: all 0.3s ease;
+}
+
+.profile-transition-enter-from {
+    opacity: 0;
+    transform: scale(0.95);
+}
+
+.profile-transition-leave-to {
+    opacity: 0;
+    transform: scale(0.95);
 }
 </style>

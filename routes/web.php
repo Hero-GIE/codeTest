@@ -28,6 +28,9 @@ Route::middleware(['firebase.auth'])->group(function () {
     Route::post('/dashboard/upload-image', [DashboardController::class, 'uploadImage'])->name('dashboard.upload.image');
     Route::post('/dashboard/pages/{page}/publish', [DashboardController::class, 'togglePublish'])->name('dashboard.pages.publish');
 
+    // ✅ Add your new profile update route here
+    Route::post('/dashboard/profile', [DashboardController::class, 'updateProfile'])->name('dashboard.profile.update');
+
     // Analytics routes
     Route::get('/dashboard/analytics', [DashboardController::class, 'getAnalytics'])->name('dashboard.analytics');
     Route::get('/dashboard/analytics/export', [DashboardController::class, 'exportAnalytics'])->name('dashboard.analytics.export');

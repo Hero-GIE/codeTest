@@ -470,9 +470,6 @@ class WebsiteController extends Controller
     }
 
 /**
- * Update user adventure
- */
-/**
  * API endpoint to update adventure (PROTECTED)
  */
     public function updateAdventure(Request $request, $adventureId)
@@ -550,9 +547,6 @@ class WebsiteController extends Controller
         }
     }
 
-/**
- * Delete user adventure
- */
     /**
      * API endpoint to delete adventure (PROTECTED)
      */

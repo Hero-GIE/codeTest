@@ -18,7 +18,6 @@ class AdventureController extends Controller
                 'location' => 'nullable|string|max:255',
             ]);
 
-            // TODO: Save to your database
             // For now, we'll just return success
             $adventure = [
                 'id'        => uniqid(), // Generate a temporary ID

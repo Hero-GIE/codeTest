@@ -25,6 +25,26 @@ class DashboardController extends Controller
             return redirect('/login');
         }
 
+        // Debug the user session data
+        \Log::info("👤 [DashboardController] User session data:", $user);
+
+        // Ensure user data has proper structure
+        $userData = [
+            'uid'        => $user['uid'] ?? null,
+            'email'      => $user['email'] ?? null,
+            'name'       => $user['name'] ?? $user['displayName'] ?? explode('@', $user['email'] ?? 'user')[0],
+            'created_at' => $user['createdAt'] ?? $user['created_at'] ?? now()->toISOString(),
+        ];
+
+        // Get user profile from Firebase to ensure we have latest data
+        $firebaseService = new FirebaseService();
+        $userProfile     = $firebaseService->getUserProfile($user['uid']);
+
+        if ($userProfile['success'] && ! empty($userProfile['data'])) {
+            // Merge Firebase profile data with session data
+            $userData = array_merge($userData, $userProfile['data']);
+        }
+
         // Get initial analytics data for the dashboard
         $analyticsData = $this->analyticsService->getAnalyticsData($user['uid'], '30days');
 
@@ -46,7 +66,7 @@ class DashboardController extends Controller
         }
 
         return Inertia::render('Dashboard', [
-            'user'             => $user,
+            'user'             => $userData, // Use the merged user data
             'analytics'        => $analyticsData,
             'websiteSettings'  => $websiteSettings,
             'colorPalettes'    => $colorPalettes,
@@ -99,6 +119,50 @@ class DashboardController extends Controller
 
         $period = $request->get('period', '30days');
         return $this->analyticsService->exportCSV($user['uid'], $period);
+    }
+
+    /**
+     * Update user profile
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = session('firebase_user');
+
+        if (! $user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        try {
+            $validated = $request->validate([
+                'name'  => 'required|string|max:255',
+                'email' => 'required|email|max:255',
+            ]);
+
+            $firebaseService = new FirebaseService();
+
+            // Update profile in Firebase
+            $result = $firebaseService->updateProfile($user['uid'], [
+                'name'      => $validated['name'],
+                'email'     => $validated['email'],
+                'updatedAt' => now()->toISOString(),
+            ]);
+
+            if ($result['success']) {
+                // Update session data
+                $updatedUser          = session('firebase_user');
+                $updatedUser['name']  = $validated['name'];
+                $updatedUser['email'] = $validated['email'];
+                session(['firebase_user' => $updatedUser]);
+
+                return redirect()->back()->with('success', 'Profile updated successfully!');
+            }
+
+            return redirect()->back()->with('error', 'Failed to update profile.');
+
+        } catch (\Exception $e) {
+            \Log::error('Profile update error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'An error occurred while updating your profile.');
+        }
     }
 
     public function editor($page = 'home')
