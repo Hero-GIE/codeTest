@@ -258,52 +258,182 @@ class WebsiteController extends Controller
      */
     private function getDefaultPageContent($page)
     {
-        // Return default/template content for each page
-        // This is what visitors see before logging in
         $defaultContent = [
             'home'    => [
-                'title'    => 'Welcome to Our Adventure Blog',
-                'sections' => [
-                    'hero'    => [
-                        'title'    => 'Explore the World',
-                        'subtitle' => 'Join us on incredible journeys',
-                    ],
-                    'mission' => [
-                        'title'       => 'Our Mission',
-                        'description' => 'Sharing adventures from around the globe',
-                        'stats'       => [
-                            ['label' => 'Adventures', 'number' => '0+'],
-                            ['label' => 'Countries', 'number' => '0+'],
+                'title'     => 'My Adventure Log',
+                'published' => true,
+                'sections'  => [
+                    'hero'     => [
+                        'title'           => 'Welcome to My Adventure Log',
+                        'subtitle'        => 'Documenting my journeys and experiences',
+                        'badge'           => 'Welcome to Your Adventure Log',
+                        'backgroundImage' => 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2074&q=80',
+                        'cta1Title'       => 'Explore Adventures',
+                        'cta1Subtitle'    => 'Start your journey today',
+                        'cta2Title'       => 'We guide your path',
+                        'cta2Subtitle'    => 'Get into action',
+                        'stats'           => [
+                            [
+                                'number'      => '0+',
+                                'label'       => 'Adventures Logged',
+                                'description' => 'By our community of explorers',
+                            ],
+                            [
+                                'number'      => '0+',
+                                'label'       => 'Countries Covered',
+                                'description' => 'By our community of explorers',
+                            ],
+                            [
+                                'number'      => '0+',
+                                'label'       => 'Photos Shared',
+                                'description' => 'By our community of explorers',
+                            ],
                         ],
                     ],
-                    'recent'  => [
+                    'features' => [
+                        'title' => 'What I Do',
+                        'items' => [
+                            [
+                                'title'       => 'Adventure Logging',
+                                'description' => 'Track and share my adventures',
+                                'icon'        => '🚀',
+                            ],
+                            [
+                                'title'       => 'Story Telling',
+                                'description' => 'Share experiences and memories',
+                                'icon'        => '📖',
+                            ],
+                            [
+                                'title'       => 'Photo Journal',
+                                'description' => 'Visual journey through photos',
+                                'icon'        => '📷',
+                            ],
+                        ],
+                    ],
+                    'mission'  => [
+                        'title'   => 'Our Mission',
+                        'content' => 'We believe every adventure has a story worth telling. Our mission is to provide the tools and platform for adventurers to document, share, and inspire others with their journeys.',
+                        'stats'   => [
+                            ['number' => '0+', 'label' => 'Adventures Logged'],
+                            ['number' => '0+', 'label' => 'Countries Covered'],
+                            ['number' => '0+', 'label' => 'Photos Shared'],
+                            ['number' => '1', 'label' => 'Happy Explorer'],
+                        ],
+                    ],
+                    'recent'   => [
                         'title' => 'Recent Adventures',
-                        'posts' => [],
+                        'posts' => [
+                            [
+                                'title'   => 'Mountain Hiking',
+                                'date'    => '2024-01-15',
+                                'image'   => 'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1176&q=80',
+                                'excerpt' => 'Amazing views from the summit...',
+                            ],
+                            [
+                                'title'   => 'Beach Vacation',
+                                'date'    => '2024-01-10',
+                                'image'   => 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1173&q=80',
+                                'excerpt' => 'Relaxing days by the ocean...',
+                            ],
+                        ],
                     ],
                 ],
             ],
             'about'   => [
-                'title'    => 'About Us',
-                'sections' => [
-                    'story' => [
-                        'title'   => 'Our Story',
-                        'content' => 'We are passionate travelers...',
+                'title'     => 'About Our Adventure',
+                'published' => true,
+                'sections'  => [
+                    'hero'         => [
+                        'title'    => 'About Us',
+                        'subtitle' => 'Discover the story behind Adventure Log and the passionate team dedicated to helping you document and share your journeys with the world.',
+                    ],
+                    'mission'      => [
+                        'title'       => 'OUR MISSION',
+                        'heading'     => 'Empowering Adventurers Worldwide',
+                        'points'      => [
+                            'Born from a passion for exploration and storytelling, Adventure Log was created to bridge the gap between memorable experiences and lasting documentation.',
+                            'We understand that every journey, whether it\'s climbing mountains or exploring local hidden gems, deserves to be remembered and shared in a beautiful, meaningful way.',
+                            'Our platform combines intuitive design with powerful features to help you create stunning visual narratives of your adventures.',
+                        ],
+                        'quote'       => '"Every adventure is a story waiting to be told. We\'re here to help you tell yours in the most beautiful way possible."',
+                        'quoteAuthor' => '— The Adventure Log Team',
+                    ],
+                    'featureCards' => [
+                        [
+                            'title'       => 'Global Community',
+                            'description' => 'Join adventurers from around the world sharing their incredible stories and inspiring others to explore.',
+                            'icon'        => 'faGlobeAmericas',
+                        ],
+                        [
+                            'title'       => 'Innovative Platform',
+                            'description' => 'Cutting-edge tools and features designed specifically for documenting and sharing your adventures beautifully.',
+                            'icon'        => 'faCompass',
+                        ],
+                        [
+                            'title'       => 'Built with Passion',
+                            'description' => 'Created by adventurers, for adventurers. We live and breathe exploration and understand your needs.',
+                            'icon'        => 'faHeart',
+                        ],
                     ],
                 ],
-            ],
-            'contact' => [
-                'title'    => 'Contact Us',
-                'sections' => [
-                    'form' => [
-                        'title' => 'Get in Touch',
-                        'email' => 'hello@example.com',
-                    ],
+                'stats'     => [
+                    'team_members'      => '5K+',
+                    'countries_reached' => '50+',
+                    'years_of_passion'  => '3+',
                 ],
             ],
             'gallery' => [
-                'title'    => 'Gallery',
-                'sections' => [
-                    'images' => [],
+                'title'     => 'Adventure Gallery',
+                'published' => true,
+                'images'    => [],
+            ],
+            'contact' => [
+                'title'     => 'Get In Touch',
+                'published' => true,
+                'email'     => 'hello@example.com',
+                'social'    => [
+                    'instagram' => '@myadventures',
+                    'twitter'   => '@adventurelog',
+                    'facebook'  => 'myadventurepage',
+                ],
+                'sections'  => [
+                    'hero'   => [
+                        'title'    => 'Get In Touch',
+                        'subtitle' => 'We\'d love to hear about your adventures and help you share them with the world',
+                    ],
+                    'info'   => [
+                        'title'       => 'Let\'s Start a Conversation',
+                        'description' => 'Whether you have questions about documenting your adventures, need technical support, or just want to share an amazing story, we\'re here to help.',
+                    ],
+                    'social' => [
+                        'title' => 'Follow Our Adventures',
+                    ],
+                    'faq'    => [
+                        'title'       => 'Frequently Asked Questions',
+                        'description' => 'Quick answers to common questions',
+                        'items'       => [
+                            [
+                                'q'    => 'How do I start documenting my adventures?',
+                                'a'    => 'Simply create an account and start adding your first adventure story with photos and descriptions.',
+                                'icon' => 'faMapMarkedAlt',
+                            ],
+                            [
+                                'q'    => 'Is there a mobile app?',
+                                'a'    => 'Yes! Our mobile app lets you document adventures on the go with real-time photo uploads.',
+                                'icon' => 'faMobileAlt',
+                            ],
+                            [
+                                'q'    => 'Can I collaborate with friends?',
+                                'a'    => 'Absolutely! You can create shared adventure logs with multiple contributors.',
+                                'icon' => 'faUsers',
+                            ],
+                            [
+                                'q'    => 'Is my data secure?',
+                                'a'    => 'We use enterprise-grade security to protect your stories and personal information.',
+                                'icon' => 'faShieldAlt',
+                            ],
+                        ],
+                    ],
                 ],
             ],
         ];

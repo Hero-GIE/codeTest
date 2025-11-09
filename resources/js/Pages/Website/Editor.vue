@@ -1,10 +1,9 @@
 <script setup>
-import { ref, reactive, computed } from 'vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import { 
+  import { ref, reactive, computed } from 'vue';
+  import { Head, Link, router, useForm } from '@inertiajs/vue3';
+  import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+  import {
     faEdit,
-    faSave,
     faEye,
     faArrowLeft,
     faUpload,
@@ -19,2168 +18,2772 @@ import {
     faCheckCircle,
     faBars,
     faTimes,
-     faSpinner, faCompass, faMountainSun,
+    faSpinner,
+    faCompass,
+    faMountainSun,
     faPlus,
     faTrash,
     faChartBar,
-    faQuestionCircle, 
-    faMapMarkedAlt,   
-    faMobileAlt,     
-    faUsers,          
-    faShieldAlt,     
+    faQuestionCircle,
+    faMapMarkedAlt,
     faGlobe,
     faLightbulb,
     faImages,
-   
-} from '@fortawesome/free-solid-svg-icons';
-import DeleteImageConfirmationDialog from '../Auth/DeleteImageConfirmationDialog.vue';
+  } from '@fortawesome/free-solid-svg-icons';
+  import DeleteImageConfirmationDialog from '../Auth/DeleteImageConfirmationDialog.vue';
 
-const props = defineProps({
+  const props = defineProps({
     user: Object,
     page: String,
     pageContent: Object,
     websiteSettings: Object,
-    colorPalettes: Object
-});
+    colorPalettes: Object,
+  });
 
-const editingSection = ref(null);
-const editedContent = reactive({ ...props.pageContent });
-const imageUploading = ref(false);
-const saving = ref(false);
-const mobileMenuOpen = ref(false);
+  const editingSection = ref(null);
+  const editedContent = reactive({ ...props.pageContent });
+  const imageUploading = ref(false);
+  const saving = ref(false);
+  const mobileMenuOpen = ref(false);
 
-// Initialize sections if they don't exist
-if (!editedContent.sections) {
+  // Add these methods to your existing methods object
+  const addHeroStat = () => {
+    if (!editedContent.sections.hero.stats) {
+      editedContent.sections.hero.stats = [];
+    }
+    editedContent.sections.hero.stats.push({
+      number: '0+',
+      label: 'New Stat',
+      description: 'By our community of explorers',
+    });
+    saveContent();
+  };
+
+  const removeHeroStat = (index) => {
+    if (editedContent.sections.hero.stats) {
+      editedContent.sections.hero.stats.splice(index, 1);
+      saveContent();
+    }
+  };
+
+  // Initialize sections if they don't exist
+  if (!editedContent.sections) {
     editedContent.sections = {};
-}
+  }
 
-// Ensure all required sections exist for home page
-if (props.page === 'home') {
+  // Ensure all required sections exist for home page
+  if (props.page === 'home') {
     if (!editedContent.sections.hero) {
-        editedContent.sections.hero = {
-            title: 'Explore The',
-            subtitle: 'Document your journeys, share your stories, and inspire others with your adventures.'
-        };
+      editedContent.sections.hero = {
+        title: 'Explore The',
+        subtitle:
+          'Document your journeys, share your stories, and inspire others with your adventures.',
+      };
     }
     if (!editedContent.sections.features) {
-        editedContent.sections.features = {
-            title: 'Amazing Features',
-            items: [
-                {
-                    title: 'Interactive Maps',
-                    description: 'Track and visualize your adventures with beautiful interactive maps.'
-                },
-                {
-                    title: 'Photo Gallery',
-                    description: 'Create stunning visual stories with our easy-to-use photo gallery.'
-                },
-                {
-                    title: 'Community Stories',
-                    description: 'Connect with fellow adventurers and share experiences.'
-                }
-            ]
-        };
+      editedContent.sections.features = {
+        title: 'Amazing Features',
+        items: [
+          {
+            title: 'Interactive Maps',
+            description: 'Track and visualize your adventures with beautiful interactive maps.',
+          },
+          {
+            title: 'Photo Gallery',
+            description: 'Create stunning visual stories with our easy-to-use photo gallery.',
+          },
+          {
+            title: 'Community Stories',
+            description: 'Connect with fellow adventurers and share experiences.',
+          },
+        ],
+      };
     }
     if (!editedContent.sections.recent) {
-        editedContent.sections.recent = {
-            title: 'Recent Adventures',
-            posts: []
-        };
+      editedContent.sections.recent = {
+        title: 'Recent Adventures',
+        posts: [],
+      };
     }
     if (!editedContent.sections.mission) {
-        editedContent.sections.mission = {
-            title: 'Our Mission',
-            content: 'We believe every adventure has a story worth telling.',
-            stats: [
-                { number: '0+', label: 'Adventures Logged' },
-                { number: '0+', label: 'Countries Covered' },
-                { number: '0+', label: 'Photos Shared' },
-                { number: '1', label: 'Happy Explorer' }
-            ]
-        };
+      editedContent.sections.mission = {
+        title: 'Our Mission',
+        content: 'We believe every adventure has a story worth telling.',
+        stats: [
+          { number: '0+', label: 'Adventures Logged' },
+          { number: '0+', label: 'Countries Covered' },
+          { number: '0+', label: 'Photos Shared' },
+          { number: '1', label: 'Happy Explorer' },
+        ],
+      };
     }
-}
+  }
 
-// Ensure all required sections exist for about page
-if (props.page === 'about') {
+  // Ensure all required sections exist for about page
+  if (props.page === 'about') {
     if (!editedContent.sections) {
-        editedContent.sections = {};
+      editedContent.sections = {};
     }
     if (!editedContent.sections.hero) {
-        editedContent.sections.hero = {
-            title: 'About Our',
-            subtitle: 'Discover the story behind Adventure Log and the passionate team dedicated to helping you document and share your journeys with the world.'
-        };
+      editedContent.sections.hero = {
+        title: 'About Our',
+        subtitle:
+          'Discover the story behind Adventure Log and the passionate team dedicated to helping you document and share your journeys with the world.',
+      };
     }
     if (!editedContent.sections.mission) {
-        editedContent.sections.mission = {
-            title: 'OUR MISSION',
-            heading: 'Empowering Adventurers Worldwide',
-            points: [
-                'Born from a passion for exploration and storytelling, Adventure Log was created to bridge the gap between memorable experiences and lasting documentation.',
-                'We understand that every journey, whether it\'s climbing mountains or exploring local hidden gems, deserves to be remembered and shared in a beautiful, meaningful way.',
-                'Our platform combines intuitive design with powerful features to help you create stunning visual narratives of your adventures.'
-            ],
-            quote: '"Every adventure is a story waiting to be told. We\'re here to help you tell yours in the most beautiful way possible."',
-            quoteAuthor: '— The Adventure Log Team'
-        };
+      editedContent.sections.mission = {
+        title: 'OUR MISSION',
+        heading: 'Empowering Adventurers Worldwide',
+        points: [
+          'Born from a passion for exploration and storytelling, Adventure Log was created to bridge the gap between memorable experiences and lasting documentation.',
+          "We understand that every journey, whether it's climbing mountains or exploring local hidden gems, deserves to be remembered and shared in a beautiful, meaningful way.",
+          'Our platform combines intuitive design with powerful features to help you create stunning visual narratives of your adventures.',
+        ],
+        quote:
+          '"Every adventure is a story waiting to be told. We\'re here to help you tell yours in the most beautiful way possible."',
+        quoteAuthor: '— The Adventure Log Team',
+      };
     }
     if (!editedContent.sections.featureCards) {
-        editedContent.sections.featureCards = [
-            {
-                title: 'Global Community',
-                description: 'Join adventurers from around the world sharing their incredible stories and inspiring others to explore.',
-                icon: 'faGlobeAmericas'
-            },
-            {
-                title: 'Innovative Platform',
-                description: 'Cutting-edge tools and features designed specifically for documenting and sharing your adventures beautifully.',
-                icon: 'faCompass'
-            },
-            {
-                title: 'Built with Passion',
-                description: 'Created by adventurers, for adventurers. We live and breathe exploration and understand your needs.',
-                icon: 'faHeart'
-            }
-        ];
+      editedContent.sections.featureCards = [
+        {
+          title: 'Global Community',
+          description:
+            'Join adventurers from around the world sharing their incredible stories and inspiring others to explore.',
+          icon: 'faGlobeAmericas',
+        },
+        {
+          title: 'Innovative Platform',
+          description:
+            'Cutting-edge tools and features designed specifically for documenting and sharing your adventures beautifully.',
+          icon: 'faCompass',
+        },
+        {
+          title: 'Built with Passion',
+          description:
+            'Created by adventurers, for adventurers. We live and breathe exploration and understand your needs.',
+          icon: 'faHeart',
+        },
+      ];
     }
     if (!editedContent.stats) {
-        editedContent.stats = {
-            'team_members': '5K+',
-            'countries_reached': '50+',
-            'years_of_passion': '3+'
-        };
+      editedContent.stats = {
+        team_members: '5K+',
+        countries_reached: '50+',
+        years_of_passion: '3+',
+      };
     }
-}
+  }
 
-// Ensure all required sections exist for contact page
-if (props.page === 'contact') {
+  // Ensure all required sections exist for contact page
+  if (props.page === 'contact') {
     if (!editedContent.sections) {
-        editedContent.sections = {};
+      editedContent.sections = {};
     }
     if (!editedContent.sections.hero) {
-        editedContent.sections.hero = {
-            title: 'Get In Touch',
-            subtitle: "We'd love to hear about your adventures and help you share them with the world"
-        };
+      editedContent.sections.hero = {
+        title: 'Get In Touch',
+        subtitle: "We'd love to hear about your adventures and help you share them with the world",
+      };
     }
     if (!editedContent.sections.info) {
-        editedContent.sections.info = {
-            title: "Let's Start a Conversation",
-            description: "Whether you have questions about documenting your adventures, need technical support, or just want to share an amazing story, we're here to help."
-        };
+      editedContent.sections.info = {
+        title: "Let's Start a Conversation",
+        description:
+          "Whether you have questions about documenting your adventures, need technical support, or just want to share an amazing story, we're here to help.",
+      };
     }
     if (!editedContent.sections.social) {
-        editedContent.sections.social = {
-            title: 'Follow Our Adventures'
-        };
+      editedContent.sections.social = {
+        title: 'Follow Our Adventures',
+      };
     }
     if (!editedContent.sections.faq) {
-        editedContent.sections.faq = {
-            title: 'Frequently Asked Questions',
-            description: 'Quick answers to common questions',
-            items: [
-                {
-                    q: 'How do I start documenting my adventures?',
-                    a: 'Simply create an account and start adding your first adventure story with photos and descriptions.',
-                    icon: 'faMapMarkedAlt'
-                },
-                {
-                    q: 'Is there a mobile app?',
-                    a: 'Yes! Our mobile app lets you document adventures on the go with real-time photo uploads.',
-                    icon: 'faMobileAlt'
-                },
-                {
-                    q: 'Can I collaborate with friends?',
-                    a: 'Absolutely! You can create shared adventure logs with multiple contributors.',
-                    icon: 'faUsers'
-                },
-                {
-                    q: 'Is my data secure?',
-                    a: 'We use enterprise-grade security to protect your stories and personal information.',
-                    icon: 'faShieldAlt'
-                }
-            ]
-        };
+      editedContent.sections.faq = {
+        title: 'Frequently Asked Questions',
+        description: 'Quick answers to common questions',
+        items: [
+          {
+            q: 'How do I start documenting my adventures?',
+            a: 'Simply create an account and start adding your first adventure story with photos and descriptions.',
+            icon: 'faMapMarkedAlt',
+          },
+          {
+            q: 'Is there a mobile app?',
+            a: 'Yes! Our mobile app lets you document adventures on the go with real-time photo uploads.',
+            icon: 'faMobileAlt',
+          },
+          {
+            q: 'Can I collaborate with friends?',
+            a: 'Absolutely! You can create shared adventure logs with multiple contributors.',
+            icon: 'faUsers',
+          },
+          {
+            q: 'Is my data secure?',
+            a: 'We use enterprise-grade security to protect your stories and personal information.',
+            icon: 'faShieldAlt',
+          },
+        ],
+      };
     }
     if (!editedContent.email) {
-        editedContent.email = 'hello@example.com';
+      editedContent.email = 'hello@example.com';
     }
     if (!editedContent.social) {
-        editedContent.social = {
-            instagram: '@myadventures',
-            twitter: '@adventurelog',
-            facebook: 'myadventurepage'
-        };
+      editedContent.social = {
+        instagram: '@myadventures',
+        twitter: '@adventurelog',
+        facebook: 'myadventurepage',
+      };
     }
-}
+  }
 
-const saveContent = async () => {
+  const saveContent = async () => {
     saving.value = true;
     try {
-        await router.post(`/website/pages/${props.page}`, editedContent);
-        setTimeout(() => saving.value = false, 1000);
+      await router.post(`/website/pages/${props.page}`, editedContent);
+      setTimeout(() => (saving.value = false), 1000);
     } catch (error) {
-        console.error('Error saving content:', error);
-        saving.value = false;
+      console.error('Error saving content:', error);
+      saving.value = false;
     }
-};
+  };
 
-// Add these reactive variables
-const showAdventureModal = ref(false)
-const savingAdventure = ref(false)
-const editingAdventureIndex = ref(null)
+  // Add these reactive variables
+  const showAdventureModal = ref(false);
+  const savingAdventure = ref(false);
+  const editingAdventureIndex = ref(null);
 
-const newAdventure = ref({
+  const newAdventure = ref({
     title: '',
     excerpt: '',
     image: '',
     date: '',
-    location: ''
-})
+    location: '',
+  });
 
-// Adventure methods
-const openAdventureModal = () => {
-    showAdventureModal.value = true
-    editingAdventureIndex.value = null
-    resetAdventureForm()
-}
+  // Adventure methods
+  const openAdventureModal = () => {
+    showAdventureModal.value = true;
+    editingAdventureIndex.value = null;
+    resetAdventureForm();
+  };
 
-const closeAdventureModal = () => {
-    showAdventureModal.value = false
-    editingAdventureIndex.value = null
-    resetAdventureForm()
-}
+  const closeAdventureModal = () => {
+    showAdventureModal.value = false;
+    editingAdventureIndex.value = null;
+    resetAdventureForm();
+  };
 
-const resetAdventureForm = () => {
+  const resetAdventureForm = () => {
     newAdventure.value = {
-        title: '',
-        excerpt: '',
-        image: '',
-        date: '',
-        location: ''
+      title: '',
+      excerpt: '',
+      image: '',
+      date: '',
+      location: '',
+    };
+  };
+
+  const editAdventure = (adventure, index) => {
+    newAdventure.value = { ...adventure };
+    editingAdventureIndex.value = index;
+    showAdventureModal.value = true;
+  };
+
+  const saveAdventure = async () => {
+    if (
+      !newAdventure.value.title ||
+      !newAdventure.value.excerpt ||
+      !newAdventure.value.image ||
+      !newAdventure.value.date
+    ) {
+      alert('Please fill in all required fields');
+      return;
     }
-}
 
-const editAdventure = (adventure, index) => {
-    newAdventure.value = { ...adventure }
-    editingAdventureIndex.value = index
-    showAdventureModal.value = true
-}
-
-const saveAdventure = async () => {
-    if (!newAdventure.value.title || !newAdventure.value.excerpt || !newAdventure.value.image || !newAdventure.value.date) {
-        alert('Please fill in all required fields')
-        return
-    }
-
-    savingAdventure.value = true
+    savingAdventure.value = true;
 
     try {
-        // ✅ FIX: Save to the correct Firebase path
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-        
-        const response = await fetch('/adventures/create', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify(newAdventure.value)
-        });
+      // ✅ FIX: Save to the correct Firebase path
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Server error:', errorText);
-            throw new Error('Failed to create adventure in database');
+      const response = await fetch('/adventures/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(newAdventure.value),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error:', errorText);
+        throw new Error('Failed to create adventure in database');
+      }
+
+      const result = await response.json();
+      console.log('✅ Adventure created:', result);
+
+      if (result.success) {
+        // ✅ FIX: Declare adventureWithId BEFORE using it
+        const adventureWithId = {
+          ...newAdventure.value,
+          id: result.id || result.adventure?.id || Date.now().toString(),
+          createdAt: new Date().toISOString(),
+        };
+
+        // Add debug logging - NOW adventureWithId is defined
+        console.log('✅ Adventure saved to Firebase path:');
+        console.log('/websites/iIYNp0xgmIRoOs9RwG7b9F6W4vv1/pages/home/sections/recent/posts');
+        console.log('New adventure data:', adventureWithId);
+
+        // Ensure posts array exists
+        if (!editedContent.sections.recent.posts) {
+          editedContent.sections.recent.posts = [];
         }
 
-        const result = await response.json();
-        console.log('✅ Adventure created:', result);
+        // Add the new adventure with its ID to local state
+        editedContent.sections.recent.posts.unshift(adventureWithId);
 
-        if (result.success) {
-            // ✅ FIX: Declare adventureWithId BEFORE using it
-            const adventureWithId = {
-                ...newAdventure.value,
-                id: result.id || result.adventure?.id || Date.now().toString(),
-                createdAt: new Date().toISOString()
-            };
+        console.log(
+          '✅ Adventure added to local state, total:',
+          editedContent.sections.recent.posts.length
+        );
 
-            // Add debug logging - NOW adventureWithId is defined
-            console.log('✅ Adventure saved to Firebase path:');
-            console.log('/websites/iIYNp0xgmIRoOs9RwG7b9F6W4vv1/pages/home/sections/recent/posts');
-            console.log('New adventure data:', adventureWithId);
-            
-            // Ensure posts array exists
-            if (!editedContent.sections.recent.posts) {
-                editedContent.sections.recent.posts = [];
-            }
+        // Close modal and reset form
+        closeAdventureModal();
 
-            // Add the new adventure with its ID to local state
-            editedContent.sections.recent.posts.unshift(adventureWithId);
-
-            console.log('✅ Adventure added to local state, total:', editedContent.sections.recent.posts.length);
-            
-            // Close modal and reset form
-            closeAdventureModal();
-            
-            // Show success message
-            alert('Adventure created successfully!');
-        } else {
-            throw new Error(result.error || 'Failed to create adventure');
-        }
-        
+        // Show success message
+        alert('Adventure created successfully!');
+      } else {
+        throw new Error(result.error || 'Failed to create adventure');
+      }
     } catch (error) {
-        console.error('❌ Error saving adventure:', error)
-        alert('Failed to save adventure: ' + error.message)
+      console.error('❌ Error saving adventure:', error);
+      alert('Failed to save adventure: ' + error.message);
     } finally {
-        savingAdventure.value = false
+      savingAdventure.value = false;
     }
-}
+  };
 
-const deleteAdventure = async (index) => {
+  const deleteAdventure = async (index) => {
     if (confirm('Are you sure you want to delete this adventure?')) {
-        editedContent.sections.recent.posts.splice(index, 1)
-        await saveContent()
+      editedContent.sections.recent.posts.splice(index, 1);
+      await saveContent();
     }
-}
+  };
 
-// Update the createNewAdventure method to use the modal
-const createNewAdventure = () => {
-    showAdventureModal.value = true
-}
+  // Update the createNewAdventure method to use the modal
+  const createNewAdventure = () => {
+    showAdventureModal.value = true;
+  };
 
-// Add to your editor component script
-const newImage = ref({
+  // Add to your editor component script
+  const newImage = ref({
     caption: '',
-    location: ''
-});
-const uploading = ref(false);
-const fileInput = ref(null);
+    location: '',
+  });
+  const uploading = ref(false);
+  const fileInput = ref(null);
 
-const handleFileUpload = (event) => {
+  const handleFileUpload = (event) => {
     const file = event.target.files?.[0];
 
     if (!file) {
-        console.warn('No file selected.');
-        return;
+      console.warn('No file selected.');
+      return;
     }
 
     // ✅ Validation: allowed file types
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-        alert('Invalid file type. Please upload a JPG, PNG, or WEBP image.');
-        console.warn('Invalid file type:', file.type);
-        fileInput.value.value = ''; // reset
-        return;
+      alert('Invalid file type. Please upload a JPG, PNG, or WEBP image.');
+      console.warn('Invalid file type:', file.type);
+      fileInput.value.value = ''; // reset
+      return;
     }
 
     // ✅ Validation: max file size (5MB)
     const maxSizeMB = 5;
     if (file.size > maxSizeMB * 1024 * 1024) {
-        alert(`File too large. Please upload an image smaller than ${maxSizeMB}MB.`);
-        console.warn(`File size exceeded: ${file.size / 1024 / 1024}MB`);
-        fileInput.value.value = ''; // reset
-        return;
+      alert(`File too large. Please upload an image smaller than ${maxSizeMB}MB.`);
+      console.warn(`File size exceeded: ${file.size / 1024 / 1024}MB`);
+      fileInput.value.value = ''; // reset
+      return;
     }
 
     console.log('File selected:', file.name, 'Type:', file.type, 'Size:', file.size);
-};
+  };
 
-const uploadImage = async () => {
+  const uploadImage = async () => {
     const file = fileInput.value?.files?.[0];
 
     if (!file) {
-        alert('Please select a file to upload');
-        console.warn('Upload aborted: no file selected');
-        return;
+      alert('Please select a file to upload');
+      console.warn('Upload aborted: no file selected');
+      return;
     }
 
     uploading.value = true;
     console.log('Uploading image:', file.name);
 
     try {
-        const formData = new FormData();
-        formData.append('image', file);
-        formData.append('caption', newImage.value.caption || '');
-        formData.append('location', newImage.value.location || '');
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('caption', newImage.value.caption || '');
+      formData.append('location', newImage.value.location || '');
 
-        console.log('Form data prepared:', {
-            caption: newImage.value.caption,
-            location: newImage.value.location,
+      console.log('Form data prepared:', {
+        caption: newImage.value.caption,
+        location: newImage.value.location,
+      });
+
+      // Get CSRF token from meta tag
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+      if (!csrfToken) {
+        console.error('CSRF token not found');
+        throw new Error('CSRF token is missing. Please refresh the page.');
+      }
+
+      console.log('CSRF token found:', csrfToken ? 'Yes' : 'No');
+
+      const response = await fetch('/gallery/upload', {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': csrfToken,
+          Accept: 'application/json',
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server responded with status:', response.status, errorText);
+        throw new Error(`Upload failed (status ${response.status})`);
+      }
+
+      const result = await response.json();
+      console.log('Upload response:', result);
+
+      if (result.success && result.image) {
+        if (!editedContent.images) {
+          editedContent.images = [];
+        }
+
+        editedContent.images.push({
+          ...result.image,
+          id: result.firebase_key || result.image.id || Date.now().toString(),
         });
 
-        // Get CSRF token from meta tag
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-        
-        if (!csrfToken) {
-            console.error('CSRF token not found');
-            throw new Error('CSRF token is missing. Please refresh the page.');
-        }
+        console.log('Image added to gallery:', result.image);
 
-        console.log('CSRF token found:', csrfToken ? 'Yes' : 'No');
+        // Reset form
+        newImage.value = { caption: '', location: '' };
+        fileInput.value.value = '';
 
-        const response = await fetch('/gallery/upload', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json',
-            },
-            body: formData,
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Server responded with status:', response.status, errorText);
-            throw new Error(`Upload failed (status ${response.status})`);
-        }
-
-        const result = await response.json();
-        console.log('Upload response:', result);
-
-        if (result.success && result.image) {
-            if (!editedContent.images) {
-                editedContent.images = [];
-            }
-
-            editedContent.images.push({
-                ...result.image,
-                id: result.firebase_key || result.image.id || Date.now().toString()
-            });
-
-            console.log('Image added to gallery:', result.image);
-
-            // Reset form
-            newImage.value = { caption: '', location: '' };
-            fileInput.value.value = '';
-
-            await saveContent();
-            console.log('Gallery content saved successfully.');
-        } else {
-            const errorMsg = result.error || 'Unknown error during upload';
-            console.error('Upload failed:', errorMsg);
-            alert('Upload failed: ' + errorMsg);
-        }
+        await saveContent();
+        console.log('Gallery content saved successfully.');
+      } else {
+        const errorMsg = result.error || 'Unknown error during upload';
+        console.error('Upload failed:', errorMsg);
+        alert('Upload failed: ' + errorMsg);
+      }
     } catch (error) {
-        console.error('Upload error:', error);
-        alert('Upload failed: ' + error.message);
+      console.error('Upload error:', error);
+      alert('Upload failed: ' + error.message);
     } finally {
-        uploading.value = false;
-        console.log('Upload process finished.');
+      uploading.value = false;
+      console.log('Upload process finished.');
     }
-};
+  };
 
-const updateImage = async (image) => {
+  const updateImage = async (image) => {
     if (!image?.id) {
-        console.warn('Update aborted: missing image ID.');
-        return;
+      console.warn('Update aborted: missing image ID.');
+      return;
     }
 
     console.log('Updating image:', image.id);
 
     try {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-        
-        if (!csrfToken) {
-            throw new Error('CSRF token is missing. Please refresh the page.');
-        }
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
 
-        const response = await fetch(`/gallery/image/${image.id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({
-                caption: image.caption || '',
-                location: image.location || ''
-            }),
-        });
+      if (!csrfToken) {
+        throw new Error('CSRF token is missing. Please refresh the page.');
+      }
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Update failed, status:', response.status, errorText);
-            throw new Error(`Failed to update image (status ${response.status})`);
-        }
+      const response = await fetch(`/gallery/image/${image.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          caption: image.caption || '',
+          location: image.location || '',
+        }),
+      });
 
-        const result = await response.json();
-        console.log('Update response:', result);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Update failed, status:', response.status, errorText);
+        throw new Error(`Failed to update image (status ${response.status})`);
+      }
 
-        if (!result.success) {
-            alert('Update failed: ' + (result.error || 'Unknown error'));
-        } else {
-            console.log('Image updated successfully:', image.id);
-        }
+      const result = await response.json();
+      console.log('Update response:', result);
+
+      if (!result.success) {
+        alert('Update failed: ' + (result.error || 'Unknown error'));
+      } else {
+        console.log('Image updated successfully:', image.id);
+      }
     } catch (error) {
-        console.error('Update error:', error);
-        alert('Update failed: ' + error.message);
+      console.error('Update error:', error);
+      alert('Update failed: ' + error.message);
     }
-};
+  };
 
-// Add these new reactive variables
-const showDeleteDialog = ref(false);
-const imageToDelete = ref(null);
-const deleting = ref(false);
+  // Add these new reactive variables
+  const showDeleteDialog = ref(false);
+  const imageToDelete = ref(null);
+  const deleting = ref(false);
 
-// Replace the deleteImage function with this:
-const openDeleteDialog = (image) => {
+  // Replace the deleteImage function with this:
+  const openDeleteDialog = (image) => {
     imageToDelete.value = image;
     showDeleteDialog.value = true;
-};
+  };
 
   const deleteImage = async () => {
     if (!imageToDelete.value?.publitio_id || !imageToDelete.value?.id) {
-        console.warn('Delete aborted: missing image identifiers.', imageToDelete.value);
-        showDeleteDialog.value = false;
-        return;
+      console.warn('Delete aborted: missing image identifiers.', imageToDelete.value);
+      showDeleteDialog.value = false;
+      return;
     }
 
     deleting.value = true;
-    console.log('Deleting image:', imageToDelete.value.publitio_id, 'Firebase key:', imageToDelete.value.id);
+    console.log(
+      'Deleting image:',
+      imageToDelete.value.publitio_id,
+      'Firebase key:',
+      imageToDelete.value.id
+    );
 
     try {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-        
-        if (!csrfToken) {
-            throw new Error('CSRF token is missing. Please refresh the page.');
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+      if (!csrfToken) {
+        throw new Error('CSRF token is missing. Please refresh the page.');
+      }
+
+      const response = await fetch(
+        `/gallery/image/${imageToDelete.value.publitio_id}?firebase_key=${imageToDelete.value.id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            Accept: 'application/json',
+          },
         }
+      );
 
-        const response = await fetch(`/gallery/image/${imageToDelete.value.publitio_id}?firebase_key=${imageToDelete.value.id}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json',
-            },
-        });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Delete request failed, status:', response.status, errorText);
+        throw new Error(`Failed to delete image (status ${response.status})`);
+      }
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Delete request failed, status:', response.status, errorText);
-            throw new Error(`Failed to delete image (status ${response.status})`);
-        }
+      const result = await response.json();
+      console.log('Delete response:', result);
 
-        const result = await response.json();
-        console.log('Delete response:', result);
+      if (result.success) {
+        // Remove image from local state
+        editedContent.images = editedContent.images.filter(
+          (img) => img.id !== imageToDelete.value.id
+        );
+        console.log('Image removed locally:', imageToDelete.value.id);
 
-        if (result.success) {
-            // Remove image from local state
-            editedContent.images = editedContent.images.filter(img => img.id !== imageToDelete.value.id);
-            console.log('Image removed locally:', imageToDelete.value.id);
-            
-            // Show success message (optional)
-            // You can add a toast notification here if you have one
-            
-            await saveContent();
-            console.log('Gallery content saved after delete.');
-        } else {
-            throw new Error(result.error || 'Unknown error during deletion');
-        }
+        // Show success message (optional)
+        // You can add a toast notification here if you have one
+
+        await saveContent();
+        console.log('Gallery content saved after delete.');
+      } else {
+        throw new Error(result.error || 'Unknown error during deletion');
+      }
     } catch (error) {
-        console.error('Delete error:', error);
-        // Show error message to user
-        alert('Delete failed: ' + error.message);
+      console.error('Delete error:', error);
+      // Show error message to user
+      alert('Delete failed: ' + error.message);
     } finally {
-        deleting.value = false;
-        showDeleteDialog.value = false;
-        imageToDelete.value = null;
+      deleting.value = false;
+      showDeleteDialog.value = false;
+      imageToDelete.value = null;
     }
-};
+  };
 
-const cancelDelete = () => {
+  const cancelDelete = () => {
     showDeleteDialog.value = false;
     imageToDelete.value = null;
     deleting.value = false;
-};
+  };
 
-
-
-const startEditing = (sectionPath) => {
+  const startEditing = (sectionPath) => {
     editingSection.value = sectionPath;
-};
+  };
 
-const stopEditing = () => {
+  const stopEditing = () => {
     editingSection.value = null;
     saveContent();
-};
+  };
 
-const addFeatureItem = () => {
+  const addFeatureItem = () => {
     if (!editedContent.sections.features.items) {
-        editedContent.sections.features.items = [];
+      editedContent.sections.features.items = [];
     }
     editedContent.sections.features.items.push({
-        title: 'New Feature',
-        description: 'Feature description'
+      title: 'New Feature',
+      description: 'Feature description',
     });
-};
+  };
 
-const addFAQItem = () => {
+  const addFAQItem = () => {
     if (!editedContent.sections.faq.items) {
-        editedContent.sections.faq.items = [];
+      editedContent.sections.faq.items = [];
     }
     editedContent.sections.faq.items.push({
-        q: 'New Question?',
-        a: 'Answer to the question...'
+      q: 'New Question?',
+      a: 'Answer to the question...',
     });
-};
+  };
 
-const removeFAQItem = (index) => {
+  const removeFAQItem = (index) => {
     editedContent.sections.faq.items.splice(index, 1);
-};
+  };
 
-const removeFeatureItem = (index) => {
+  const removeFeatureItem = (index) => {
     editedContent.sections.features.items.splice(index, 1);
-};
+  };
 
-const addMissionStat = () => {
+  const addMissionStat = () => {
     if (!editedContent.sections.mission.stats) {
-        editedContent.sections.mission.stats = [];
+      editedContent.sections.mission.stats = [];
     }
     editedContent.sections.mission.stats.push({
-        number: '0+',
-        label: 'New Stat'
+      number: '0+',
+      label: 'New Stat',
     });
-};
+  };
 
-const removeMissionStat = (index) => {
+  const removeMissionStat = (index) => {
     editedContent.sections.mission.stats.splice(index, 1);
-};
+  };
 
-const addMissionPoint = () => {
+  const addMissionPoint = () => {
     if (!editedContent.sections.mission.points) {
-        editedContent.sections.mission.points = [];
+      editedContent.sections.mission.points = [];
     }
     editedContent.sections.mission.points.push('New point...');
-};
+  };
 
-const removeMissionPoint = (index) => {
+  const removeMissionPoint = (index) => {
     editedContent.sections.mission.points.splice(index, 1);
-};
+  };
 
-const addFeatureCard = () => {
+  const addFeatureCard = () => {
     if (!editedContent.sections.featureCards) {
-        editedContent.sections.featureCards = [];
+      editedContent.sections.featureCards = [];
     }
     editedContent.sections.featureCards.push({
-        title: 'New Feature',
-        description: 'Description...',
-        icon: 'faHeart'
+      title: 'New Feature',
+      description: 'Description...',
+      icon: 'faHeart',
     });
-};
+  };
 
-const removeFeatureCard = (index) => {
+  const removeFeatureCard = (index) => {
     editedContent.sections.featureCards.splice(index, 1);
-};
+  };
 
-const initializeContactPage = () => {
+  const initializeContactPage = () => {
     editedContent.sections = {
-        hero: {
-            title: 'Get In Touch',
-            subtitle: "We'd love to hear about your adventures and help you share them with the world"
-        },
-        info: {
-            title: "Let's Start a Conversation",
-            description: "Whether you have questions about documenting your adventures, need technical support, or just want to share an amazing story, we're here to help."
-        },
-        social: {
-            title: 'Follow Our Adventures'
-        },
-        faq: {
-            title: 'Frequently Asked Questions',
-            description: 'Quick answers to common questions',
-            items: [
-                {
-                    q: 'How do I start documenting my adventures?',
-                    a: 'Simply create an account and start adding your first adventure story with photos and descriptions.',
-                    icon: 'faMapMarkedAlt'
-                },
-                {
-                    q: 'Is there a mobile app?',
-                    a: 'Yes! Our mobile app lets you document adventures on the go with real-time photo uploads.',
-                    icon: 'faMobileAlt'
-                },
-                {
-                    q: 'Can I collaborate with friends?',
-                    a: 'Absolutely! You can create shared adventure logs with multiple contributors.',
-                    icon: 'faUsers'
-                },
-                {
-                    q: 'Is my data secure?',
-                    a: 'We use enterprise-grade security to protect your stories and personal information.',
-                    icon: 'faShieldAlt'
-                }
-            ]
-        }
+      hero: {
+        title: 'Get In Touch',
+        subtitle: "We'd love to hear about your adventures and help you share them with the world",
+      },
+      info: {
+        title: "Let's Start a Conversation",
+        description:
+          "Whether you have questions about documenting your adventures, need technical support, or just want to share an amazing story, we're here to help.",
+      },
+      social: {
+        title: 'Follow Our Adventures',
+      },
+      faq: {
+        title: 'Frequently Asked Questions',
+        description: 'Quick answers to common questions',
+        items: [
+          {
+            q: 'How do I start documenting my adventures?',
+            a: 'Simply create an account and start adding your first adventure story with photos and descriptions.',
+            icon: 'faMapMarkedAlt',
+          },
+          {
+            q: 'Is there a mobile app?',
+            a: 'Yes! Our mobile app lets you document adventures on the go with real-time photo uploads.',
+            icon: 'faMobileAlt',
+          },
+          {
+            q: 'Can I collaborate with friends?',
+            a: 'Absolutely! You can create shared adventure logs with multiple contributors.',
+            icon: 'faUsers',
+          },
+          {
+            q: 'Is my data secure?',
+            a: 'We use enterprise-grade security to protect your stories and personal information.',
+            icon: 'faShieldAlt',
+          },
+        ],
+      },
     };
     editedContent.email = 'hello@example.com';
     editedContent.social = {
-        instagram: '@myadventures',
-        twitter: '@adventurelog',
-        facebook: 'myadventurepage'
+      instagram: '@myadventures',
+      twitter: '@adventurelog',
+      facebook: 'myadventurepage',
     };
     saveContent();
-};
+  };
 
-const initializeAboutPage = () => {
+  const initializeAboutPage = () => {
     editedContent.sections = {
-        hero: {
-            title: 'About Our',
-            subtitle: 'Discover the story behind Adventure Log and the passionate team dedicated to helping you document and share your journeys with the world.'
+      hero: {
+        title: 'About Our',
+        subtitle:
+          'Discover the story behind Adventure Log and the passionate team dedicated to helping you document and share your journeys with the world.',
+      },
+      mission: {
+        title: 'OUR MISSION',
+        heading: 'Empowering Adventurers Worldwide',
+        points: [
+          'Born from a passion for exploration and storytelling, Adventure Log was created to bridge the gap between memorable experiences and lasting documentation.',
+          "We understand that every journey, whether it's climbing mountains or exploring local hidden gems, deserves to be remembered and shared in a beautiful, meaningful way.",
+          'Our platform combines intuitive design with powerful features to help you create stunning visual narratives of your adventures.',
+        ],
+        quote:
+          '"Every adventure is a story waiting to be told. We\'re here to help you tell yours in the most beautiful way possible."',
+        quoteAuthor: '— The Adventure Log Team',
+      },
+      featureCards: [
+        {
+          title: 'Global Community',
+          description:
+            'Join adventurers from around the world sharing their incredible stories and inspiring others to explore.',
+          icon: 'faGlobeAmericas',
         },
-        mission: {
-            title: 'OUR MISSION',
-            heading: 'Empowering Adventurers Worldwide',
-            points: [
-                'Born from a passion for exploration and storytelling, Adventure Log was created to bridge the gap between memorable experiences and lasting documentation.',
-                'We understand that every journey, whether it\'s climbing mountains or exploring local hidden gems, deserves to be remembered and shared in a beautiful, meaningful way.',
-                'Our platform combines intuitive design with powerful features to help you create stunning visual narratives of your adventures.'
-            ],
-            quote: '"Every adventure is a story waiting to be told. We\'re here to help you tell yours in the most beautiful way possible."',
-            quoteAuthor: '— The Adventure Log Team'
+        {
+          title: 'Innovative Platform',
+          description:
+            'Cutting-edge tools and features designed specifically for documenting and sharing your adventures beautifully.',
+          icon: 'faCompass',
         },
-        featureCards: [
-            {
-                title: 'Global Community',
-                description: 'Join adventurers from around the world sharing their incredible stories and inspiring others to explore.',
-                icon: 'faGlobeAmericas'
-            },
-            {
-                title: 'Innovative Platform',
-                description: 'Cutting-edge tools and features designed specifically for documenting and sharing your adventures beautifully.',
-                icon: 'faCompass'
-            },
-            {
-                title: 'Built with Passion',
-                description: 'Created by adventurers, for adventurers. We live and breathe exploration and understand your needs.',
-                icon: 'faHeart'
-            }
-        ]
+        {
+          title: 'Built with Passion',
+          description:
+            'Created by adventurers, for adventurers. We live and breathe exploration and understand your needs.',
+          icon: 'faHeart',
+        },
+      ],
     };
     editedContent.stats = {
-        'team_members': '5K+',
-        'countries_reached': '50+',
-        'years_of_passion': '3+'
+      team_members: '5K+',
+      countries_reached: '50+',
+      years_of_passion: '3+',
     };
     saveContent();
-};
+  };
 
-
-
-const pageTitle = computed(() => {
+  const pageTitle = computed(() => {
     return props.page.charAt(0).toUpperCase() + props.page.slice(1) + ' Page Editor';
-});
+  });
 </script>
 
 <template>
-    <Head :title="pageTitle" />
+  <Head :title="pageTitle" />
 
-    <div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
-        <!-- Mobile Menu Overlay -->
-        <div 
-            v-if="mobileMenuOpen" 
-            class="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden"
+  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
+    <!-- Mobile Menu Overlay -->
+    <div
+      v-if="mobileMenuOpen"
+      class="fixed inset-0 bg-black bg-opacity-50 z-60 lg:hidden"
+      @click="mobileMenuOpen = false"
+    ></div>
+
+    <!-- Editor Header -->
+    <nav class="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-30">
+      <div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+        <div class="flex justify-between h-16">
+          <!-- Left Section -->
+          <div class="flex items-center space-x-2 sm:space-x-3">
+            <button
+              @click="mobileMenuOpen = !mobileMenuOpen"
+              class="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+            >
+              <FontAwesomeIcon :icon="mobileMenuOpen ? faTimes : faBars" class="text-lg" />
+            </button>
+
+            <div
+              class="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
+            >
+              <FontAwesomeIcon :icon="faEdit" class="text-white text-sm sm:text-lg" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <h1 class="text-lg sm:text-xl font-bold text-gray-900 truncate">
+                Editing:
+                <span class="capitalize text-blue-600">{{ page }}</span>
+              </h1>
+              <p class="text-xs sm:text-sm text-gray-500 truncate">
+                Make changes and see instant preview
+              </p>
+            </div>
+          </div>
+
+          <!-- Desktop Actions -->
+          <div class="hidden lg:flex items-center space-x-2 lg:space-x-3">
+            <Link
+              :href="route('dashboard')"
+              class="group flex items-center space-x-2 text-gray-500 hover:text-gray-900 px-3 lg:px-4 py-2 rounded-lg transition-all duration-300 hover:bg-gray-100 text-sm lg:text-base"
+            >
+              <FontAwesomeIcon
+                :icon="faArrowLeft"
+                class="group-hover:-translate-x-1 transition-transform text-sm"
+              />
+              <span>Dashboard</span>
+            </Link>
+            <Link
+              :href="route('website.page', { page })"
+              class="group flex items-center space-x-2 text-gray-600 hover:text-blue-600 px-3 lg:px-4 py-2 rounded-lg transition-all duration-300 hover:bg-blue-50 text-sm lg:text-base"
+              target="_blank"
+            >
+              <FontAwesomeIcon
+                :icon="faExternalLinkAlt"
+                class="group-hover:scale-110 transition-transform text-sm"
+              />
+              <span>Preview</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div
+        v-if="mobileMenuOpen"
+        class="lg:hidden absolute top-16 left-0 right-0 bg-white border-b border-gray-200 shadow-xl z-50"
+      >
+        <div class="px-4 py-3 space-y-3">
+          <Link
+            :href="route('dashboard')"
+            class="flex items-center space-x-3 text-gray-700 hover:text-blue-600 py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors"
             @click="mobileMenuOpen = false"
-        ></div>
-
-        <!-- Editor Header -->
-        <nav class="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-40">
-            <div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <!-- Left Section -->
-                    <div class="flex items-center space-x-2 sm:space-x-3">
-                        <button 
-                            @click="mobileMenuOpen = !mobileMenuOpen"
-                            class="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-                        >
-                            <FontAwesomeIcon :icon="mobileMenuOpen ? faTimes : faBars" class="text-lg" />
-                        </button>
-                        
-                        <div class="w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-                            <FontAwesomeIcon :icon="faEdit" class="text-white text-sm sm:text-lg" />
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <h1 class="text-lg sm:text-xl font-bold text-gray-900 truncate">
-                                Editing: <span class="capitalize text-blue-600">{{ page }}</span>
-                            </h1>
-                            <p class="text-xs sm:text-sm text-gray-500 truncate">Make changes and see instant preview</p>
-                        </div>
-                    </div>
-
-                    <!-- Desktop Actions -->
-                    <div class="hidden lg:flex items-center space-x-2 lg:space-x-3">
-                        <Link 
-                            :href="route('dashboard')" 
-                            class="group flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 lg:px-4 py-2 rounded-lg transition-all duration-300 hover:bg-gray-100 text-sm lg:text-base"
-                        >
-                            <FontAwesomeIcon :icon="faArrowLeft" class="group-hover:-translate-x-1 transition-transform text-sm" />
-                            <span>Dashboard</span>
-                        </Link>
-                        <Link 
-                            :href="route('website.page', { page })" 
-                            class="group flex items-center space-x-2 text-gray-600 hover:text-blue-600 px-3 lg:px-4 py-2 rounded-lg transition-all duration-300 hover:bg-blue-50 text-sm lg:text-base"
-                            target="_blank"
-                        >
-                            <FontAwesomeIcon :icon="faExternalLinkAlt" class="group-hover:scale-110 transition-transform text-sm" />
-                            <span>Preview</span>
-                        </Link>
-                    </div>
-
-               
-                </div>
-            </div>
-
-            <!-- Mobile Menu -->
-            <div 
-                v-if="mobileMenuOpen" 
-                class="lg:hidden absolute top-16 left-0 right-0 bg-white border-b border-gray-200 shadow-xl z-50"
-            >
-                <div class="px-4 py-3 space-y-3">
-                    <Link 
-                        :href="route('dashboard')" 
-                        class="flex items-center space-x-3 text-gray-700 hover:text-blue-600 py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors"
-                        @click="mobileMenuOpen = false"
-                    >
-                        <FontAwesomeIcon :icon="faArrowLeft" class="text-gray-400" />
-                        <span>Back to Dashboard</span>
-                    </Link>
-                    <Link 
-                        :href="route('website.page', { page })" 
-                        class="flex items-center space-x-3 text-gray-700 hover:text-blue-600 py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors"
-                        target="_blank"
-                        @click="mobileMenuOpen = false"
-                    >
-                        <FontAwesomeIcon :icon="faExternalLinkAlt" class="text-gray-400" />
-                        <span>Preview Page</span>
-                    </Link>
-                </div>
-            </div>
-        </nav>
-
-        <div class="max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-8 h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)]">
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 h-full">
-                <!-- Editor Panel -->
-                <div class="group bg-white shadow-lg sm:shadow-xl rounded-xl sm:rounded-2xl border border-gray-100 flex flex-col h-full overflow-hidden">
-                    <div class="p-4 sm:p-6 border-b border-gray-200 flex-shrink-0">
-                        <div class="flex items-center space-x-2 sm:space-x-3">
-                            <div class="w-8 h-8 sm:w-12 sm:h-12 bg-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-                                <FontAwesomeIcon :icon="faFileAlt" class="text-white text-sm sm:text-xl" />
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <h2 class="text-lg sm:text-2xl font-bold text-gray-900 truncate">Content Editor</h2>
-                                <p class="text-xs sm:text-sm text-gray-500">Edit your page content in real-time</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Scrollable Content Area -->
-                    <div class="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
-                        <!-- Page Title -->
-                        <div class="p-3 sm:p-4 lg:p-5 border-2 border-gray-200 rounded-lg sm:rounded-xl hover:border-blue-300 transition-all duration-300 bg-white">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center space-x-2">
-                                <FontAwesomeIcon :icon="faHeading" class="text-blue-500 text-sm" />
-                                <span class="text-xs sm:text-sm">Page Title</span>
-                            </label>
-                            <input
-                                type="text"
-                                v-model="editedContent.title"
-                                @blur="saveContent"
-                                class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-base sm:text-lg font-medium"
-                                placeholder="Enter your page title..."
-                            />
-                        </div>
-
-                     <!-- Home Page Sections -->
-<div v-if="page === 'home'">
-    <!-- Hero Section -->
-    <div v-if="editedContent.sections.hero" class="p-3 sm:p-4 lg:p-5 border-2 border-purple-200 rounded-lg sm:rounded-xl hover:border-purple-400 transition-all duration-300 bg-purple-50/30">
-        <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center space-x-2">
-            <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                <FontAwesomeIcon :icon="faPalette" class="text-white text-xs sm:text-sm" />
-            </div>
-            <span>Hero Section</span>
-        </h3>
-        
-        <div class="space-y-3">
-            <div>
-                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Hero Title</label>
-                <input
-                    type="text"
-                    v-model="editedContent.sections.hero.title"
-                    @blur="saveContent"
-                    class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                    placeholder="Enter hero title..."
-                />
-            </div>
-            <div>
-                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Hero Subtitle</label>
-                <textarea
-                    v-model="editedContent.sections.hero.subtitle"
-                    @blur="saveContent"
-                    rows="3"
-                    class="w-full px-3 sm:p-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm resize-vertical"
-                    placeholder="Enter hero subtitle..."
-                />
-            </div>
+          >
+            <FontAwesomeIcon :icon="faArrowLeft" class="text-gray-400" />
+            <span>Back to Dashboard</span>
+          </Link>
+          <Link
+            :href="route('website.page', { page })"
+            class="flex items-center space-x-3 text-gray-700 hover:text-blue-600 py-2 px-3 rounded-lg hover:bg-blue-50 transition-colors"
+            target="_blank"
+            @click="mobileMenuOpen = false"
+          >
+            <FontAwesomeIcon :icon="faExternalLinkAlt" class="text-gray-400" />
+            <span>Preview Page</span>
+          </Link>
         </div>
-    </div>
+      </div>
+    </nav>
 
-    <!-- Features Section -->
-    <div v-if="editedContent.sections.features" class="p-3 sm:p-4 lg:p-5 border-2 border-blue-200 rounded-lg sm:rounded-xl hover:border-blue-400 transition-all duration-300 bg-blue-50/30">
-        <div class="flex items-center justify-between mb-3 sm:mb-4">
-            <h3 class="text-base sm:text-lg font-bold text-gray-900 flex items-center space-x-2">
-                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <FontAwesomeIcon :icon="faList" class="text-white text-xs sm:text-sm" />
-                </div>
-                <span>Features Section</span>
-            </h3>
-            <button
-                @click="addFeatureItem"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1"
-            >
-                <FontAwesomeIcon :icon="faPlus" class="text-xs" />
-                <span>Add Feature</span>
-            </button>
-        </div>
-        
-        <div class="space-y-3">
-            <div>
-                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Section Title</label>
-                <input
-                    type="text"
-                    v-model="editedContent.sections.features.title"
-                    @blur="saveContent"
-                    class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    placeholder="Enter features section title..."
-                />
+    <div
+      class="max-w-7xl mx-auto py-4 sm:py-6 px-3 sm:px-4 lg:px-8 h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)]"
+    >
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 h-full">
+        <!-- Editor Panel -->
+        <div
+          class="group bg-white shadow-lg sm:shadow-xl rounded-xl sm:rounded-2xl border border-gray-100 flex flex-col h-full overflow-hidden"
+        >
+          <div class="p-4 sm:p-6 border-b border-gray-200 flex-shrink-0">
+            <div class="flex items-center space-x-2 sm:space-x-3">
+              <div
+                class="w-8 h-8 sm:w-12 sm:h-12 bg-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
+              >
+                <FontAwesomeIcon :icon="faFileAlt" class="text-white text-sm sm:text-xl" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <h2 class="text-lg sm:text-2xl font-bold text-gray-900 truncate">Content Editor</h2>
+                <p class="text-xs sm:text-sm text-gray-500">Edit your page content in real-time</p>
+              </div>
             </div>
-            
-            <div class="space-y-3">
-                <div 
-                    v-for="(item, index) in editedContent.sections.features.items" 
-                    :key="index"
-                    class="p-3 sm:p-4 border-2 border-gray-200 rounded-lg bg-white relative"
+          </div>
+
+          <!-- Scrollable Content Area -->
+          <div class="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
+            <!-- Page Title -->
+            <div
+              class="p-3 sm:p-4 lg:p-5 border-2 border-gray-200 rounded-lg sm:rounded-xl hover:border-blue-300 transition-all duration-300 bg-white"
+            >
+              <label
+                class="block text-sm font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center space-x-2"
+              >
+                <FontAwesomeIcon :icon="faHeading" class="text-blue-500 text-sm" />
+                <span class="text-xs sm:text-sm">Page Title</span>
+              </label>
+              <input
+                type="text"
+                v-model="editedContent.title"
+                @blur="saveContent"
+                class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-base sm:text-lg font-medium"
+                placeholder="Enter your page title..."
+              />
+            </div>
+
+            <!-- Home Page Sections -->
+            <div v-if="page === 'home'">
+              <!-- Hero Section - Enhanced with All Editable Fields -->
+              <div
+                v-if="editedContent.sections.hero"
+                class="p-3 sm:p-4 lg:p-5 border-2 border-purple-200 rounded-lg sm:rounded-xl hover:border-purple-400 transition-all duration-300 bg-purple-50/30"
+              >
+                <h3
+                  class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center space-x-2"
                 >
-                    <button
-                        @click="removeFeatureItem(index)"
-                        class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition-all"
-                    >
-                        <FontAwesomeIcon :icon="faTrash" class="text-xs" />
-                    </button>
-                    
-                    <div class="space-y-2 pr-8">
-                        <div>
-                            <label class="block text-xs text-gray-600 mb-1 font-medium">Feature Title</label>
-                            <input
-                                type="text"
-                                v-model="item.title"
-                                @blur="saveContent"
-                                class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
-                                placeholder="Feature title..."
-                            />
-                        </div>
-                        <div>
-                            <label class="block text-xs text-gray-600 mb-1 font-medium">Description</label>
-                            <textarea
-                                v-model="item.description"
-                                @blur="saveContent"
-                                rows="2"
-                                class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm resize-vertical"
-                                placeholder="Feature description..."
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                  <div
+                    class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0"
+                  >
+                    <FontAwesomeIcon :icon="faPalette" class="text-white text-xs sm:text-sm" />
+                  </div>
+                  <span>Hero Section</span>
+                </h3>
 
-    <!-- Mission Section -->
-    <div v-if="editedContent.sections.mission" class="p-3 sm:p-4 lg:p-5 border-2 border-green-200 rounded-lg sm:rounded-xl hover:border-green-400 transition-all duration-300 bg-green-50/30">
-        <div class="flex items-center justify-between mb-3 sm:mb-4">
-            <h3 class="text-base sm:text-lg font-bold text-gray-900 flex items-center space-x-2">
-                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <FontAwesomeIcon :icon="faChartBar" class="text-white text-xs sm:text-sm" />
-                </div>
-                <span>Mission Section</span>
-            </h3>
-            <button
-                @click="addMissionStat"
-                class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1"
-            >
-                <FontAwesomeIcon :icon="faPlus" class="text-xs" />
-                <span>Add Stat</span>
-            </button>
-        </div>
-        
-        <div class="space-y-3">
-            <div>
-                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Mission Title</label>
-                <input
-                    type="text"
-                    v-model="editedContent.sections.mission.title"
-                    @blur="saveContent"
-                    class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                    placeholder="Enter mission title..."
-                />
-            </div>
-            <div>
-                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Mission Content</label>
-                <textarea
-                    v-model="editedContent.sections.mission.content"
-                    @blur="saveContent"
-                    rows="3"
-                    class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm resize-vertical"
-                    placeholder="Enter mission content..."
-                />
-            </div>
-            
-            <div>
-                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Mission Stats</label>
-                <div class="space-y-2">
-                    <div 
-                        v-for="(stat, index) in editedContent.sections.mission.stats" 
+                <div class="space-y-4">
+                  <!-- Badge -->
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Badge Text
+                    </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.hero.badge"
+                      @blur="saveContent"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                      placeholder="Welcome to Your Adventure Log"
+                    />
+                  </div>
+
+                  <!-- Background Image -->
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Background Image URL
+                    </label>
+                    <input
+                      type="url"
+                      v-model="editedContent.sections.hero.backgroundImage"
+                      @blur="saveContent"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                      placeholder="https://images.unsplash.com/photo-..."
+                    />
+                    <p class="text-xs text-gray-500 mt-1">
+                      Pro tip: Use high-quality landscape images from
+                      <a
+                        href="https://unsplash.com"
+                        target="_blank"
+                        class="text-purple-600 hover:underline"
+                      >
+                        Unsplash
+                      </a>
+                    </p>
+                  </div>
+
+                  <!-- Hero Title -->
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Hero Title
+                    </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.hero.title"
+                      @blur="saveContent"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                      placeholder="Enter hero title..."
+                    />
+                  </div>
+
+                  <!-- Hero Subtitle -->
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Hero Subtitle
+                    </label>
+                    <textarea
+                      v-model="editedContent.sections.hero.subtitle"
+                      @blur="saveContent"
+                      rows="3"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm resize-vertical"
+                      placeholder="Enter hero subtitle..."
+                    />
+                  </div>
+
+                  <!-- CTA Cards -->
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- CTA 1 -->
+                    <div class="p-3 border-2 border-amber-200 rounded-lg bg-amber-50/30">
+                      <h4 class="text-xs font-semibold text-amber-800 mb-2">First CTA Card</h4>
+                      <div class="space-y-2">
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.cta1Title"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="CTA Title"
+                        />
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.cta1Subtitle"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="CTA Subtitle"
+                        />
+                      </div>
+                    </div>
+
+                    <!-- CTA 2 -->
+                    <div class="p-3 border-2 border-emerald-200 rounded-lg bg-emerald-50/30">
+                      <h4 class="text-xs font-semibold text-emerald-800 mb-2">Second CTA Card</h4>
+                      <div class="space-y-2">
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.cta2Title"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="CTA Title"
+                        />
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.cta2Subtitle"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="CTA Subtitle"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Hero Stats -->
+                  <div>
+                    <div class="flex items-center justify-between mb-2">
+                      <label class="block text-xs sm:text-sm font-medium text-gray-700">
+                        Hero Stats
+                      </label>
+                      <button
+                        @click="addHeroStat"
+                        class="bg-purple-600 hover:bg-purple-700 text-white px-2 py-1 rounded text-xs font-semibold transition-all flex items-center space-x-1"
+                      >
+                        <FontAwesomeIcon :icon="faPlus" class="text-xs" />
+                        <span>Add Stat</span>
+                      </button>
+                    </div>
+
+                    <div class="space-y-2">
+                      <div
+                        v-for="(stat, index) in editedContent.sections.hero.stats || []"
                         :key="index"
                         class="p-3 border-2 border-gray-200 rounded-lg bg-white relative"
-                    >
+                      >
                         <button
-                            @click="removeMissionStat(index)"
-                            class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition-all"
+                          @click="removeHeroStat(index)"
+                          class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1 rounded-lg hover:bg-red-50 transition-all"
                         >
-                            <FontAwesomeIcon :icon="faTrash" class="text-xs" />
+                          <FontAwesomeIcon :icon="faTrash" class="text-xs" />
                         </button>
-                        
-                        <div class="grid grid-cols-2 gap-2 pr-8">
-                            <div>
-                                <label class="block text-xs text-gray-600 mb-1 font-medium">Number</label>
-                                <input
-                                    type="text"
-                                    v-model="stat.number"
-                                    @blur="saveContent"
-                                    class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-xs"
-                                    placeholder="e.g., 100+"
-                                />
-                            </div>
-                            <div>
-                                <label class="block text-xs text-gray-600 mb-1 font-medium">Label</label>
-                                <input
-                                    type="text"
-                                    v-model="stat.label"
-                                    @blur="saveContent"
-                                    class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-xs"
-                                    placeholder="e.g., Adventures"
-                                />
-                            </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pr-8">
+                          <div>
+                            <label class="block text-xs text-gray-600 mb-1 font-medium">
+                              Number
+                            </label>
+                            <input
+                              type="text"
+                              v-model="stat.number"
+                              @blur="saveContent"
+                              class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                              placeholder="e.g., 100+"
+                            />
+                          </div>
+                          <div>
+                            <label class="block text-xs text-gray-600 mb-1 font-medium">
+                              Label
+                            </label>
+                            <input
+                              type="text"
+                              v-model="stat.label"
+                              @blur="saveContent"
+                              class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                              placeholder="e.g., Adventures"
+                            />
+                          </div>
+                          <div>
+                            <label class="block text-xs text-gray-600 mb-1 font-medium">
+                              Description
+                            </label>
+                            <input
+                              type="text"
+                              v-model="stat.description"
+                              @blur="saveContent"
+                              class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                              placeholder="e.g., By our community"
+                            />
+                          </div>
                         </div>
+                      </div>
                     </div>
+                  </div>
                 </div>
-            </div>
-        </div>
-    </div>
+              </div>
 
-    <!-- Recent Adventures Section -->
-    <div class="p-3 sm:p-4 lg:p-5 border-2 border-orange-200 rounded-lg sm:rounded-xl hover:border-orange-400 transition-all duration-300 bg-orange-50/30">
-        <div class="flex items-center justify-between mb-3 sm:mb-4">
-            <h3 class="text-base sm:text-lg font-bold text-gray-900 flex items-center space-x-2">
-                <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <FontAwesomeIcon :icon="faImage" class="text-white text-xs sm:text-sm" />
+              <!-- Features Section -->
+              <div
+                v-if="editedContent.sections.features"
+                class="p-3 sm:p-4 lg:p-5 border-2 border-blue-200 rounded-lg sm:rounded-xl hover:border-blue-400 transition-all duration-300 bg-blue-50/30"
+              >
+                <div class="flex items-center justify-between mb-3 sm:mb-4">
+                  <h3
+                    class="text-base sm:text-lg font-bold text-gray-900 flex items-center space-x-2"
+                  >
+                    <div
+                      class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0"
+                    >
+                      <FontAwesomeIcon :icon="faList" class="text-white text-xs sm:text-sm" />
+                    </div>
+                    <span>Features Section</span>
+                  </h3>
+                  <button
+                    @click="addFeatureItem"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1"
+                  >
+                    <FontAwesomeIcon :icon="faPlus" class="text-xs" />
+                    <span>Add Feature</span>
+                  </button>
                 </div>
-                <span>Recent Adventures</span>
-            </h3>
-            <button
-                @click="showAdventureModal = true"
-                class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1"
-            >
-                <FontAwesomeIcon :icon="faPlus" class="text-xs" />
-                <span>Create Adventure</span>
-            </button>
-        </div>
-        
-        <div class="space-y-3">
-            <div>
-                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Section Title</label>
-                <input
-                    type="text"
-                    v-model="editedContent.sections.recent.title"
-                    @blur="saveContent"
-                    class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                    placeholder="Enter recent adventures title..."
-                />
-            </div>
 
-            <!-- Adventures List -->
-            <div class="space-y-4">
-                <h4 class="text-sm font-semibold text-gray-700">Your Adventures ({{ editedContent.sections.recent.posts?.length || 0 }})</h4>
-                
-                <!-- No Adventures State -->
-                <div 
-                    v-if="!editedContent.sections.recent.posts?.length" 
-                    class="text-center py-8 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50/50"
-                >
-                    <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Section Title
+                    </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.features.title"
+                      @blur="saveContent"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      placeholder="Enter features section title..."
+                    />
+                  </div>
+
+                  <div class="space-y-3">
+                    <div
+                      v-for="(item, index) in editedContent.sections.features.items"
+                      :key="index"
+                      class="p-3 sm:p-4 border-2 border-gray-200 rounded-lg bg-white relative"
+                    >
+                      <button
+                        @click="removeFeatureItem(index)"
+                        class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition-all"
+                      >
+                        <FontAwesomeIcon :icon="faTrash" class="text-xs" />
+                      </button>
+
+                      <div class="space-y-2 pr-8">
+                        <div>
+                          <label class="block text-xs text-gray-600 mb-1 font-medium">
+                            Feature Title
+                          </label>
+                          <input
+                            type="text"
+                            v-model="item.title"
+                            @blur="saveContent"
+                            class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
+                            placeholder="Feature title..."
+                          />
+                        </div>
+                        <div>
+                          <label class="block text-xs text-gray-600 mb-1 font-medium">
+                            Description
+                          </label>
+                          <textarea
+                            v-model="item.description"
+                            @blur="saveContent"
+                            rows="2"
+                            class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm resize-vertical"
+                            placeholder="Feature description..."
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mission Section -->
+              <div
+                v-if="editedContent.sections.mission"
+                class="p-3 sm:p-4 lg:p-5 border-2 border-green-200 rounded-lg sm:rounded-xl hover:border-green-400 transition-all duration-300 bg-green-50/30"
+              >
+                <div class="flex items-center justify-between mb-3 sm:mb-4">
+                  <h3
+                    class="text-base sm:text-lg font-bold text-gray-900 flex items-center space-x-2"
+                  >
+                    <div
+                      class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0"
+                    >
+                      <FontAwesomeIcon :icon="faChartBar" class="text-white text-xs sm:text-sm" />
+                    </div>
+                    <span>Mission Section</span>
+                  </h3>
+                  <button
+                    @click="addMissionStat"
+                    class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1"
+                  >
+                    <FontAwesomeIcon :icon="faPlus" class="text-xs" />
+                    <span>Add Stat</span>
+                  </button>
+                </div>
+
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Mission Title
+                    </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.mission.title"
+                      @blur="saveContent"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                      placeholder="Enter mission title..."
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Mission Content
+                    </label>
+                    <textarea
+                      v-model="editedContent.sections.mission.content"
+                      @blur="saveContent"
+                      rows="3"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm resize-vertical"
+                      placeholder="Enter mission content..."
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Mission Stats
+                    </label>
+                    <div class="space-y-2">
+                      <div
+                        v-for="(stat, index) in editedContent.sections.mission.stats"
+                        :key="index"
+                        class="p-3 border-2 border-gray-200 rounded-lg bg-white relative"
+                      >
+                        <button
+                          @click="removeMissionStat(index)"
+                          class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition-all"
+                        >
+                          <FontAwesomeIcon :icon="faTrash" class="text-xs" />
+                        </button>
+
+                        <div class="grid grid-cols-2 gap-2 pr-8">
+                          <div>
+                            <label class="block text-xs text-gray-600 mb-1 font-medium">
+                              Number
+                            </label>
+                            <input
+                              type="text"
+                              v-model="stat.number"
+                              @blur="saveContent"
+                              class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-xs"
+                              placeholder="e.g., 100+"
+                            />
+                          </div>
+                          <div>
+                            <label class="block text-xs text-gray-600 mb-1 font-medium">
+                              Label
+                            </label>
+                            <input
+                              type="text"
+                              v-model="stat.label"
+                              @blur="saveContent"
+                              class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-xs"
+                              placeholder="e.g., Adventures"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Recent Adventures Section -->
+              <div
+                class="p-3 sm:p-4 lg:p-5 border-2 border-orange-200 rounded-lg sm:rounded-xl hover:border-orange-400 transition-all duration-300 bg-orange-50/30"
+              >
+                <div class="flex items-center justify-between mb-3 sm:mb-4">
+                  <h3
+                    class="text-base sm:text-lg font-bold text-gray-900 flex items-center space-x-2"
+                  >
+                    <div
+                      class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0"
+                    >
+                      <FontAwesomeIcon :icon="faImage" class="text-white text-xs sm:text-sm" />
+                    </div>
+                    <span>Recent Adventures</span>
+                  </h3>
+                  <button
+                    @click="showAdventureModal = true"
+                    class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1"
+                  >
+                    <FontAwesomeIcon :icon="faPlus" class="text-xs" />
+                    <span>Create Adventure</span>
+                  </button>
+                </div>
+
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Section Title
+                    </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.recent.title"
+                      @blur="saveContent"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                      placeholder="Enter recent adventures title..."
+                    />
+                  </div>
+
+                  <!-- Adventures List -->
+                  <div class="space-y-4">
+                    <h4 class="text-sm font-semibold text-gray-700">
+                      Your Adventures ({{ editedContent.sections.recent.posts?.length || 0 }})
+                    </h4>
+
+                    <!-- No Adventures State -->
+                    <div
+                      v-if="!editedContent.sections.recent.posts?.length"
+                      class="text-center py-8 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50/50"
+                    >
+                      <div
+                        class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4"
+                      >
                         <FontAwesomeIcon :icon="faCompass" class="text-orange-500 text-2xl" />
-                    </div>
-                    <h5 class="text-lg font-semibold text-gray-700 mb-2">No Adventures Yet</h5>
-                    <p class="text-gray-500 text-sm max-w-md mx-auto mb-4">
+                      </div>
+                      <h5 class="text-lg font-semibold text-gray-700 mb-2">No Adventures Yet</h5>
+                      <p class="text-gray-500 text-sm max-w-md mx-auto mb-4">
                         Create your first adventure to showcase on your homepage
-                    </p>
-                    <button 
+                      </p>
+                      <button
                         @click="showAdventureModal = true"
                         class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-all flex items-center space-x-2 mx-auto"
-                    >
+                      >
                         <FontAwesomeIcon :icon="faPlus" />
                         <span>Create First Adventure</span>
-                    </button>
-                </div>
+                      </button>
+                    </div>
 
-                <!-- Adventures Grid -->
-                <div v-else class="grid grid-cols-1 gap-4 max-h-96 overflow-y-auto p-2">
-                    <div 
-                        v-for="(adventure, index) in editedContent.sections.recent.posts" 
+                    <!-- Adventures Grid -->
+                    <div v-else class="grid grid-cols-1 gap-4 max-h-96 overflow-y-auto p-2">
+                      <div
+                        v-for="(adventure, index) in editedContent.sections.recent.posts"
                         :key="adventure.id || index"
                         class="bg-white border-2 border-gray-200 rounded-xl p-4 hover:border-orange-300 transition-all duration-300 relative group"
-                    >
+                      >
                         <div class="flex items-start space-x-4">
-                            <!-- Adventure Image -->
-                            <div class="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden">
-                                <img 
-                                    :src="adventure.image" 
-                                    :alt="adventure.title"
-                                    class="w-full h-full object-cover"
-                                />
+                          <!-- Adventure Image -->
+                          <div class="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden">
+                            <img
+                              :src="adventure.image"
+                              :alt="adventure.title"
+                              class="w-full h-full object-cover"
+                            />
+                          </div>
+
+                          <!-- Adventure Details -->
+                          <div class="flex-1 min-w-0">
+                            <h5 class="font-semibold text-gray-900 text-sm mb-1 truncate">
+                              {{ adventure.title }}
+                            </h5>
+                            <p class="text-gray-600 text-xs mb-2 line-clamp-2">
+                              {{ adventure.excerpt }}
+                            </p>
+                            <div class="flex items-center justify-between text-xs text-gray-500">
+                              <span>{{ adventure.date }}</span>
+                              <span>{{ adventure.location || 'No location' }}</span>
                             </div>
-                            
-                            <!-- Adventure Details -->
-                            <div class="flex-1 min-w-0">
-                                <h5 class="font-semibold text-gray-900 text-sm mb-1 truncate">
-                                    {{ adventure.title }}
-                                </h5>
-                                <p class="text-gray-600 text-xs mb-2 line-clamp-2">
-                                    {{ adventure.excerpt }}
-                                </p>
-                                <div class="flex items-center justify-between text-xs text-gray-500">
-                                    <span>{{ adventure.date }}</span>
-                                    <span>{{ adventure.location || 'No location' }}</span>
-                                </div>
-                            </div>
+                          </div>
                         </div>
 
                         <!-- Action Buttons -->
-                        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex space-x-1">
-                            <button
-                                @click="editAdventure(adventure, index)"
-                                class="bg-blue-500 text-white p-1.5 rounded-lg hover:bg-blue-600 transition-colors"
-                                title="Edit Adventure"
-                            >
-                                <FontAwesomeIcon :icon="faEdit" class="text-xs" />
-                            </button>
-                            <button
-                                @click="deleteAdventure(index)"
-                                class="bg-red-500 text-white p-1.5 rounded-lg hover:bg-red-600 transition-colors"
-                                title="Delete Adventure"
-                            >
-                                <FontAwesomeIcon :icon="faTrash" class="text-xs" />
-                            </button>
+                        <div
+                          class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex space-x-1"
+                        >
+                          <button
+                            @click="editAdventure(adventure, index)"
+                            class="bg-blue-500 text-white p-1.5 rounded-lg hover:bg-blue-600 transition-colors"
+                            title="Edit Adventure"
+                          >
+                            <FontAwesomeIcon :icon="faEdit" class="text-xs" />
+                          </button>
+                          <button
+                            @click="deleteAdventure(index)"
+                            class="bg-red-500 text-white p-1.5 rounded-lg hover:bg-red-600 transition-colors"
+                            title="Delete Adventure"
+                          >
+                            <FontAwesomeIcon :icon="faTrash" class="text-xs" />
+                          </button>
                         </div>
+                      </div>
                     </div>
+                  </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Adventure Creation/Edit Modal -->
-<div v-if="showAdventureModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <!-- Modal Header -->
-        <div class="border-b border-gray-200 p-4">
-            <div class="flex items-center justify-between">
-                <h3 class="text-lg font-bold text-gray-900">
-                    {{ editingAdventureIndex !== null ? 'Edit Adventure' : 'Create New Adventure' }}
-                </h3>
-                <button
-                    @click="closeAdventureModal"
-                    class="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                    <FontAwesomeIcon :icon="faTimes" class="text-lg" />
-                </button>
-            </div>
-        </div>
-
-        <!-- Adventure Form -->
-        <div class="p-4 space-y-4">
-            <!-- Adventure Title -->
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                    Adventure Title *
-                </label>
-                <input
-                    v-model="newAdventure.title"
-                    type="text"
-                    required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300"
-                    placeholder="e.g., Mountain Hiking in the Alps"
-                />
+              </div>
             </div>
 
-            <!-- Adventure Excerpt -->
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                    Short Description *
-                </label>
-                <textarea
-                    v-model="newAdventure.excerpt"
-                    required
-                    rows="2"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 resize-vertical"
-                    placeholder="Brief description of your adventure..."
-                />
-            </div>
+            <!-- Enhanced Adventure Creation/Edit Modal -->
+            <div
+              v-if="showAdventureModal"
+              class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-all duration-300"
+            >
+              <div
+                class="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-gray-200 transform transition-all duration-300 scale-95 hover:scale-100"
+              >
+                <!-- Modal Header -->
+                <div class="bg-gradient-to-r from-gray-900 to-black text-white p-6 rounded-t-2xl">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h3 class="text-xl font-bold">
+                        {{
+                          editingAdventureIndex !== null ? 'Edit Adventure' : 'Create New Adventure'
+                        }}
+                      </h3>
+                      <p class="text-gray-300 text-sm mt-1">
+                        {{
+                          editingAdventureIndex !== null
+                            ? 'Update your adventure details'
+                            : 'Share your next great adventure'
+                        }}
+                      </p>
+                    </div>
+                    <button
+                      @click="closeAdventureModal"
+                      class="text-gray-300 hover:text-white transition-colors duration-200 bg-black bg-opacity-30 p-2 rounded-full"
+                    >
+                      <FontAwesomeIcon :icon="faTimes" class="text-lg" />
+                    </button>
+                  </div>
+                </div>
 
-            <!-- Adventure Image -->
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                    Adventure Image URL *
-                </label>
-                <input
-                    v-model="newAdventure.image"
-                    type="url"
-                    required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300"
-                    placeholder="https://images.unsplash.com/photo-1469474968028-56623f02e42e"
-                />
-                <p class="text-xs text-gray-500 mt-1">
-                    Pro tip: Use high-quality images from <a href="https://unsplash.com" target="_blank" class="text-orange-600 hover:underline">Unsplash</a>
-                </p>
-            </div>
-
-            <!-- Date and Location -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        Adventure Date *
+                <!-- Adventure Form -->
+                <div class="p-6 space-y-6">
+                  <!-- Adventure Title -->
+                  <div>
+                    <label class="block text-sm font-bold text-gray-900 mb-2 flex items-center">
+                      <span>Adventure Title</span>
+                      <span class="text-red-500 ml-1">*</span>
                     </label>
                     <input
+                      v-model="newAdventure.title"
+                      type="text"
+                      required
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-300 bg-gray-50"
+                      placeholder="e.g., Mountain Hiking in the Alps"
+                    />
+                  </div>
+
+                  <!-- Adventure Excerpt -->
+                  <div>
+                    <label class="block text-sm font-bold text-gray-900 mb-2 flex items-center">
+                      <span>Short Description</span>
+                      <span class="text-red-500 ml-1">*</span>
+                    </label>
+                    <textarea
+                      v-model="newAdventure.excerpt"
+                      required
+                      rows="3"
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-300 resize-vertical bg-gray-50"
+                      placeholder="Brief description of your adventure..."
+                    />
+                  </div>
+
+                  <!-- Adventure Image -->
+                  <div>
+                    <label class="block text-sm font-bold text-gray-900 mb-2 flex items-center">
+                      <span>Adventure Image URL</span>
+                      <span class="text-red-500 ml-1">*</span>
+                    </label>
+                    <input
+                      v-model="newAdventure.image"
+                      type="url"
+                      required
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-300 bg-gray-50"
+                      placeholder="https://images.unsplash.com/photo-1469474968028-56623f02e42e"
+                    />
+                    <p class="text-xs text-gray-600 mt-2">
+                      Pro tip: Use high-quality images from
+                      <a
+                        href="https://unsplash.com"
+                        target="_blank"
+                        class="text-black font-semibold hover:underline"
+                      >
+                        Unsplash
+                      </a>
+                    </p>
+                  </div>
+
+                  <!-- Date and Location -->
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-bold text-gray-900 mb-2 flex items-center">
+                        <span>Adventure Date</span>
+                        <span class="text-red-500 ml-1">*</span>
+                      </label>
+                      <input
                         v-model="newAdventure.date"
                         type="date"
                         required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300"
-                    />
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        Location
-                    </label>
-                    <input
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-300 bg-gray-50"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-bold text-gray-900 mb-2">Location</label>
+                      <input
                         v-model="newAdventure.location"
                         type="text"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-300 bg-gray-50"
                         placeholder="e.g., Swiss Alps, Switzerland"
-                    />
-                </div>
-            </div>
-
-            <!-- Preview -->
-            <div class="border-2 border-dashed border-gray-300 rounded-lg p-3 bg-gray-50">
-                <h4 class="text-sm font-semibold text-gray-700 mb-2">Preview</h4>
-                <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                    <div v-if="newAdventure.image" class="h-24 bg-gradient-to-br from-orange-500 to-orange-600 overflow-hidden">
-                        <img 
-                            :src="newAdventure.image" 
-                            :alt="newAdventure.title"
-                            class="w-full h-full object-cover"
-                        />
+                      />
                     </div>
-                    <div v-else class="h-24 bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-                        <FontAwesomeIcon :icon="faMountainSun" class="text-white text-xl" />
-                    </div>
-                    <div class="p-2">
-                        <h5 class="font-semibold text-gray-900 text-sm mb-1">
-                            {{ newAdventure.title || 'Adventure Title' }}
-                        </h5>
-                        <p class="text-gray-600 text-xs line-clamp-2">
-                            {{ newAdventure.excerpt || 'Adventure description...' }}
-                        </p>
-                        <div class="flex justify-between items-center text-xs text-gray-500 mt-1">
-                            <span>{{ newAdventure.date || 'Date' }}</span>
-                            <span>{{ newAdventure.location || 'Location' }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                  </div>
 
-        <!-- Modal Footer -->
-        <div class="border-t border-gray-200 p-4">
-            <div class="flex flex-col sm:flex-row gap-2">
-                <button
-                    @click="saveAdventure"
-                    :disabled="!newAdventure.title || !newAdventure.excerpt || !newAdventure.image || !newAdventure.date"
-                    class="flex-1 bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-                >
-                    <FontAwesomeIcon v-if="savingAdventure" :icon="faSpinner" class="animate-spin" />
-                    <span class="text-sm">{{ editingAdventureIndex !== null ? 'Update Adventure' : 'Create Adventure' }}</span>
-                </button>
-                <button
-                    @click="closeAdventureModal"
-                    class="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-600 transition-all duration-300"
-                >
-                    <span class="text-sm">Cancel</span>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-                        <!-- About Page Sections -->
-                        <div v-if="page === 'about'">
-                            <!-- Initialize Button -->
-                            <div v-if="!editedContent.sections.hero && !editedContent.sections.mission" class="mb-4">
-                                <button
-                                    @click="initializeAboutPage"
-                                    class="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg font-semibold transition-all flex items-center justify-center space-x-2"
-                                >
-                                    <FontAwesomeIcon :icon="faPlus" />
-                                    <span>Initialize About Page Sections</span>
-                                </button>
-                            </div>
-
-                            <!-- Hero Section -->
-                            <div v-if="editedContent.sections.hero" class="p-3 sm:p-4 lg:p-5 border-2 border-purple-200 rounded-lg sm:rounded-xl hover:border-purple-400 transition-all duration-300 bg-purple-50/30">
-                                <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center space-x-2">
-                                    <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <FontAwesomeIcon :icon="faPalette" class="text-white text-xs sm:text-sm" />
-                                    </div>
-                                    <span>Hero Section</span>
-                                </h3>
-                                
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Hero Title</label>
-                                        <input
-                                            type="text"
-                                            v-model="editedContent.sections.hero.title"
-                                            @blur="saveContent"
-                                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                                            placeholder="e.g., About Our"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Hero Subtitle</label>
-                                        <textarea
-                                            v-model="editedContent.sections.hero.subtitle"
-                                            @blur="saveContent"
-                                            rows="3"
-                                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm resize-vertical"
-                                            placeholder="Discover the story behind..."
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Mission Section -->
-                            <div v-if="editedContent.sections.mission" class="p-3 sm:p-4 lg:p-5 border-2 border-green-200 rounded-lg sm:rounded-xl hover:border-green-400 transition-all duration-300 bg-green-50/30">
-                                <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center space-x-2">
-                                    <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <FontAwesomeIcon :icon="faLightbulb" class="text-white text-xs sm:text-sm" />
-                                    </div>
-                                    <span>Mission Section</span>
-                                </h3>
-                                
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Mission Title</label>
-                                        <input
-                                            type="text"
-                                            v-model="editedContent.sections.mission.title"
-                                            @blur="saveContent"
-                                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                                            placeholder="e.g., OUR MISSION"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Mission Heading</label>
-                                        <input
-                                            type="text"
-                                            v-model="editedContent.sections.mission.heading"
-                                            @blur="saveContent"
-                                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                                            placeholder="e.g., Empowering Adventurers Worldwide"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Mission Points</label>
-                                        <div class="space-y-2">
-                                            <div v-for="(point, index) in editedContent.sections.mission.points" :key="index" class="relative">
-                                                <textarea
-                                                    v-model="editedContent.sections.mission.points[index]"
-                                                    @blur="saveContent"
-                                                    rows="2"
-                                                    class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm resize-vertical"
-                                                    :placeholder="`Point ${index + 1}...`"
-                                                />
-                                                <button
-                                                    v-if="editedContent.sections.mission.points.length > 1"
-                                                    @click="removeMissionPoint(index)"
-                                                    class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition-all"
-                                                >
-                                                    <FontAwesomeIcon :icon="faTrash" class="text-xs" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <button
-                                            @click="addMissionPoint"
-                                            class="mt-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center space-x-1"
-                                        >
-                                            <FontAwesomeIcon :icon="faPlus" class="text-xs" />
-                                            <span>Add Point</span>
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Quote</label>
-                                        <textarea
-                                            v-model="editedContent.sections.mission.quote"
-                                            @blur="saveContent"
-                                            rows="2"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm resize-vertical"
-                                            placeholder="Enter inspirational quote..."
-                                        />
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Quote Author</label>
-                                        <input
-                                            type="text"
-                                            v-model="editedContent.sections.mission.quoteAuthor"
-                                            @blur="saveContent"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                                            placeholder="e.g., — The Adventure Log Team"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Feature Cards Section -->
-                            <div v-if="editedContent.sections.featureCards" class="p-3 sm:p-4 lg:p-5 border-2 border-purple-200 rounded-lg sm:rounded-xl hover:border-purple-400 transition-all duration-300 bg-purple-50/30">
-                                <div class="flex items-center justify-between mb-3 sm:mb-4">
-                                    <h3 class="text-base sm:text-lg font-bold text-gray-900 flex items-center space-x-2">
-                                        <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                            <FontAwesomeIcon :icon="faList" class="text-white text-xs sm:text-sm" />
-                                        </div>
-                                        <span>Feature Cards</span>
-                                    </h3>
-                                    <button
-                                        @click="addFeatureCard"
-                                        class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1"
-                                    >
-                                        <FontAwesomeIcon :icon="faPlus" class="text-xs" />
-                                        <span>Add Card</span>
-                                    </button>
-                                </div>
-                                
-                                <div class="space-y-3">
-                                    <div 
-                                        v-for="(card, index) in editedContent.sections.featureCards" 
-                                        :key="index"
-                                        class="p-3 sm:p-4 border-2 border-gray-200 rounded-lg bg-white relative"
-                                    >
-                                        <button
-                                            @click="removeFeatureCard(index)"
-                                            class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition-all"
-                                        >
-                                            <FontAwesomeIcon :icon="faTrash" class="text-xs" />
-                                        </button>
-                                        
-                                        <div class="space-y-2 pr-8">
-                                            <div>
-                                                <label class="block text-xs text-gray-600 mb-1 font-medium">Card Title</label>
-                                                <input
-                                                    type="text"
-                                                    v-model="card.title"
-                                                    @blur="saveContent"
-                                                    class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm"
-                                                    placeholder="Feature title..."
-                                                />
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-600 mb-1 font-medium">Description</label>
-                                                <textarea
-                                                    v-model="card.description"
-                                                    @blur="saveContent"
-                                                    rows="2"
-                                                    class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm resize-vertical"
-                                                    placeholder="Feature description..."
-                                                />
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs text-gray-600 mb-1 font-medium">Icon (FontAwesome name)</label>
-                                                <input
-                                                    type="text"
-                                                    v-model="card.icon"
-                                                    @blur="saveContent"
-                                                    class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm"
-                                                    placeholder="e.g., faGlobeAmericas"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Stats Section -->
-                            <div v-if="editedContent.stats" class="p-3 sm:p-4 lg:p-5 border-2 border-blue-200 rounded-lg sm:rounded-xl hover:border-blue-400 transition-all duration-300 bg-blue-50/30">
-                                <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center space-x-2">
-                                    <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <FontAwesomeIcon :icon="faChartBar" class="text-white text-xs sm:text-sm" />
-                                    </div>
-                                    <span>Stats Section</span>
-                                </h3>
-                                
-                                <div class="space-y-3">
-                                    <div v-for="(value, key) in editedContent.stats" :key="key" class="p-3 border-2 border-gray-200 rounded-lg bg-white">
-                                        <label class="block text-xs text-gray-600 mb-1 font-medium capitalize">{{ key.replace('_', ' ') }}</label>
-                                        <input
-                                            type="text"
-                                            v-model="editedContent.stats[key]"
-                                            @blur="saveContent"
-                                            class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
-                                            :placeholder="`e.g., 50+`"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Contact Page Sections -->
-                        <div v-if="page === 'contact'">
-                            <!-- Initialize Button -->
-                            <div v-if="!editedContent.sections.hero && !editedContent.sections.info" class="mb-4">
-                                <button
-                                    @click="initializeContactPage"
-                                    class="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg font-semibold transition-all flex items-center justify-center space-x-2"
-                                >
-                                    <FontAwesomeIcon :icon="faPlus" />
-                                    <span>Initialize Contact Page Sections</span>
-                                </button>
-                            </div>
-
-                            <!-- Hero Section -->
-                            <div v-if="editedContent.sections.hero" class="p-3 sm:p-4 lg:p-5 border-2 border-purple-200 rounded-lg sm:rounded-xl hover:border-purple-400 transition-all duration-300 bg-purple-50/30">
-                                <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center space-x-2">
-                                    <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <FontAwesomeIcon :icon="faPalette" class="text-white text-xs sm:text-sm" />
-                                    </div>
-                                    <span>Hero Section</span>
-                                </h3>
-                                
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Hero Title</label>
-                                        <input
-                                            type="text"
-                                            v-model="editedContent.sections.hero.title"
-                                            @blur="saveContent"
-                                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                                            placeholder="Enter hero title..."
-                                        />
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Hero Subtitle</label>
-                                        <textarea
-                                            v-model="editedContent.sections.hero.subtitle"
-                                            @blur="saveContent"
-                                            rows="3"
-                                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm resize-vertical"
-                                            placeholder="Enter hero subtitle..."
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Contact Information Section -->
-                            <div v-if="editedContent.sections.info" class="p-3 sm:p-4 lg:p-5 border-2 border-blue-200 rounded-lg sm:rounded-xl hover:border-blue-400 transition-all duration-300 bg-blue-50/30">
-                                <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center space-x-2">
-                                    <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <FontAwesomeIcon :icon="faMapMarkedAlt" class="text-white text-xs sm:text-sm" />
-                                    </div>
-                                    <span>Contact Information</span>
-                                </h3>
-                                
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Section Title</label>
-                                        <input
-                                            type="text"
-                                            v-model="editedContent.sections.info.title"
-                                            @blur="saveContent"
-                                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                            placeholder="Enter section title..."
-                                        />
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Description</label>
-                                        <textarea
-                                            v-model="editedContent.sections.info.description"
-                                            @blur="saveContent"
-                                            rows="3"
-                                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-vertical"
-                                            placeholder="Enter description..."
-                                        />
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                                        <input
-                                            type="email"
-                                            v-model="editedContent.email"
-                                            @blur="saveContent"
-                                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                            placeholder="Enter email address..."
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Social Media Section -->
-                            <div v-if="editedContent.sections.social" class="p-3 sm:p-4 lg:p-5 border-2 border-green-200 rounded-lg sm:rounded-xl hover:border-green-400 transition-all duration-300 bg-green-50/30">
-                                <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center space-x-2">
-                                    <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                        <FontAwesomeIcon :icon="faGlobe" class="text-white text-xs sm:text-sm" />
-                                    </div>
-                                    <span>Social Media</span>
-                                </h3>
-                                
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Social Section Title</label>
-                                        <input
-                                            type="text"
-                                            v-model="editedContent.sections.social.title"
-                                            @blur="saveContent"
-                                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                                            placeholder="Enter social section title..."
-                                        />
-                                    </div>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div>
-                                            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Instagram</label>
-                                            <input
-                                                type="text"
-                                                v-model="editedContent.social.instagram"
-                                                @blur="saveContent"
-                                                class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                                                placeholder="@username"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Twitter</label>
-                                            <input
-                                                type="text"
-                                                v-model="editedContent.social.twitter"
-                                                @blur="saveContent"
-                                                class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                                                placeholder="@username"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Facebook</label>
-                                            <input
-                                                type="text"
-                                                v-model="editedContent.social.facebook"
-                                                @blur="saveContent"
-                                                class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                                                placeholder="username"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- FAQ Section -->
-                            <div v-if="editedContent.sections.faq" class="p-3 sm:p-4 lg:p-5 border-2 border-orange-200 rounded-lg sm:rounded-xl hover:border-orange-400 transition-all duration-300 bg-orange-50/30">
-                                <div class="flex items-center justify-between mb-3 sm:mb-4">
-                                    <h3 class="text-base sm:text-lg font-bold text-gray-900 flex items-center space-x-2">
-                                        <div class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                                            <FontAwesomeIcon :icon="faQuestionCircle" class="text-white text-xs sm:text-sm" />
-                                        </div>
-                                        <span>FAQ Section</span>
-                                    </h3>
-                                    <button
-                                        @click="addFAQItem"
-                                        class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1"
-                                    >
-                                        <FontAwesomeIcon :icon="faPlus" class="text-xs" />
-                                        <span>Add FAQ</span>
-                                    </button>
-                                </div>
-                                
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">FAQ Section Title</label>
-                                        <input
-                                            type="text"
-                                            v-model="editedContent.sections.faq.title"
-                                            @blur="saveContent"
-                                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                                            placeholder="Enter FAQ section title..."
-                                        />
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">FAQ Description</label>
-                                        <textarea
-                                            v-model="editedContent.sections.faq.description"
-                                            @blur="saveContent"
-                                            rows="2"
-                                            class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm resize-vertical"
-                                            placeholder="Enter FAQ description..."
-                                        />
-                                    </div>
-                                    
-                                    <div class="space-y-3">
-                                        <div 
-                                            v-for="(faq, index) in editedContent.sections.faq.items" 
-                                            :key="index"
-                                            class="p-3 sm:p-4 border-2 border-gray-200 rounded-lg bg-white relative"
-                                        >
-                                            <button
-                                                @click="removeFAQItem(index)"
-                                                class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition-all"
-                                            >
-                                                <FontAwesomeIcon :icon="faTrash" class="text-xs" />
-                                            </button>
-                                            
-                                            <div class="space-y-2 pr-8">
-                                                <div>
-                                                    <label class="block text-xs text-gray-600 mb-1 font-medium">Question</label>
-                                                    <input
-                                                        type="text"
-                                                        v-model="faq.q"
-                                                        @blur="saveContent"
-                                                        class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs sm:text-sm"
-                                                        placeholder="Enter question..."
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label class="block text-xs text-gray-600 mb-1 font-medium">Answer</label>
-                                                    <textarea
-                                                        v-model="faq.a"
-                                                        @blur="saveContent"
-                                                        rows="2"
-                                                        class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs sm:text-sm resize-vertical"
-                                                        placeholder="Enter answer..."
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-
-<!-- Gallery Editor Section -->
-<div v-if="page === 'gallery'" class="p-4 sm:p-6 border-2 border-purple-200 rounded-xl bg-purple-50/30">
-    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center space-x-2">
-        <FontAwesomeIcon :icon="faImages" class="text-purple-600" />
-        <span>Gallery Images Management</span>
-    </h3>
-    
-    <!-- Upload Section -->
-    <div class="mb-6 p-4 bg-white rounded-lg border-2 border-dashed border-gray-300">
-        <h4 class="font-semibold text-gray-800 mb-3">Upload New Image</h4>
-        <div class="space-y-3">
-            <input
-                type="file"
-                ref="fileInput"
-                @change="handleFileUpload"
-                accept="image/*"
-                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-            />
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <input
-                    v-model="newImage.caption"
-                    type="text"
-                    placeholder="Image caption"
-                    class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                />
-                <input
-                    v-model="newImage.location"
-                    type="text"
-                    placeholder="Location"
-                    class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                />
-            </div>
-            <button
-                @click="uploadImage"
-                :disabled="uploading"
-                class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 flex items-center space-x-2"
-            >
-                <FontAwesomeIcon :icon="uploading ? faSpinner : faUpload" :class="{ 'animate-spin': uploading }" />
-                <span>{{ uploading ? 'Uploading...' : 'Upload Image' }}</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- Existing Images -->
-<div class="space-y-4">
-    <h4 class="font-semibold text-gray-800">Existing Images ({{ editedContent.images?.length || 0 }})</h4>
-    
-    <!-- No Images State -->
-    <div v-if="!editedContent.images?.length" class="text-center py-12 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50/50">
-        <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <FontAwesomeIcon :icon="faImages" class="text-purple-500 text-2xl" />
-        </div>
-        <h5 class="text-lg font-semibold text-gray-700 mb-2">No Images Uploaded Yet</h5>
-        <p class="text-gray-500 text-sm max-w-md mx-auto">
-            Upload your first adventure photo to start building your gallery. 
-            Images will appear here once uploaded.
-        </p>
-    </div>
-
-    <!-- Images Grid -->
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div 
-            v-for="(image, index) in editedContent.images" 
-            :key="image.id"
-            class="bg-white rounded-lg border border-gray-200 p-3"
-        >
-            <img :src="image.url" :alt="image.caption" class="w-full h-32 object-cover rounded mb-2" />
-            <input
-                v-model="image.caption"
-                @blur="updateImage(image)"
-                type="text"
-                class="w-full px-2 py-1 border border-gray-300 rounded text-sm mb-2"
-                placeholder="Caption"
-            />
-            <input
-                v-model="image.location"
-                @blur="updateImage(image)"
-                type="text"
-                class="w-full px-2 py-1 border border-gray-300 rounded text-sm mb-2"
-                placeholder="Location"
-            />
-           <button
-                        @click="openDeleteDialog(image)"
-                        class="w-full bg-red-500 text-white py-1 rounded text-sm hover:bg-red-600 flex items-center justify-center space-x-1 transition-all duration-200"
+                  <!-- Preview -->
+                  <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50">
+                    <h4 class="text-sm font-bold text-gray-900 mb-3 flex items-center">
+                      <FontAwesomeIcon :icon="faEye" class="mr-2 text-gray-600" />
+                      Preview
+                    </h4>
+                    <div
+                      class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm transition-all duration-300 hover:shadow-md"
                     >
-                        <FontAwesomeIcon :icon="faTrash" />
-                        <span>Delete</span>
-                    </button>
-        </div>
-    </div>
-</div>
-</div>
-                        <!-- Simple Content Editor (for other pages) -->
-                        <div v-if="page !== 'home' && page !== 'about' && page !== 'contact'" class="p-3 sm:p-4 lg:p-5 border-2 border-gray-200 rounded-lg sm:rounded-xl hover:border-blue-300 transition-all duration-300 bg-white">
-                            <div class="mb-3 sm:mb-4">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center space-x-2">
-                                    <FontAwesomeIcon :icon="faTextWidth" class="text-blue-500 text-sm" />
-                                    <span class="text-xs sm:text-sm">Page Content</span>
-                                </label>
-                                <textarea
-                                    v-model="editedContent.content"
-                                    @blur="saveContent"
-                                    rows="6"
-                                    class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 resize-vertical text-sm"
-                                    placeholder="Enter your page content..."
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Save Button -->
-                    <div class="p-3 sm:p-4 lg:p-6 border-t border-gray-200 bg-gray-50/50 flex-shrink-0">
-                        <button
-                            @click="saveContent"
-                            :disabled="saving"
-                            class="group w-full bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl transition-all duration-300 hover:shadow-xl hover:scale-105 flex items-center justify-center space-x-2 sm:space-x-3 font-bold text-sm sm:text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      <div
+                        v-if="newAdventure.image"
+                        class="h-32 bg-gradient-to-br from-gray-800 to-black overflow-hidden"
+                      >
+                        <img
+                          :src="newAdventure.image"
+                          :alt="newAdventure.title"
+                          class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                        />
+                      </div>
+                      <div
+                        v-else
+                        class="h-32 bg-gradient-to-br from-gray-800 to-black flex items-center justify-center"
+                      >
+                        <FontAwesomeIcon :icon="faMountainSun" class="text-white text-2xl" />
+                      </div>
+                      <div class="p-3">
+                        <h5 class="font-bold text-gray-900 text-sm mb-1 truncate">
+                          {{ newAdventure.title || 'Adventure Title' }}
+                        </h5>
+                        <p class="text-gray-700 text-xs line-clamp-2 mb-2">
+                          {{ newAdventure.excerpt || 'Adventure description...' }}
+                        </p>
+                        <div
+                          class="flex justify-between items-center text-xs text-gray-600 mt-2 pt-2 border-t border-gray-100"
                         >
-                            <FontAwesomeIcon :icon="saving ? faSpinner : faCheckCircle" class="text-lg sm:text-xl group-hover:scale-110 transition-transform" :class="{ 'animate-spin': saving }" />
-                            <span>{{ saving ? 'Saving...' : 'Save All Changes' }}</span>
-                        </button>
+                          <span class="flex items-center">
+                            <FontAwesomeIcon :icon="faCalendar" class="mr-1 text-gray-500" />
+                            {{ newAdventure.date || 'Date' }}
+                          </span>
+                          <span class="flex items-center">
+                            <FontAwesomeIcon :icon="faLocationDot" class="mr-1 text-gray-500" />
+                            {{ newAdventure.location || 'Location' }}
+                          </span>
+                        </div>
+                      </div>
                     </div>
+                  </div>
                 </div>
 
-                <!-- Live Preview Panel -->
-                <div class="group bg-white shadow-lg sm:shadow-xl rounded-xl sm:rounded-2xl border border-gray-100 flex flex-col h-full overflow-hidden">
-                    <div class="p-4 sm:p-6 border-b border-gray-200 flex-shrink-0">
-                        <div class="flex items-center space-x-2 sm:space-x-3">
-                            <div class="w-8 h-8 sm:w-12 sm:h-12 bg-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-                                <FontAwesomeIcon :icon="faDesktop" class="text-white text-sm sm:text-xl" />
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <h2 class="text-lg sm:text-2xl font-bold text-gray-900 truncate">Live Preview</h2>
-                                <p class="text-xs sm:text-sm text-gray-500">Real-time preview of your changes</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Scrollable Preview Content -->
-                    <div class="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
-                        <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 sm:p-6 bg-gradient-to-br from-gray-50 to-blue-50/30 hover:border-blue-400 transition-all duration-300 h-full flex flex-col">
-                            <div class="text-center mb-4 sm:mb-6">
-                                <FontAwesomeIcon :icon="faEye" class="text-blue-500 text-2xl sm:text-3xl mb-2 sm:mb-3" />
-                                <p class="text-gray-600 text-xs sm:text-sm">
-                                    Changes auto-save as you type. Preview updates in real-time.
-                                </p>
-                            </div>
-                            
-                            <!-- Mini Preview -->
-                            <div class="bg-white border-2 border-gray-200 rounded-xl p-3 sm:p-4 lg:p-5 shadow-lg hover:shadow-xl transition-all duration-300 mb-4 sm:mb-6 flex-1 overflow-y-auto">
-                                <h3 class="text-lg sm:text-xl font-bold text-blue-600 mb-3 sm:mb-4 flex items-center space-x-2">
-                                    <FontAwesomeIcon :icon="faFileAlt" class="text-blue-500 text-sm" />
-                                    <span class="truncate">{{ editedContent.title || 'Page Title' }}</span>
-                                </h3>
-                                
-                                <!-- Home Page Preview -->
-                                <div v-if="page === 'home'" class="space-y-3 sm:space-y-4">
-                                    <!-- Hero Preview -->
-                                    <div class="p-3 sm:p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
-                                        <h4 class="font-bold text-purple-900 text-xs sm:text-sm mb-2 flex items-center space-x-2">
-                                            <div class="w-4 h-4 bg-purple-600 rounded flex items-center justify-center">
-                                                <FontAwesomeIcon :icon="faPalette" class="text-white text-xs" />
-                                            </div>
-                                            <span>Hero Section</span>
-                                        </h4>
-                                        <p class="text-xs text-gray-700 font-semibold mb-1">{{ editedContent.sections.hero?.title }}</p>
-                                        <p class="text-xs text-gray-600">{{ editedContent.sections.hero?.subtitle?.substring(0, 80) }}...</p>
-                                    </div>
-
-                                    <!-- Features Preview -->
-                                    <div class="p-3 sm:p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
-                                        <h4 class="font-bold text-blue-900 text-xs sm:text-sm mb-2 flex items-center space-x-2">
-                                            <div class="w-4 h-4 bg-blue-600 rounded flex items-center justify-center">
-                                                <FontAwesomeIcon :icon="faList" class="text-white text-xs" />
-                                            </div>
-                                            <span>Features ({{ editedContent.sections.features?.items?.length || 0 }})</span>
-                                        </h4>
-                                        <p class="text-xs text-gray-700 font-semibold mb-2">{{ editedContent.sections.features?.title }}</p>
-                                        <div class="space-y-1">
-                                            <div v-for="(item, i) in editedContent.sections.features?.items?.slice(0, 2)" :key="i" class="text-xs text-gray-600">
-                                                • {{ item.title }}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Mission Preview -->
-                                    <div class="p-3 sm:p-4 bg-green-50 border-2 border-green-200 rounded-lg">
-                                        <h4 class="font-bold text-green-900 text-xs sm:text-sm mb-2 flex items-center space-x-2">
-                                            <div class="w-4 h-4 bg-green-600 rounded flex items-center justify-center">
-                                                <FontAwesomeIcon :icon="faChartBar" class="text-white text-xs" />
-                                            </div>
-                                            <span>Mission & Stats ({{ editedContent.sections.mission?.stats?.length || 0 }})</span>
-                                        </h4>
-                                        <p class="text-xs text-gray-700 font-semibold mb-1">{{ editedContent.sections.mission?.title }}</p>
-                                        <p class="text-xs text-gray-600 mb-2">{{ editedContent.sections.mission?.content?.substring(0, 60) }}...</p>
-                                        <div class="grid grid-cols-2 gap-1">
-                                            <div v-for="(stat, i) in editedContent.sections.mission?.stats?.slice(0, 4)" :key="i" class="text-xs bg-white rounded p-1.5">
-                                                <span class="font-bold text-green-600">{{ stat.number }}</span>
-                                                <span class="text-gray-600 text-xs"> {{ stat.label }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Recent Adventures Preview -->
-                                    <div class="p-3 sm:p-4 bg-orange-50 border-2 border-orange-200 rounded-lg">
-                                        <h4 class="font-bold text-orange-900 text-xs sm:text-sm mb-2 flex items-center space-x-2">
-                                            <div class="w-4 h-4 bg-orange-600 rounded flex items-center justify-center">
-                                                <FontAwesomeIcon :icon="faImage" class="text-white text-xs" />
-                                            </div>
-                                            <span>{{ editedContent.sections.recent?.title }}</span>
-                                        </h4>
-                                        <p class="text-xs text-gray-600">Dynamic - shows your actual adventures</p>
-                                    </div>
-                                </div>
-
-                                <!-- About Page Preview -->
-                                <div v-else-if="page === 'about'" class="space-y-3 sm:space-y-4">
-                                    <!-- Hero Preview -->
-                                    <div class="p-3 sm:p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
-                                        <h4 class="font-bold text-purple-900 text-xs sm:text-sm mb-2 flex items-center space-x-2">
-                                            <div class="w-4 h-4 bg-purple-600 rounded flex items-center justify-center">
-                                                <FontAwesomeIcon :icon="faPalette" class="text-white text-xs" />
-                                            </div>
-                                            <span>Hero Section</span>
-                                        </h4>
-                                        <p class="text-xs text-gray-700 font-semibold mb-1">{{ editedContent.sections.hero?.title }}</p>
-                                        <p class="text-xs text-gray-600">{{ editedContent.sections.hero?.subtitle?.substring(0, 80) }}...</p>
-                                    </div>
-
-                                    <!-- Mission Preview -->
-                                    <div class="p-3 sm:p-4 bg-green-50 border-2 border-green-200 rounded-lg">
-                                        <h4 class="font-bold text-green-900 text-xs sm:text-sm mb-2 flex items-center space-x-2">
-                                            <div class="w-4 h-4 bg-green-600 rounded flex items-center justify-center">
-                                                <FontAwesomeIcon :icon="faLightbulb" class="text-white text-xs" />
-                                            </div>
-                                            <span>Mission Section</span>
-                                        </h4>
-                                        <p class="text-xs text-gray-700 font-semibold mb-1">{{ editedContent.sections.mission?.title }}</p>
-                                        <p class="text-xs text-gray-600">{{ editedContent.sections.mission?.heading?.substring(0, 60) }}...</p>
-                                        <div class="space-y-1 mt-2">
-                                            <div v-for="(point, i) in editedContent.sections.mission?.points?.slice(0, 2)" :key="i" class="text-xs text-gray-600">
-                                                • {{ point.substring(0, 50) }}...
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Feature Cards Preview -->
-                                    <div class="p-3 sm:p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
-                                        <h4 class="font-bold text-purple-900 text-xs sm:text-sm mb-2 flex items-center space-x-2">
-                                            <div class="w-4 h-4 bg-purple-600 rounded flex items-center justify-center">
-                                                <FontAwesomeIcon :icon="faList" class="text-white text-xs" />
-                                            </div>
-                                            <span>Feature Cards ({{ editedContent.sections.featureCards?.length || 0 }})</span>
-                                        </h4>
-                                        <div class="space-y-1">
-                                            <div v-for="(card, i) in editedContent.sections.featureCards?.slice(0, 2)" :key="i" class="text-xs text-gray-600">
-                                                • {{ card.title }}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Stats Preview -->
-                                    <div class="p-3 sm:p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
-                                        <h4 class="font-bold text-blue-900 text-xs sm:text-sm mb-2 flex items-center space-x-2">
-                                            <div class="w-4 h-4 bg-blue-600 rounded flex items-center justify-center">
-                                                <FontAwesomeIcon :icon="faChartBar" class="text-white text-xs" />
-                                            </div>
-                                            <span>Stats Section</span>
-                                        </h4>
-                                        <div class="grid grid-cols-2 gap-1">
-                                            <div v-for="(value, key) in editedContent.stats" :key="key" class="text-xs bg-white rounded p-1.5">
-                                                <span class="font-bold text-blue-600">{{ value }}</span>
-                                                <span class="text-gray-600 text-xs"> {{ key.replace('_', ' ') }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Contact Page Preview -->
-                                <div v-else-if="page === 'contact'" class="space-y-3 sm:space-y-4">
-                                    <!-- Hero Preview -->
-                                    <div class="p-3 sm:p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
-                                        <h4 class="font-bold text-purple-900 text-xs sm:text-sm mb-2 flex items-center space-x-2">
-                                            <div class="w-4 h-4 bg-purple-600 rounded flex items-center justify-center">
-                                                <FontAwesomeIcon :icon="faPalette" class="text-white text-xs" />
-                                            </div>
-                                            <span>Hero Section</span>
-                                        </h4>
-                                        <p class="text-xs text-gray-700 font-semibold mb-1">{{ editedContent.sections.hero?.title }}</p>
-                                        <p class="text-xs text-gray-600">{{ editedContent.sections.hero?.subtitle?.substring(0, 80) }}...</p>
-                                    </div>
-
-                                    <!-- Contact Info Preview -->
-                                    <div class="p-3 sm:p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
-                                        <h4 class="font-bold text-blue-900 text-xs sm:text-sm mb-2 flex items-center space-x-2">
-                                            <div class="w-4 h-4 bg-blue-600 rounded flex items-center justify-center">
-                                                <FontAwesomeIcon :icon="faMapMarkedAlt" class="text-white text-xs" />
-                                            </div>
-                                            <span>Contact Information</span>
-                                        </h4>
-                                        <p class="text-xs text-gray-700 font-semibold mb-1">{{ editedContent.sections.info?.title }}</p>
-                                        <p class="text-xs text-gray-600">{{ editedContent.sections.info?.description?.substring(0, 60) }}...</p>
-                                        <p class="text-xs text-blue-600 mt-1">{{ editedContent.email }}</p>
-                                    </div>
-
-                                    <!-- Social Media Preview -->
-                                    <div class="p-3 sm:p-4 bg-green-50 border-2 border-green-200 rounded-lg">
-                                        <h4 class="font-bold text-green-900 text-xs sm:text-sm mb-2 flex items-center space-x-2">
-                                            <div class="w-4 h-4 bg-green-600 rounded flex items-center justify-center">
-                                                <FontAwesomeIcon :icon="faGlobe" class="text-white text-xs" />
-                                            </div>
-                                            <span>Social Media</span>
-                                        </h4>
-                                        <p class="text-xs text-gray-700 font-semibold mb-1">{{ editedContent.sections.social?.title }}</p>
-                                        <div class="space-y-1">
-                                            <div v-if="editedContent.social?.instagram" class="text-xs text-gray-600">
-                                                • Instagram: {{ editedContent.social.instagram }}
-                                            </div>
-                                            <div v-if="editedContent.social?.twitter" class="text-xs text-gray-600">
-                                                • Twitter: {{ editedContent.social.twitter }}
-                                            </div>
-                                            <div v-if="editedContent.social?.facebook" class="text-xs text-gray-600">
-                                                • Facebook: {{ editedContent.social.facebook }}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- FAQ Preview -->
-                                    <div class="p-3 sm:p-4 bg-orange-50 border-2 border-orange-200 rounded-lg">
-                                        <h4 class="font-bold text-orange-900 text-xs sm:text-sm mb-2 flex items-center space-x-2">
-                                            <div class="w-4 h-4 bg-orange-600 rounded flex items-center justify-center">
-                                                <FontAwesomeIcon :icon="faQuestionCircle" class="text-white text-xs" />
-                                            </div>
-                                            <span>FAQ Section</span>
-                                        </h4>
-                                        <p class="text-xs text-gray-700 font-semibold mb-1">{{ editedContent.sections.faq?.title }}</p>
-                                        <p class="text-xs text-gray-600 mb-2">{{ editedContent.sections.faq?.description }}</p>
-                                        <div class="space-y-1">
-                                            <div v-for="(faq, i) in editedContent.sections.faq?.items?.slice(0, 2)" :key="i" class="text-xs text-gray-600">
-                                                • {{ faq.q }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Other Pages Preview -->
-                                <div v-else class="p-2 sm:p-3 bg-gray-50 rounded-lg">
-                                    <p class="text-gray-600 text-xs sm:text-sm">{{ editedContent.content?.substring(0, 150) || 'No content yet...' }}</p>
-                                </div>
-                            </div>
-
-                            <!-- Quick Preview Link -->
-                            <div class="text-center mt-auto">
-                                <Link 
-                                    :href="route('website.page', { page })" 
-                                    target="_blank"
-                                    class="group inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105 font-semibold text-sm sm:text-base w-full sm:w-auto justify-center"
-                                >
-                                    <FontAwesomeIcon :icon="faExternalLinkAlt" class="group-hover:scale-110 transition-transform text-sm" />
-                                    <span>Open Full Preview</span>
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Modal Footer -->
+                <div class="border-t border-gray-200 p-6 bg-gray-50 rounded-b-2xl">
+                  <div class="flex flex-col sm:flex-row gap-3">
+                    <button
+                      @click="saveAdventure"
+                      :disabled="
+                        !newAdventure.title ||
+                        !newAdventure.excerpt ||
+                        !newAdventure.image ||
+                        !newAdventure.date
+                      "
+                      class="flex-1 bg-black text-white px-5 py-3 rounded-lg font-bold hover:bg-gray-800 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-md hover:shadow-lg"
+                    >
+                      <FontAwesomeIcon
+                        v-if="savingAdventure"
+                        :icon="faSpinner"
+                        class="animate-spin"
+                      />
+                      <span class="text-sm">
+                        {{
+                          editingAdventureIndex !== null ? 'Update Adventure' : 'Create Adventure'
+                        }}
+                      </span>
+                    </button>
+                    <button
+                      @click="closeAdventureModal"
+                      class="flex-1 bg-white text-gray-800 border border-gray-300 px-5 py-3 rounded-lg font-bold hover:bg-gray-100 transition-all duration-300 shadow-sm hover:shadow-md"
+                    >
+                      <span class="text-sm">Cancel</span>
+                    </button>
+                  </div>
                 </div>
+              </div>
             </div>
+
+            <!-- About Page Sections -->
+            <div v-if="page === 'about'">
+              <!-- Initialize Button -->
+              <div
+                v-if="!editedContent.sections.hero && !editedContent.sections.mission"
+                class="mb-4"
+              >
+                <button
+                  @click="initializeAboutPage"
+                  class="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg font-semibold transition-all flex items-center justify-center space-x-2"
+                >
+                  <FontAwesomeIcon :icon="faPlus" />
+                  <span>Initialize About Page Sections</span>
+                </button>
+              </div>
+
+              <!-- Hero Section -->
+              <div
+                v-if="editedContent.sections.hero"
+                class="p-3 sm:p-4 lg:p-5 border-2 border-purple-200 rounded-lg sm:rounded-xl hover:border-purple-400 transition-all duration-300 bg-purple-50/30"
+              >
+                <h3
+                  class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center space-x-2"
+                >
+                  <div
+                    class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0"
+                  >
+                    <FontAwesomeIcon :icon="faPalette" class="text-white text-xs sm:text-sm" />
+                  </div>
+                  <span>Hero Section</span>
+                </h3>
+
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Hero Title
+                    </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.hero.title"
+                      @blur="saveContent"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                      placeholder="e.g., About Our"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Hero Subtitle
+                    </label>
+                    <textarea
+                      v-model="editedContent.sections.hero.subtitle"
+                      @blur="saveContent"
+                      rows="3"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm resize-vertical"
+                      placeholder="Discover the story behind..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mission Section -->
+              <div
+                v-if="editedContent.sections.mission"
+                class="p-3 sm:p-4 lg:p-5 border-2 border-green-200 rounded-lg sm:rounded-xl hover:border-green-400 transition-all duration-300 bg-green-50/30"
+              >
+                <h3
+                  class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center space-x-2"
+                >
+                  <div
+                    class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0"
+                  >
+                    <FontAwesomeIcon :icon="faLightbulb" class="text-white text-xs sm:text-sm" />
+                  </div>
+                  <span>Mission Section</span>
+                </h3>
+
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Mission Title
+                    </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.mission.title"
+                      @blur="saveContent"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                      placeholder="e.g., OUR MISSION"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Mission Heading
+                    </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.mission.heading"
+                      @blur="saveContent"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                      placeholder="e.g., Empowering Adventurers Worldwide"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Mission Points
+                    </label>
+                    <div class="space-y-2">
+                      <div
+                        v-for="(point, index) in editedContent.sections.mission.points"
+                        :key="index"
+                        class="relative"
+                      >
+                        <textarea
+                          v-model="editedContent.sections.mission.points[index]"
+                          @blur="saveContent"
+                          rows="2"
+                          class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm resize-vertical"
+                          :placeholder="`Point ${index + 1}...`"
+                        />
+                        <button
+                          v-if="editedContent.sections.mission.points.length > 1"
+                          @click="removeMissionPoint(index)"
+                          class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition-all"
+                        >
+                          <FontAwesomeIcon :icon="faTrash" class="text-xs" />
+                        </button>
+                      </div>
+                    </div>
+                    <button
+                      @click="addMissionPoint"
+                      class="mt-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center space-x-1"
+                    >
+                      <FontAwesomeIcon :icon="faPlus" class="text-xs" />
+                      <span>Add Point</span>
+                    </button>
+                  </div>
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Quote
+                    </label>
+                    <textarea
+                      v-model="editedContent.sections.mission.quote"
+                      @blur="saveContent"
+                      rows="2"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm resize-vertical"
+                      placeholder="Enter inspirational quote..."
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Quote Author
+                    </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.mission.quoteAuthor"
+                      @blur="saveContent"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                      placeholder="e.g., — The Adventure Log Team"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Feature Cards Section -->
+              <div
+                v-if="editedContent.sections.featureCards"
+                class="p-3 sm:p-4 lg:p-5 border-2 border-purple-200 rounded-lg sm:rounded-xl hover:border-purple-400 transition-all duration-300 bg-purple-50/30"
+              >
+                <div class="flex items-center justify-between mb-3 sm:mb-4">
+                  <h3
+                    class="text-base sm:text-lg font-bold text-gray-900 flex items-center space-x-2"
+                  >
+                    <div
+                      class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0"
+                    >
+                      <FontAwesomeIcon :icon="faList" class="text-white text-xs sm:text-sm" />
+                    </div>
+                    <span>Feature Cards</span>
+                  </h3>
+                  <button
+                    @click="addFeatureCard"
+                    class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1"
+                  >
+                    <FontAwesomeIcon :icon="faPlus" class="text-xs" />
+                    <span>Add Card</span>
+                  </button>
+                </div>
+
+                <div class="space-y-3">
+                  <div
+                    v-for="(card, index) in editedContent.sections.featureCards"
+                    :key="index"
+                    class="p-3 sm:p-4 border-2 border-gray-200 rounded-lg bg-white relative"
+                  >
+                    <button
+                      @click="removeFeatureCard(index)"
+                      class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition-all"
+                    >
+                      <FontAwesomeIcon :icon="faTrash" class="text-xs" />
+                    </button>
+
+                    <div class="space-y-2 pr-8">
+                      <div>
+                        <label class="block text-xs text-gray-600 mb-1 font-medium">
+                          Card Title
+                        </label>
+                        <input
+                          type="text"
+                          v-model="card.title"
+                          @blur="saveContent"
+                          class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm"
+                          placeholder="Feature title..."
+                        />
+                      </div>
+                      <div>
+                        <label class="block text-xs text-gray-600 mb-1 font-medium">
+                          Description
+                        </label>
+                        <textarea
+                          v-model="card.description"
+                          @blur="saveContent"
+                          rows="2"
+                          class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm resize-vertical"
+                          placeholder="Feature description..."
+                        />
+                      </div>
+                      <div>
+                        <label class="block text-xs text-gray-600 mb-1 font-medium">
+                          Icon (FontAwesome name)
+                        </label>
+                        <input
+                          type="text"
+                          v-model="card.icon"
+                          @blur="saveContent"
+                          class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm"
+                          placeholder="e.g., faGlobeAmericas"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Stats Section -->
+              <div
+                v-if="editedContent.stats"
+                class="p-3 sm:p-4 lg:p-5 border-2 border-blue-200 rounded-lg sm:rounded-xl hover:border-blue-400 transition-all duration-300 bg-blue-50/30"
+              >
+                <h3
+                  class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center space-x-2"
+                >
+                  <div
+                    class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0"
+                  >
+                    <FontAwesomeIcon :icon="faChartBar" class="text-white text-xs sm:text-sm" />
+                  </div>
+                  <span>Stats Section</span>
+                </h3>
+
+                <div class="space-y-3">
+                  <div
+                    v-for="(value, key) in editedContent.stats"
+                    :key="key"
+                    class="p-3 border-2 border-gray-200 rounded-lg bg-white"
+                  >
+                    <label class="block text-xs text-gray-600 mb-1 font-medium capitalize">
+                      {{ key.replace('_', ' ') }}
+                    </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.stats[key]"
+                      @blur="saveContent"
+                      class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
+                      :placeholder="`e.g., 50+`"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contact Page Sections -->
+            <div v-if="page === 'contact'">
+              <!-- Initialize Button -->
+              <div v-if="!editedContent.sections.hero && !editedContent.sections.info" class="mb-4">
+                <button
+                  @click="initializeContactPage"
+                  class="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg font-semibold transition-all flex items-center justify-center space-x-2"
+                >
+                  <FontAwesomeIcon :icon="faPlus" />
+                  <span>Initialize Contact Page Sections</span>
+                </button>
+              </div>
+
+              <!-- Hero Section -->
+              <div
+                v-if="editedContent.sections.hero"
+                class="p-3 sm:p-4 lg:p-5 border-2 border-purple-200 rounded-lg sm:rounded-xl hover:border-purple-400 transition-all duration-300 bg-purple-50/30"
+              >
+                <h3
+                  class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center space-x-2"
+                >
+                  <div
+                    class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0"
+                  >
+                    <FontAwesomeIcon :icon="faPalette" class="text-white text-xs sm:text-sm" />
+                  </div>
+                  <span>Hero Section</span>
+                </h3>
+
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Hero Title
+                    </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.hero.title"
+                      @blur="saveContent"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                      placeholder="Enter hero title..."
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Hero Subtitle
+                    </label>
+                    <textarea
+                      v-model="editedContent.sections.hero.subtitle"
+                      @blur="saveContent"
+                      rows="3"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm resize-vertical"
+                      placeholder="Enter hero subtitle..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Contact Information Section -->
+              <div
+                v-if="editedContent.sections.info"
+                class="p-3 sm:p-4 lg:p-5 border-2 border-blue-200 rounded-lg sm:rounded-xl hover:border-blue-400 transition-all duration-300 bg-blue-50/30"
+              >
+                <h3
+                  class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center space-x-2"
+                >
+                  <div
+                    class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0"
+                  >
+                    <FontAwesomeIcon :icon="faMapMarkedAlt" class="text-white text-xs sm:text-sm" />
+                  </div>
+                  <span>Contact Information</span>
+                </h3>
+
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Section Title
+                    </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.info.title"
+                      @blur="saveContent"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      placeholder="Enter section title..."
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Description
+                    </label>
+                    <textarea
+                      v-model="editedContent.sections.info.description"
+                      @blur="saveContent"
+                      rows="3"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-vertical"
+                      placeholder="Enter description..."
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      v-model="editedContent.email"
+                      @blur="saveContent"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      placeholder="Enter email address..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Social Media Section -->
+              <div
+                v-if="editedContent.sections.social"
+                class="p-3 sm:p-4 lg:p-5 border-2 border-green-200 rounded-lg sm:rounded-xl hover:border-green-400 transition-all duration-300 bg-green-50/30"
+              >
+                <h3
+                  class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center space-x-2"
+                >
+                  <div
+                    class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0"
+                  >
+                    <FontAwesomeIcon :icon="faGlobe" class="text-white text-xs sm:text-sm" />
+                  </div>
+                  <span>Social Media</span>
+                </h3>
+
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Social Section Title
+                    </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.social.title"
+                      @blur="saveContent"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                      placeholder="Enter social section title..."
+                    />
+                  </div>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                        Instagram
+                      </label>
+                      <input
+                        type="text"
+                        v-model="editedContent.social.instagram"
+                        @blur="saveContent"
+                        class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                        placeholder="@username"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                        Twitter
+                      </label>
+                      <input
+                        type="text"
+                        v-model="editedContent.social.twitter"
+                        @blur="saveContent"
+                        class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                        placeholder="@username"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                        Facebook
+                      </label>
+                      <input
+                        type="text"
+                        v-model="editedContent.social.facebook"
+                        @blur="saveContent"
+                        class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                        placeholder="username"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- FAQ Section -->
+              <div
+                v-if="editedContent.sections.faq"
+                class="p-3 sm:p-4 lg:p-5 border-2 border-orange-200 rounded-lg sm:rounded-xl hover:border-orange-400 transition-all duration-300 bg-orange-50/30"
+              >
+                <div class="flex items-center justify-between mb-3 sm:mb-4">
+                  <h3
+                    class="text-base sm:text-lg font-bold text-gray-900 flex items-center space-x-2"
+                  >
+                    <div
+                      class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0"
+                    >
+                      <FontAwesomeIcon
+                        :icon="faQuestionCircle"
+                        class="text-white text-xs sm:text-sm"
+                      />
+                    </div>
+                    <span>FAQ Section</span>
+                  </h3>
+                  <button
+                    @click="addFAQItem"
+                    class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1"
+                  >
+                    <FontAwesomeIcon :icon="faPlus" class="text-xs" />
+                    <span>Add FAQ</span>
+                  </button>
+                </div>
+
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      FAQ Section Title
+                    </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.faq.title"
+                      @blur="saveContent"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                      placeholder="Enter FAQ section title..."
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      FAQ Description
+                    </label>
+                    <textarea
+                      v-model="editedContent.sections.faq.description"
+                      @blur="saveContent"
+                      rows="2"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm resize-vertical"
+                      placeholder="Enter FAQ description..."
+                    />
+                  </div>
+
+                  <div class="space-y-3">
+                    <div
+                      v-for="(faq, index) in editedContent.sections.faq.items"
+                      :key="index"
+                      class="p-3 sm:p-4 border-2 border-gray-200 rounded-lg bg-white relative"
+                    >
+                      <button
+                        @click="removeFAQItem(index)"
+                        class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition-all"
+                      >
+                        <FontAwesomeIcon :icon="faTrash" class="text-xs" />
+                      </button>
+
+                      <div class="space-y-2 pr-8">
+                        <div>
+                          <label class="block text-xs text-gray-600 mb-1 font-medium">
+                            Question
+                          </label>
+                          <input
+                            type="text"
+                            v-model="faq.q"
+                            @blur="saveContent"
+                            class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs sm:text-sm"
+                            placeholder="Enter question..."
+                          />
+                        </div>
+                        <div>
+                          <label class="block text-xs text-gray-600 mb-1 font-medium">Answer</label>
+                          <textarea
+                            v-model="faq.a"
+                            @blur="saveContent"
+                            rows="2"
+                            class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs sm:text-sm resize-vertical"
+                            placeholder="Enter answer..."
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Gallery Editor Section -->
+            <div
+              v-if="page === 'gallery'"
+              class="p-4 sm:p-6 border-2 border-purple-200 rounded-xl bg-purple-50/30"
+            >
+              <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center space-x-2">
+                <FontAwesomeIcon :icon="faImages" class="text-purple-600" />
+                <span>Gallery Images Management</span>
+              </h3>
+
+              <!-- Upload Section -->
+              <div class="mb-6 p-4 bg-white rounded-lg border-2 border-dashed border-gray-300">
+                <h4 class="font-semibold text-gray-800 mb-3">Upload New Image</h4>
+                <div class="space-y-3">
+                  <input
+                    type="file"
+                    ref="fileInput"
+                    @change="handleFileUpload"
+                    accept="image/*"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  />
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input
+                      v-model="newImage.caption"
+                      type="text"
+                      placeholder="Image caption"
+                      class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    />
+                    <input
+                      v-model="newImage.location"
+                      type="text"
+                      placeholder="Location"
+                      class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    />
+                  </div>
+                  <button
+                    @click="uploadImage"
+                    :disabled="uploading"
+                    class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 flex items-center space-x-2"
+                  >
+                    <FontAwesomeIcon
+                      :icon="uploading ? faSpinner : faUpload"
+                      :class="{
+                        'animate-spin': uploading,
+                      }"
+                    />
+                    <span>{{ uploading ? 'Uploading...' : 'Upload Image' }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Existing Images -->
+              <div class="space-y-4">
+                <h4 class="font-semibold text-gray-800">
+                  Existing Images ({{ editedContent.images?.length || 0 }})
+                </h4>
+
+                <!-- No Images State -->
+                <div
+                  v-if="!editedContent.images?.length"
+                  class="text-center py-12 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50/50"
+                >
+                  <div
+                    class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4"
+                  >
+                    <FontAwesomeIcon :icon="faImages" class="text-purple-500 text-2xl" />
+                  </div>
+                  <h5 class="text-lg font-semibold text-gray-700 mb-2">No Images Uploaded Yet</h5>
+                  <p class="text-gray-500 text-sm max-w-md mx-auto">
+                    Upload your first adventure photo to start building your gallery. Images will
+                    appear here once uploaded.
+                  </p>
+                </div>
+
+                <!-- Images Grid -->
+                <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div
+                    v-for="(image, index) in editedContent.images"
+                    :key="image.id"
+                    class="bg-white rounded-lg border border-gray-200 p-3"
+                  >
+                    <img
+                      :src="image.url"
+                      :alt="image.caption"
+                      class="w-full h-32 object-cover rounded mb-2"
+                    />
+                    <input
+                      v-model="image.caption"
+                      @blur="updateImage(image)"
+                      type="text"
+                      class="w-full px-2 py-1 border border-gray-300 rounded text-sm mb-2"
+                      placeholder="Caption"
+                    />
+                    <input
+                      v-model="image.location"
+                      @blur="updateImage(image)"
+                      type="text"
+                      class="w-full px-2 py-1 border border-gray-300 rounded text-sm mb-2"
+                      placeholder="Location"
+                    />
+                    <button
+                      @click="openDeleteDialog(image)"
+                      class="w-full bg-red-500 text-white py-1 rounded text-sm hover:bg-red-600 flex items-center justify-center space-x-1 transition-all duration-200"
+                    >
+                      <FontAwesomeIcon :icon="faTrash" />
+                      <span>Delete</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Simple Content Editor (for other pages) -->
+            <div
+              v-if="page !== 'home' && page !== 'about' && page !== 'contact'"
+              class="p-3 sm:p-4 lg:p-5 border-2 border-gray-200 rounded-lg sm:rounded-xl hover:border-blue-300 transition-all duration-300 bg-white"
+            >
+              <div class="mb-3 sm:mb-4">
+                <label
+                  class="block text-sm font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center space-x-2"
+                >
+                  <FontAwesomeIcon :icon="faTextWidth" class="text-blue-500 text-sm" />
+                  <span class="text-xs sm:text-sm">Page Content</span>
+                </label>
+                <textarea
+                  v-model="editedContent.content"
+                  @blur="saveContent"
+                  rows="6"
+                  class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 resize-vertical text-sm"
+                  placeholder="Enter your page content..."
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Save Button -->
+          <div class="p-3 sm:p-4 lg:p-6 border-t border-gray-200 bg-gray-50/50 flex-shrink-0">
+            <button
+              @click="saveContent"
+              :disabled="saving"
+              class="group w-full bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl transition-all duration-300 hover:shadow-xl hover:scale-105 flex items-center justify-center space-x-2 sm:space-x-3 font-bold text-sm sm:text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FontAwesomeIcon
+                :icon="saving ? faSpinner : faCheckCircle"
+                class="text-lg sm:text-xl group-hover:scale-110 transition-transform"
+                :class="{ 'animate-spin': saving }"
+              />
+              <span>{{ saving ? 'Saving...' : 'Save All Changes' }}</span>
+            </button>
+          </div>
         </div>
+
+        <!-- Live Preview Panel -->
+        <div
+          class="group bg-white shadow-lg sm:shadow-xl rounded-xl sm:rounded-2xl border border-gray-100 flex flex-col h-full overflow-hidden"
+        >
+          <div class="p-4 sm:p-6 border-b border-gray-200 flex-shrink-0">
+            <div class="flex items-center space-x-2 sm:space-x-3">
+              <div
+                class="w-8 h-8 sm:w-12 sm:h-12 bg-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
+              >
+                <FontAwesomeIcon :icon="faDesktop" class="text-white text-sm sm:text-xl" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <h2 class="text-lg sm:text-2xl font-bold text-gray-900 truncate">Live Preview</h2>
+                <p class="text-xs sm:text-sm text-gray-500">Real-time preview of your changes</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scrollable Preview Content -->
+          <div class="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6">
+            <div
+              class="border-2 border-dashed border-gray-300 rounded-xl p-4 sm:p-6 bg-gradient-to-br from-gray-50 to-blue-50/30 hover:border-blue-400 transition-all duration-300 h-full flex flex-col"
+            >
+              <div class="text-center mb-4 sm:mb-6">
+                <FontAwesomeIcon
+                  :icon="faEye"
+                  class="text-blue-500 text-2xl sm:text-3xl mb-2 sm:mb-3"
+                />
+                <p class="text-gray-600 text-xs sm:text-sm">
+                  Changes auto-save as you type. Preview updates in real-time.
+                </p>
+              </div>
+
+              <!-- Mini Preview -->
+              <div
+                class="bg-white border-2 border-gray-200 rounded-xl p-3 sm:p-4 lg:p-5 shadow-lg hover:shadow-xl transition-all duration-300 mb-4 sm:mb-6 flex-1 overflow-y-auto"
+              >
+                <h3
+                  class="text-lg sm:text-xl font-bold text-blue-600 mb-3 sm:mb-4 flex items-center space-x-2"
+                >
+                  <FontAwesomeIcon :icon="faFileAlt" class="text-blue-500 text-sm" />
+                  <span class="truncate">{{ editedContent.title || 'Page Title' }}</span>
+                </h3>
+
+                <!-- Home Page Preview -->
+                <div v-if="page === 'home'" class="space-y-3 sm:space-y-4">
+                  <!-- Hero Preview -->
+                  <!-- Enhanced Hero Preview -->
+                  <div class="p-3 sm:p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
+                    <h4
+                      class="font-bold text-purple-900 text-xs sm:text-sm mb-2 flex items-center space-x-2"
+                    >
+                      <div class="w-4 h-4 bg-purple-600 rounded flex items-center justify-center">
+                        <FontAwesomeIcon :icon="faPalette" class="text-white text-xs" />
+                      </div>
+                      <span>Hero Section</span>
+                    </h4>
+                    <p class="text-xs text-purple-600 font-semibold mb-1">
+                      {{ editedContent.sections.hero?.badge }}
+                    </p>
+                    <p class="text-xs text-gray-700 font-semibold mb-1">
+                      {{ editedContent.sections.hero?.title }}
+                    </p>
+                    <p class="text-xs text-gray-600 mb-2">
+                      {{ editedContent.sections.hero?.subtitle?.substring(0, 80) }}...
+                    </p>
+                    <div class="grid grid-cols-2 gap-1">
+                      <div
+                        v-for="(stat, i) in editedContent.sections.hero?.stats?.slice(0, 2)"
+                        :key="i"
+                        class="text-xs bg-white rounded p-1"
+                      >
+                        <span class="font-bold text-purple-600">{{ stat.number }}</span>
+                        <span class="text-gray-600 text-xs">
+                          {{ stat.label }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Features Preview -->
+                  <div class="p-3 sm:p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                    <h4
+                      class="font-bold text-blue-900 text-xs sm:text-sm mb-2 flex items-center space-x-2"
+                    >
+                      <div class="w-4 h-4 bg-blue-600 rounded flex items-center justify-center">
+                        <FontAwesomeIcon :icon="faList" class="text-white text-xs" />
+                      </div>
+                      <span>
+                        Features ({{ editedContent.sections.features?.items?.length || 0 }})
+                      </span>
+                    </h4>
+                    <p class="text-xs text-gray-700 font-semibold mb-2">
+                      {{ editedContent.sections.features?.title }}
+                    </p>
+                    <div class="space-y-1">
+                      <div
+                        v-for="(item, i) in editedContent.sections.features?.items?.slice(0, 2)"
+                        :key="i"
+                        class="text-xs text-gray-600"
+                      >
+                        • {{ item.title }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Mission Preview -->
+                  <div class="p-3 sm:p-4 bg-green-50 border-2 border-green-200 rounded-lg">
+                    <h4
+                      class="font-bold text-green-900 text-xs sm:text-sm mb-2 flex items-center space-x-2"
+                    >
+                      <div class="w-4 h-4 bg-green-600 rounded flex items-center justify-center">
+                        <FontAwesomeIcon :icon="faChartBar" class="text-white text-xs" />
+                      </div>
+                      <span>
+                        Mission & Stats ({{ editedContent.sections.mission?.stats?.length || 0 }})
+                      </span>
+                    </h4>
+                    <p class="text-xs text-gray-700 font-semibold mb-1">
+                      {{ editedContent.sections.mission?.title }}
+                    </p>
+                    <p class="text-xs text-gray-600 mb-2">
+                      {{ editedContent.sections.mission?.content?.substring(0, 60) }}...
+                    </p>
+                    <div class="grid grid-cols-2 gap-1">
+                      <div
+                        v-for="(stat, i) in editedContent.sections.mission?.stats?.slice(0, 4)"
+                        :key="i"
+                        class="text-xs bg-white rounded p-1.5"
+                      >
+                        <span class="font-bold text-green-600">{{ stat.number }}</span>
+                        <span class="text-gray-600 text-xs">
+                          {{ stat.label }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Recent Adventures Preview -->
+                  <div class="p-3 sm:p-4 bg-orange-50 border-2 border-orange-200 rounded-lg">
+                    <h4
+                      class="font-bold text-orange-900 text-xs sm:text-sm mb-2 flex items-center space-x-2"
+                    >
+                      <div class="w-4 h-4 bg-orange-600 rounded flex items-center justify-center">
+                        <FontAwesomeIcon :icon="faImage" class="text-white text-xs" />
+                      </div>
+                      <span>{{ editedContent.sections.recent?.title }}</span>
+                    </h4>
+                    <p class="text-xs text-gray-600">Dynamic - shows your actual adventures</p>
+                  </div>
+                </div>
+
+                <!-- About Page Preview -->
+                <div v-else-if="page === 'about'" class="space-y-3 sm:space-y-4">
+                  <!-- Hero Preview -->
+                  <div class="p-3 sm:p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
+                    <h4
+                      class="font-bold text-purple-900 text-xs sm:text-sm mb-2 flex items-center space-x-2"
+                    >
+                      <div class="w-4 h-4 bg-purple-600 rounded flex items-center justify-center">
+                        <FontAwesomeIcon :icon="faPalette" class="text-white text-xs" />
+                      </div>
+                      <span>Hero Section</span>
+                    </h4>
+                    <p class="text-xs text-gray-700 font-semibold mb-1">
+                      {{ editedContent.sections.hero?.title }}
+                    </p>
+                    <p class="text-xs text-gray-600">
+                      {{ editedContent.sections.hero?.subtitle?.substring(0, 80) }}...
+                    </p>
+                  </div>
+
+                  <!-- Mission Preview -->
+                  <div class="p-3 sm:p-4 bg-green-50 border-2 border-green-200 rounded-lg">
+                    <h4
+                      class="font-bold text-green-900 text-xs sm:text-sm mb-2 flex items-center space-x-2"
+                    >
+                      <div class="w-4 h-4 bg-green-600 rounded flex items-center justify-center">
+                        <FontAwesomeIcon :icon="faLightbulb" class="text-white text-xs" />
+                      </div>
+                      <span>Mission Section</span>
+                    </h4>
+                    <p class="text-xs text-gray-700 font-semibold mb-1">
+                      {{ editedContent.sections.mission?.title }}
+                    </p>
+                    <p class="text-xs text-gray-600">
+                      {{ editedContent.sections.mission?.heading?.substring(0, 60) }}...
+                    </p>
+                    <div class="space-y-1 mt-2">
+                      <div
+                        v-for="(point, i) in editedContent.sections.mission?.points?.slice(0, 2)"
+                        :key="i"
+                        class="text-xs text-gray-600"
+                      >
+                        •
+                        {{ point.substring(0, 50) }}...
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Feature Cards Preview -->
+                  <div class="p-3 sm:p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
+                    <h4
+                      class="font-bold text-purple-900 text-xs sm:text-sm mb-2 flex items-center space-x-2"
+                    >
+                      <div class="w-4 h-4 bg-purple-600 rounded flex items-center justify-center">
+                        <FontAwesomeIcon :icon="faList" class="text-white text-xs" />
+                      </div>
+                      <span>
+                        Feature Cards ({{ editedContent.sections.featureCards?.length || 0 }})
+                      </span>
+                    </h4>
+                    <div class="space-y-1">
+                      <div
+                        v-for="(card, i) in editedContent.sections.featureCards?.slice(0, 2)"
+                        :key="i"
+                        class="text-xs text-gray-600"
+                      >
+                        • {{ card.title }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Stats Preview -->
+                  <div class="p-3 sm:p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                    <h4
+                      class="font-bold text-blue-900 text-xs sm:text-sm mb-2 flex items-center space-x-2"
+                    >
+                      <div class="w-4 h-4 bg-blue-600 rounded flex items-center justify-center">
+                        <FontAwesomeIcon :icon="faChartBar" class="text-white text-xs" />
+                      </div>
+                      <span>Stats Section</span>
+                    </h4>
+                    <div class="grid grid-cols-2 gap-1">
+                      <div
+                        v-for="(value, key) in editedContent.stats"
+                        :key="key"
+                        class="text-xs bg-white rounded p-1.5"
+                      >
+                        <span class="font-bold text-blue-600">{{ value }}</span>
+                        <span class="text-gray-600 text-xs">
+                          {{ key.replace('_', ' ') }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Contact Page Preview -->
+                <div v-else-if="page === 'contact'" class="space-y-3 sm:space-y-4">
+                  <!-- Hero Preview -->
+                  <div class="p-3 sm:p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
+                    <h4
+                      class="font-bold text-purple-900 text-xs sm:text-sm mb-2 flex items-center space-x-2"
+                    >
+                      <div class="w-4 h-4 bg-purple-600 rounded flex items-center justify-center">
+                        <FontAwesomeIcon :icon="faPalette" class="text-white text-xs" />
+                      </div>
+                      <span>Hero Section</span>
+                    </h4>
+                    <p class="text-xs text-gray-700 font-semibold mb-1">
+                      {{ editedContent.sections.hero?.title }}
+                    </p>
+                    <p class="text-xs text-gray-600">
+                      {{ editedContent.sections.hero?.subtitle?.substring(0, 80) }}...
+                    </p>
+                  </div>
+
+                  <!-- Contact Info Preview -->
+                  <div class="p-3 sm:p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                    <h4
+                      class="font-bold text-blue-900 text-xs sm:text-sm mb-2 flex items-center space-x-2"
+                    >
+                      <div class="w-4 h-4 bg-blue-600 rounded flex items-center justify-center">
+                        <FontAwesomeIcon :icon="faMapMarkedAlt" class="text-white text-xs" />
+                      </div>
+                      <span>Contact Information</span>
+                    </h4>
+                    <p class="text-xs text-gray-700 font-semibold mb-1">
+                      {{ editedContent.sections.info?.title }}
+                    </p>
+                    <p class="text-xs text-gray-600">
+                      {{ editedContent.sections.info?.description?.substring(0, 60) }}...
+                    </p>
+                    <p class="text-xs text-blue-600 mt-1">
+                      {{ editedContent.email }}
+                    </p>
+                  </div>
+
+                  <!-- Social Media Preview -->
+                  <div class="p-3 sm:p-4 bg-green-50 border-2 border-green-200 rounded-lg">
+                    <h4
+                      class="font-bold text-green-900 text-xs sm:text-sm mb-2 flex items-center space-x-2"
+                    >
+                      <div class="w-4 h-4 bg-green-600 rounded flex items-center justify-center">
+                        <FontAwesomeIcon :icon="faGlobe" class="text-white text-xs" />
+                      </div>
+                      <span>Social Media</span>
+                    </h4>
+                    <p class="text-xs text-gray-700 font-semibold mb-1">
+                      {{ editedContent.sections.social?.title }}
+                    </p>
+                    <div class="space-y-1">
+                      <div v-if="editedContent.social?.instagram" class="text-xs text-gray-600">
+                        • Instagram:
+                        {{ editedContent.social.instagram }}
+                      </div>
+                      <div v-if="editedContent.social?.twitter" class="text-xs text-gray-600">
+                        • Twitter:
+                        {{ editedContent.social.twitter }}
+                      </div>
+                      <div v-if="editedContent.social?.facebook" class="text-xs text-gray-600">
+                        • Facebook:
+                        {{ editedContent.social.facebook }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- FAQ Preview -->
+                  <div class="p-3 sm:p-4 bg-orange-50 border-2 border-orange-200 rounded-lg">
+                    <h4
+                      class="font-bold text-orange-900 text-xs sm:text-sm mb-2 flex items-center space-x-2"
+                    >
+                      <div class="w-4 h-4 bg-orange-600 rounded flex items-center justify-center">
+                        <FontAwesomeIcon :icon="faQuestionCircle" class="text-white text-xs" />
+                      </div>
+                      <span>FAQ Section</span>
+                    </h4>
+                    <p class="text-xs text-gray-700 font-semibold mb-1">
+                      {{ editedContent.sections.faq?.title }}
+                    </p>
+                    <p class="text-xs text-gray-600 mb-2">
+                      {{ editedContent.sections.faq?.description }}
+                    </p>
+                    <div class="space-y-1">
+                      <div
+                        v-for="(faq, i) in editedContent.sections.faq?.items?.slice(0, 2)"
+                        :key="i"
+                        class="text-xs text-gray-600"
+                      >
+                        • {{ faq.q }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Other Pages Preview -->
+                <div v-else class="p-2 sm:p-3 bg-gray-50 rounded-lg">
+                  <p class="text-gray-600 text-xs sm:text-sm">
+                    {{ editedContent.content?.substring(0, 150) || 'No content yet...' }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Quick Preview Link -->
+              <div class="text-center mt-auto">
+                <Link
+                  :href="route('website.page', { page })"
+                  target="_blank"
+                  class="group inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105 font-semibold text-sm sm:text-base w-full sm:w-auto justify-center"
+                >
+                  <FontAwesomeIcon
+                    :icon="faExternalLinkAlt"
+                    class="group-hover:scale-110 transition-transform text-sm"
+                  />
+                  <span>Open Full Preview</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-       <!-- Add the delete confirmation dialog at the end of your template -->
-    <DeleteImageConfirmationDialog
-        :show="showDeleteDialog"
-        :image="imageToDelete"
-        :deleting="deleting"
-        @confirm="deleteImage"
-        @cancel="cancelDelete"
-    />
+  </div>
+  <!-- Add the delete confirmation dialog at the end of your template -->
+  <DeleteImageConfirmationDialog
+    :show="showDeleteDialog"
+    :image="imageToDelete"
+    :deleting="deleting"
+    @confirm="deleteImage"
+    @cancel="cancelDelete"
+  />
 </template>
 
 <style scoped>
-/* Custom scrollbar styling */
-.overflow-y-auto {
+  /* Custom scrollbar styling */
+  .overflow-y-auto {
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f1f5f9;
-}
+  }
 
-.overflow-y-auto::-webkit-scrollbar {
+  .overflow-y-auto::-webkit-scrollbar {
     width: 4px;
-}
+  }
 
-.overflow-y-auto::-webkit-scrollbar-track {
+  .overflow-y-auto::-webkit-scrollbar-track {
     background: #f1f5f9;
     border-radius: 2px;
-}
+  }
 
-.overflow-y-auto::-webkit-scrollbar-thumb {
+  .overflow-y-auto::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 2px;
-}
+  }
 
-.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  .overflow-y-auto::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
-}
+  }
 
-@media (min-width: 640px) {
+  @media (min-width: 640px) {
     .overflow-y-auto::-webkit-scrollbar {
-        width: 6px;
+      width: 6px;
     }
-}
+  }
 </style>
