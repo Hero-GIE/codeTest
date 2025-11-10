@@ -17,11 +17,12 @@ class GalleryController extends Controller
         $this->analyticsService = $analyticsService;
     }
 
+    // In GalleryController.php - Update the show method
     public function show(Request $request)
     {
         $user = session('firebase_user');
 
-        // Determine website owner (same logic as WebsiteController)
+        // 🔥 IMPORTANT: Use the SAME logic as WebsiteController
         $websiteOwnerUid = $this->getWebsiteOwnerUid($request, $user);
 
         // Get page content for the website owner
@@ -30,12 +31,11 @@ class GalleryController extends Controller
         // Determine if current user is the owner
         $isOwner = $user && $user['uid'] === $websiteOwnerUid;
 
-        // Get published pages
+        // 🔥 FIX: Use the EXACT same method as WebsiteController
         $publishedPages = $this->getPublishedPages($websiteOwnerUid);
 
         // 🔥 CHECK IF GALLERY IS PUBLISHED (unless user is the owner)
         if (! $isOwner && ! ($pageContent['published'] ?? false)) {
-            // Gallery is not published and user is not the owner
             abort(404, 'Page not found');
         }
 
@@ -44,35 +44,22 @@ class GalleryController extends Controller
             $this->analyticsService->recordVisit($websiteOwnerUid, 'gallery', $request);
         }
 
-        // If no owner UID, show default public gallery
-        if (! $websiteOwnerUid) {
-            return Inertia::render('Website/Page', [
-                'user'            => null,
-                'page'            => 'gallery',
-                'pageContent'     => [
-                    'title'     => 'Adventure Gallery',
-                    'images'    => [],
-                    'published' => true,
-                ],
-                'websiteSettings' => [
-                    'colorPalette' => 'default',
-                    'customColors' => [
-                        'primary'   => '#000000',
-                        'secondary' => '#8B4513',
-                        'accent'    => '#FFFFFF',
-                    ],
-                ],
-                'isEditMode'      => false,
-                'isOwner'         => false,
-                'publishedPages'  => $publishedPages, // Add this line
-            ]);
-        }
-
         // Get gallery images for the website owner
-        $galleryImages = $this->firebaseService->getGalleryImages($websiteOwnerUid);
-
+        $galleryImages         = $this->firebaseService->getGalleryImages($websiteOwnerUid);
         $pageContent['images'] = $galleryImages;
-        $websiteSettings       = $this->firebaseService->getWebsiteSettings($websiteOwnerUid);
+
+        $websiteSettings = $this->firebaseService->getWebsiteSettings($websiteOwnerUid);
+
+        // 🔥 CRITICAL: Make sure websiteSettings has customColors
+        if (! $websiteSettings || ! isset($websiteSettings['customColors'])) {
+            $websiteSettings = [
+                'customColors' => [
+                    'primary'   => '#000000',
+                    'secondary' => '#8B4513',
+                    'accent'    => '#FFFFFF',
+                ],
+            ];
+        }
 
         return Inertia::render('Website/Page', [
             'user'            => $user,
@@ -81,7 +68,7 @@ class GalleryController extends Controller
             'websiteSettings' => $websiteSettings,
             'isEditMode'      => $request->has('edit') && $isOwner,
             'isOwner'         => $isOwner,
-            'publishedPages'  => $publishedPages, // Add this line
+            'publishedPages'  => $publishedPages, // ✅ Now consistent with other pages
         ]);
     }
 

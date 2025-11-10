@@ -128,7 +128,7 @@
       <!-- Background Image with Enhanced Overlay -->
       <div class="absolute inset-0">
         <img
-          src="https://images.unsplash.com/photo-1455849318743-b2233052fcff?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1169"
+          src="https://plus.unsplash.com/premium_photo-1698497393056-bcbcacf3e663?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fGFkdmVudHVyZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&q=60&w=600"
           alt="Mountain landscape"
           class="w-full h-full object-cover scale-105 animate-slow-zoom"
         />

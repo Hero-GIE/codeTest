@@ -17,9 +17,14 @@ class WebsiteController extends Controller
         $this->firebaseService  = $firebaseService;
         $this->analyticsService = $analyticsService;
     }
-
     public function showPage(Request $request, $page = 'home')
     {
+        \Log::info("WebsiteController - showPage called", [
+            'page' => $page,
+            'user' => session('firebase_user') ? 'logged_in' : 'guest',
+            'url'  => $request->fullUrl(),
+        ]);
+
         // Get current user if logged in
         $user = session('firebase_user');
 
@@ -80,6 +85,31 @@ class WebsiteController extends Controller
             ]);
         }
 
+        // 🔥 GALLERY-SPECIFIC LOGIC: Load gallery images
+        if ($page === 'gallery' && $websiteOwnerUid) {
+            \Log::info("🖼️ Loading gallery images for gallery page", ['uid' => $websiteOwnerUid]);
+
+            // Fetch gallery images from Firebase
+            $galleryImages = $this->firebaseService->getGalleryImages($websiteOwnerUid);
+
+            \Log::info("📊 Gallery images fetched", [
+                'count'  => count($galleryImages),
+                'images' => array_map(function ($img) {
+                    return [
+                        'id'      => $img['id'] ?? 'unknown',
+                        'caption' => $img['caption'] ?? 'No caption',
+                    ];
+                }, $galleryImages),
+            ]);
+
+            // Inject gallery images into page content
+            $pageContent['images'] = $galleryImages;
+
+            \Log::info("✅ Gallery images injected into page content", [
+                'final_count' => count($pageContent['images']),
+            ]);
+        }
+
         // 🔥 RECORD ANALYTICS for the website owner (only for published pages)
         if ($websiteOwnerUid && ($pageContent['published'] ?? false)) {
             $this->analyticsService->recordVisit($websiteOwnerUid, $page, $request);
@@ -87,6 +117,13 @@ class WebsiteController extends Controller
 
         // Get list of published pages
         $publishedPages = $this->getPublishedPages($websiteOwnerUid);
+
+        \Log::info("📋 Final published pages for navigation", [
+            'uid'             => $websiteOwnerUid,
+            'published_pages' => $publishedPages,
+            'current_page'    => $page,
+            'is_published'    => in_array($page, $publishedPages),
+        ]);
 
         return Inertia::render('Website/Page', [
             'user'            => $user,

@@ -32,12 +32,18 @@ class FirebaseService
             "client_x509_cert_url"        => env('FIREBASE_CLIENT_CERT_URL'),
         ];
 
-        $this->firebase = (new Factory)
-            ->withServiceAccount($serviceAccount)
-            ->withDatabaseUri(env('FIREBASE_DATABASE_URL'));
+        try {
+            $this->firebase = (new Factory)
+                ->withServiceAccount($serviceAccount)
+                ->withDatabaseUri(env('FIREBASE_DATABASE_URL'));
 
-        $this->auth     = $this->firebase->createAuth();
-        $this->database = $this->firebase->createDatabase();
+            $this->auth     = $this->firebase->createAuth();
+            $this->database = $this->firebase->createDatabase();
+
+        } catch (\Exception $e) {
+            \Log::error('Firebase Initialization Failed: ' . $e->getMessage());
+            throw $e;
+        }
     }
 
 /**
@@ -810,7 +816,7 @@ class FirebaseService
                         'title'           => 'Welcome to My Adventure Log',
                         'subtitle'        => 'Documenting my journeys and experiences',
                         'text'            => 'Start your adventure and share your stories with the world.',
-                        'backgroundImage' => 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2074&q=80',
+                        'backgroundImage' => 'https://plus.unsplash.com/premium_photo-1663047386229-637af57cecfe?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fGFkdmVudHVyZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&q=60&w=600',
                         'cta1Title'       => 'Explore Adventures',
                         'cta1Subtitle'    => 'Start your journey today',
                         'cta2Title'       => 'We guide your path',

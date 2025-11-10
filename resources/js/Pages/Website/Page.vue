@@ -24,7 +24,7 @@
     faYoutube,
   } from '@fortawesome/free-brands-svg-icons';
   import { computed, ref, onMounted, onUnmounted } from 'vue';
-  import { Head, Link } from '@inertiajs/vue3';
+  import { Head, Link, router } from '@inertiajs/vue3';
 
   // Import individual page components
   import HomePage from './HomePage.vue';
@@ -38,6 +38,10 @@
     pageContent: Object,
     websiteSettings: Object,
     isEditMode: Boolean,
+    isOwner: {
+      type: Boolean,
+      default: false,
+    },
     publishedPages: {
       type: Array,
       default: () => ['home', 'about', 'gallery', 'contact'],
@@ -225,6 +229,14 @@
             >
               {{ navPage.charAt(0).toUpperCase() + navPage.slice(1) }}
             </Link>
+
+            <!-- Empty state fallback -->
+            <div
+              v-if="availablePages.length === 0"
+              class="px-2 lg:px-3 py-2 text-sm text-gray-400 italic"
+            >
+              No pages available
+            </div>
           </nav>
 
           <!-- Desktop Auth Links -->
@@ -291,6 +303,14 @@
             >
               {{ navPage.charAt(0).toUpperCase() + navPage.slice(1) }}
             </Link>
+
+            <!-- Empty state fallback -->
+            <div
+              v-if="availablePages.length === 0"
+              class="px-4 py-3 text-base text-gray-400 italic text-center"
+            >
+              No pages available
+            </div>
           </nav>
 
           <!-- Mobile Auth Links -->

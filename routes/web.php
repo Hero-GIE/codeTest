@@ -56,5 +56,5 @@ Route::middleware(['firebase.auth'])->group(function () {
 Route::get('/', [WebsiteController::class, 'showPage'])->defaults('page', 'home')->name('website.home');
 Route::get('/about', [WebsiteController::class, 'showPage'])->defaults('page', 'about')->name('website.about');
 Route::get('/contact', [WebsiteController::class, 'showPage'])->defaults('page', 'contact')->name('website.contact');
-Route::get('/gallery', [GalleryController::class, 'show'])->name('gallery');
+Route::get('/gallery', [WebsiteController::class, 'showPage'])->defaults('page', 'gallery')->name('website.gallery');
 Route::get('/{page}', [WebsiteController::class, 'showPage'])->name('website.page');
