@@ -966,37 +966,46 @@ class FirebaseService
                 ],
             ],
 
+            // In your getDefaultPageContent method
             'gallery' => [
                 'title'     => 'Adventure Gallery',
                 'published' => true,
                 'sections'  => [
                     'hero' => [
-                        'title'            => 'Adventure Gallery',
-                        'highlightedTitle' => 'Visual Stories',
-                        'subtitle'         => 'Visual stories from incredible journeys around the world',
-                        'badge'            => 'Welcome to Your Adventure Log',
-                        'backgroundImage'  => 'https://plus.unsplash.com/premium_photo-1709371824843-2b72258fbd71?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1267',
-                        'stat1Label'       => 'Photos Shared',
-                        'stat2Label'       => 'Adventures Documented',
-                        'stat3Label'       => 'Countries Covered',
-                        'stat4Label'       => 'Community Active',
-                        'countriesCovered' => 50,
-                        'communityActive'  => '24/7',
-                        'categories'       => [
+                        'title'                     => 'Adventure Gallery',
+                        'highlightedTitle'          => 'Visual Stories',
+                        'subtitle'                  => 'Visual stories from incredible journeys around the world',
+                        'badge'                     => 'Welcome to Your Adventure Log',
+                        'backgroundImage'           => 'https://plus.unsplash.com/premium_photo-1709371824843-2b72258fbd71?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1267',
+
+                        // Stats Values
+                        'photosShared'              => '0',
+                        'adventuresDocumented'      => '0+',
+                        'countriesCovered'          => '50+',
+                        'communityActive'           => '24/7',
+
+                        // Stats Labels (NEW)
+                        'photosSharedLabel'         => 'Photos Shared',
+                        'adventuresDocumentedLabel' => 'Adventures Documented',
+                        'countriesCoveredLabel'     => 'Countries Covered',
+                        'communityActiveLabel'      => 'Community Active',
+
+                        'categories'                => [
                             'Mountain Expeditions',
                             'Forest Trails',
                             'Coastal Adventures',
                             'Desert Journeys',
                             'Urban Exploration',
                         ],
-                        'cta1Title'        => 'Browse Gallery',
-                        'cta1Subtitle'     => 'Explore stunning visuals',
-                        'cta2Title'        => 'Share Your Story',
-                        'cta2Subtitle'     => 'Upload your adventures',
+                        'cta1Title'                 => 'Browse Gallery',
+                        'cta1Subtitle'              => 'Explore stunning visuals',
+                        'cta2Title'                 => 'Share Your Story',
+                        'cta2Subtitle'              => 'Upload your adventures',
                     ],
                 ],
                 'images'    => [],
             ],
+
             // In your FirebaseService.php, update the contact page defaults
             'contact' => [
                 'title'     => 'Get In Touch',

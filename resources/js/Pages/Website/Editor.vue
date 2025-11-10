@@ -2689,84 +2689,100 @@
                     />
                   </div>
 
-                  <!-- Stats Section -->
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Stat 1 Label (Images)
-                      </label>
-                      <input
-                        type="text"
-                        v-model="editedContent.sections.hero.stat1Label"
-                        @blur="saveContent"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                        placeholder="Photos Shared"
-                      />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Stat 2 Label (Adventures)
-                      </label>
-                      <input
-                        type="text"
-                        v-model="editedContent.sections.hero.stat2Label"
-                        @blur="saveContent"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                        placeholder="Adventures Documented"
-                      />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Stat 3 Label (Countries)
-                      </label>
-                      <input
-                        type="text"
-                        v-model="editedContent.sections.hero.stat3Label"
-                        @blur="saveContent"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                        placeholder="Countries Covered"
-                      />
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Stat 4 Label (Community)
-                      </label>
-                      <input
-                        type="text"
-                        v-model="editedContent.sections.hero.stat4Label"
-                        @blur="saveContent"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                        placeholder="Community Active"
-                      />
-                    </div>
-                  </div>
-
-                  <!-- Countries Covered Number -->
+                  <!-- Dynamic Stats Section -->
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                      Countries Covered Number
+                      Gallery Stats
                     </label>
-                    <input
-                      type="number"
-                      v-model="editedContent.sections.hero.countriesCovered"
-                      @blur="saveContent"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                      placeholder="50"
-                    />
-                  </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <!-- Photos Shared -->
+                      <div class="p-3 border-2 border-amber-200 rounded-lg bg-amber-50/30">
+                        <label class="block text-xs font-semibold text-amber-800 mb-2">
+                          Photos Shared Label
+                        </label>
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.photosSharedLabel"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="Photos Shared"
+                        />
+                        <label class="block text-xs text-amber-700 mt-2 mb-1">Count</label>
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.photosShared"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="0"
+                        />
+                      </div>
 
-                  <!-- Community Active Text -->
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                      Community Active Text
-                    </label>
-                    <input
-                      type="text"
-                      v-model="editedContent.sections.hero.communityActive"
-                      @blur="saveContent"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                      placeholder="24/7"
-                    />
+                      <!-- Adventures Documented -->
+                      <div class="p-3 border-2 border-emerald-200 rounded-lg bg-emerald-50/30">
+                        <label class="block text-xs font-semibold text-emerald-800 mb-2">
+                          Adventures Documented Label
+                        </label>
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.adventuresDocumentedLabel"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="Adventures Documented"
+                        />
+                        <label class="block text-xs text-emerald-700 mt-2 mb-1">Count</label>
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.adventuresDocumented"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="0+"
+                        />
+                      </div>
+
+                      <!-- Countries Covered -->
+                      <div class="p-3 border-2 border-blue-200 rounded-lg bg-blue-50/30">
+                        <label class="block text-xs font-semibold text-blue-800 mb-2">
+                          Countries Covered Label
+                        </label>
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.countriesCoveredLabel"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="Countries Covered"
+                        />
+                        <label class="block text-xs text-blue-700 mt-2 mb-1">Count</label>
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.countriesCovered"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="50+"
+                        />
+                      </div>
+
+                      <!-- Community Active -->
+                      <div class="p-3 border-2 border-purple-200 rounded-lg bg-purple-50/30">
+                        <label class="block text-xs font-semibold text-purple-800 mb-2">
+                          Community Active Label
+                        </label>
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.communityActiveLabel"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="Community Active"
+                        />
+                        <label class="block text-xs text-purple-700 mt-2 mb-1">Count</label>
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.communityActive"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="24/7"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <!-- Gallery Categories -->

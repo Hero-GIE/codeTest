@@ -234,49 +234,67 @@
           </span>
         </h1>
 
-        <!-- Enhanced Gallery Stats -->
+        <!-- Enhanced Gallery Stats - Fully Editable -->
         <div
           class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto mb-12 animate-fade-in-up delay-300"
         >
+          <!-- Photos Shared -->
           <div
             class="glass-effect-card rounded-xl p-5 text-center group hover:scale-105 transition-all duration-300 border-2 border-white/20 hover:border-amber-300/50 shadow-lg"
           >
             <div
               class="text-3xl font-bold text-amber-400 mb-2 group-hover:scale-110 transition-transform"
             >
-              {{ pageContent?.images?.length || 0 }}
+              {{ heroSection.photosShared || pageContent?.images?.length || 0 }}
             </div>
-            <div class="text-white/90 text-sm font-semibold">Photos Shared</div>
+            <div class="text-white/90 text-sm font-semibold">
+              {{ heroSection.photosSharedLabel || 'Photos Shared' }}
+            </div>
           </div>
+
+          <!-- Adventures Documented -->
           <div
             class="glass-effect-card rounded-xl p-5 text-center group hover:scale-105 transition-all duration-300 border-2 border-white/20 hover:border-emerald-300/50 shadow-lg"
           >
             <div
               class="text-3xl font-bold text-emerald-400 mb-2 group-hover:scale-110 transition-transform"
             >
-              {{ Math.ceil((pageContent?.images?.length || 0) / 3) }}+
+              {{
+                heroSection.adventuresDocumented ||
+                Math.ceil((pageContent?.images?.length || 0) / 3) + '+'
+              }}
             </div>
-            <div class="text-white/90 text-sm font-semibold">Adventures Documented</div>
+            <div class="text-white/90 text-sm font-semibold">
+              {{ heroSection.adventuresDocumentedLabel || 'Adventures Documented' }}
+            </div>
           </div>
+
+          <!-- Countries Covered -->
           <div
             class="glass-effect-card rounded-xl p-5 text-center group hover:scale-105 transition-all duration-300 border-2 border-white/20 hover:border-blue-300/50 shadow-lg"
           >
             <div
               class="text-3xl font-bold text-blue-400 mb-2 group-hover:scale-110 transition-transform"
             >
-              50+
+              {{ heroSection.countriesCovered || '50+' }}
             </div>
-            <div class="text-white/90 text-sm font-semibold">Countries Covered</div>
+            <div class="text-white/90 text-sm font-semibold">
+              {{ heroSection.countriesCoveredLabel || 'Countries Covered' }}
+            </div>
           </div>
+
+          <!-- Community Active -->
           <div
             class="glass-effect-card rounded-xl p-5 text-center group hover:scale-105 transition-all duration-300 border-2 border-white/20 hover:border-purple-300/50 shadow-lg"
           >
             <div
               class="text-3xl font-bold text-purple-400 mb-2 group-hover:scale-110 transition-transform"
             >
-              24/7
+              {{ heroSection.communityActive || '24/7' }}
             </div>
-            <div class="text-white/90 text-sm font-semibold">Community Active</div>
+            <div class="text-white/90 text-sm font-semibold">
+              {{ heroSection.communityActiveLabel || 'Community Active' }}
+            </div>
           </div>
         </div>
 

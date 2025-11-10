@@ -799,7 +799,7 @@
                 @click="isEditMode && startEditing('missionBadge')"
               >
                 <FontAwesomeIcon :icon="faGlobe" />
-                <span>MY MISSION And Goal</span>
+                <span>MY MISSION</span>
               </span>
             </div>
 
