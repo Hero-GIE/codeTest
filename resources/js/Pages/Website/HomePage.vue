@@ -35,6 +35,11 @@
     websiteSettings: Object,
   });
 
+  // Local editable content - MOVED UP before computed properties
+  const editableContent = ref({});
+  const editingSection = ref(null);
+  const editingField = ref(null);
+
   // ✅ FIXED: Now you can use props.websiteSettings
   const themeColors = computed(() => {
     return (
@@ -54,18 +59,16 @@
   // Emit events for saving changes
   const emit = defineEmits(['update:pageContent', 'save']);
 
-  // Local editable content - MOVED UP before computed properties
-  const editableContent = ref({});
-  const editingSection = ref(null);
-  const editingField = ref(null);
-
-  // Ensure all required sections exist for home page
-  if (props.page === 'home') {
-    if (!editedContent.sections.hero) {
-      editedContent.sections.hero = {
+  // Default content that matches the initialization structure
+  const defaultPageContent = {
+    title: 'My Adventure Log',
+    published: true,
+    sections: {
+      hero: {
+        badge: 'Welcome to Your Adventure Log',
         title: 'Welcome to My Adventure Log',
         subtitle: 'Documenting my journeys and experiences',
-        badge: 'Welcome to Your Adventure Log',
+        text: 'Start your adventure and share your stories with the world.',
         backgroundImage:
           'https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2074&q=80',
         cta1Title: 'Explore Adventures',
@@ -73,51 +76,32 @@
         cta2Title: 'We guide your path',
         cta2Subtitle: 'Get into action',
         stats: [
-          {
-            number: '0+',
-            label: 'Adventures Logged',
-            description: 'By our community of explorers',
-          },
-          {
-            number: '0+',
-            label: 'Countries Covered',
-            description: 'By our community of explorers',
-          },
-          {
-            number: '0+',
-            label: 'Photos Shared',
-            description: 'By our community of explorers',
-          },
+          { number: '100+', label: 'Adventures', description: 'By our community' },
+          { number: '50+', label: 'Countries', description: 'Explored worldwide' },
+          { number: '1k+', label: 'Photos', description: 'Memories captured' },
         ],
-      };
-    }
-    if (!editedContent.sections.features) {
-      editedContent.sections.features = {
-        title: 'Amazing Features',
+      },
+      features: {
+        title: 'What I Do',
         items: [
           {
-            title: 'Interactive Maps',
-            description: 'Track and visualize your adventures with beautiful interactive maps.',
+            title: 'Adventure Logging',
+            description: 'Track and share my adventures',
+            icon: '🚀',
           },
           {
-            title: 'Photo Gallery',
-            description: 'Create stunning visual stories with our easy-to-use photo gallery.',
+            title: 'Story Telling',
+            description: 'Share experiences and memories',
+            icon: '📖',
           },
           {
-            title: 'Community Stories',
-            description: 'Connect with fellow adventurers and share experiences.',
+            title: 'Photo Journal',
+            description: 'Visual journey through photos',
+            icon: '📷',
           },
         ],
-      };
-    }
-    if (!editedContent.sections.recent) {
-      editedContent.sections.recent = {
-        title: 'Recent Adventures',
-        posts: [],
-      };
-    }
-    if (!editedContent.sections.mission) {
-      editedContent.sections.mission = {
+      },
+      mission: {
         title: 'Our Mission',
         content:
           'We believe every adventure has a story worth telling. Our mission is to provide the tools and platform for adventurers to document, share, and inspire others with their journeys.',
@@ -127,44 +111,66 @@
           { number: '0+', label: 'Photos Shared' },
           { number: '1', label: 'Happy Explorer' },
         ],
-      };
-    }
-  }
-
-  // Add these methods to your existing methods object
-  const addHeroStat = () => {
-    if (!editableContent.value.sections.hero.stats) {
-      editableContent.value.sections.hero.stats = [];
-    }
-    editableContent.value.sections.hero.stats.push({
-      number: '0+',
-      label: 'New Stat',
-      description: 'By our community of explorers',
-    });
-  };
-
-  const removeHeroStat = (index) => {
-    if (editableContent.value.sections.hero.stats) {
-      editableContent.value.sections.hero.stats.splice(index, 1);
-    }
-  };
-
-  // Initialize with props only - no conflicting defaults
-  function initializeEditableContent() {
-    editableContent.value = { ...props.pageContent };
-
-    // Ensure sections exist but don't override with empty arrays
-    if (!editableContent.value.sections) {
-      editableContent.value.sections = {};
-    }
-
-    // Only set empty recent posts if they don't exist at all
-    if (!editableContent.value.sections.recent) {
-      editableContent.value.sections.recent = {
+      },
+      recent: {
         title: 'Recent Adventures',
-        posts: [],
-      };
+        posts: [
+          {
+            title: 'Mountain Hiking',
+            date: '2024-01-15',
+            image:
+              'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1176&q=80',
+            excerpt: 'Amazing views from the summit...',
+          },
+          {
+            title: 'Beach Vacation',
+            date: '2024-01-10',
+            image:
+              'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1173&q=80',
+            excerpt: 'Relaxing days by the ocean...',
+          },
+        ],
+      },
+    },
+  };
+
+  // ✅ FIXED: Initialize with proper fallback to default content
+  function initializeEditableContent() {
+    console.log('🔄 Initializing content...');
+    console.log('📦 Props pageContent:', props.pageContent);
+
+    // Use pageContent if it exists and has content, otherwise use defaultPageContent
+    if (
+      props.pageContent &&
+      props.pageContent.sections &&
+      Object.keys(props.pageContent.sections).length > 0
+    ) {
+      editableContent.value = JSON.parse(JSON.stringify(props.pageContent));
+      console.log('✅ Using provided pageContent');
+    } else {
+      editableContent.value = JSON.parse(JSON.stringify(defaultPageContent));
+      console.log('✅ Using defaultPageContent (no props provided)');
     }
+
+    // Ensure all default sections exist
+    Object.keys(defaultPageContent.sections).forEach((sectionKey) => {
+      if (!editableContent.value.sections[sectionKey]) {
+        editableContent.value.sections[sectionKey] = JSON.parse(
+          JSON.stringify(defaultPageContent.sections[sectionKey])
+        );
+      } else {
+        // Ensure all fields in each section exist
+        Object.keys(defaultPageContent.sections[sectionKey]).forEach((fieldKey) => {
+          if (editableContent.value.sections[sectionKey][fieldKey] === undefined) {
+            editableContent.value.sections[sectionKey][fieldKey] = JSON.parse(
+              JSON.stringify(defaultPageContent.sections[sectionKey][fieldKey])
+            );
+          }
+        });
+      }
+    });
+
+    console.log('🎯 Final editableContent:', editableContent.value);
   }
 
   // Watch for changes in pageContent prop
@@ -248,6 +254,24 @@
     stopEditing();
   };
 
+  // Hero stats methods
+  const addHeroStat = () => {
+    if (!editableContent.value.sections.hero.stats) {
+      editableContent.value.sections.hero.stats = [];
+    }
+    editableContent.value.sections.hero.stats.push({
+      number: '0+',
+      label: 'New Stat',
+      description: 'By our community',
+    });
+  };
+
+  const removeHeroStat = (index) => {
+    if (editableContent.value.sections.hero.stats) {
+      editableContent.value.sections.hero.stats.splice(index, 1);
+    }
+  };
+
   const addFeatureItem = () => {
     if (!editableContent.value.sections.features.items) {
       editableContent.value.sections.features.items = [];
@@ -255,6 +279,7 @@
     editableContent.value.sections.features.items.push({
       title: 'New Feature',
       description: 'Describe this amazing feature...',
+      icon: '🚀',
     });
   };
 
@@ -306,6 +331,7 @@
     console.log('HomePage theme colors:', themeColors.value);
   });
 </script>
+
 <template>
   <div class="overflow-hidden relative theme-page" :class="{ 'editing-mode': isEditMode }">
     <!-- Edit Mode Indicator -->
@@ -318,68 +344,102 @@
     </div>
 
     <section class="relative theme-gradient-primary text-white py-16 md:py-24 overflow-hidden">
-      <!-- Background Image with Dim Overlay - Make Editable -->
+      <!-- Background Image with Dynamic Overlay -->
       <div class="absolute inset-0">
         <img
           :src="
             editableContent.sections?.hero?.backgroundImage ||
-            'https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2074&q=80'
+            defaultPageContent.sections.hero.backgroundImage
           "
           alt="Mountain landscape"
-          class="w-full h-full object-cover"
+          class="w-full h-full object-cover scale-105 animate-slow-zoom"
         />
-        <!-- Enhanced overlay with multiple gradients for depth -->
+        <!-- Multi-layered gradient overlays for depth -->
         <div
-          class="absolute inset-0 bg-gradient-to-br from-blue-900/80 via-purple-900/40 to-emerald-900/70"
-        ></div>
-        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-      </div>
-
-      <!-- Animated Background Elements -->
-      <div class="absolute inset-0 overflow-hidden">
-        <div
-          class="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse-glow"
+          class="absolute inset-0 bg-gradient-to-br from-indigo-900/85 via-purple-800/50 to-teal-900/75"
         ></div>
         <div
-          class="absolute top-40 right-20 w-96 h-96 bg-white/15 rounded-full blur-3xl animate-pulse-glow delay-1000"
+          class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"
         ></div>
         <div
-          class="absolute bottom-20 left-1/3 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse-glow delay-2000"
+          class="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-black/40"
         ></div>
       </div>
 
-      <!-- Floating Icons -->
+      <!-- Enhanced Animated Background Elements with Glow -->
+      <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          class="absolute top-16 -left-20 w-96 h-96 bg-cyan-400/20 rounded-full blur-3xl animate-float-glow"
+        ></div>
+        <div
+          class="absolute top-32 right-10 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-3xl animate-pulse-glow-slow"
+        ></div>
+        <div
+          class="absolute bottom-10 left-1/4 w-80 h-80 bg-amber-400/15 rounded-full blur-3xl animate-float-delayed"
+        ></div>
+        <div
+          class="absolute top-1/2 right-1/3 w-64 h-64 bg-emerald-400/15 rounded-full blur-3xl animate-pulse-glow delay-1000"
+        ></div>
+      </div>
+
+      <!-- Floating Particles Effect -->
+      <div class="absolute inset-0 pointer-events-none overflow-hidden">
+        <div
+          class="absolute top-[10%] left-[15%] w-2 h-2 bg-white/40 rounded-full animate-float-particle"
+        ></div>
+        <div
+          class="absolute top-[25%] left-[75%] w-1.5 h-1.5 bg-amber-300/50 rounded-full animate-float-particle delay-500"
+        ></div>
+        <div
+          class="absolute top-[60%] left-[20%] w-2.5 h-2.5 bg-cyan-300/40 rounded-full animate-float-particle delay-1000"
+        ></div>
+        <div
+          class="absolute top-[45%] left-[85%] w-1 h-1 bg-purple-300/50 rounded-full animate-float-particle delay-1500"
+        ></div>
+        <div
+          class="absolute top-[80%] left-[50%] w-2 h-2 bg-emerald-300/40 rounded-full animate-float-particle delay-2000"
+        ></div>
+      </div>
+
+      <!-- Floating Icons with Enhanced Animations -->
       <div class="absolute inset-0 pointer-events-none">
-        <div class="absolute top-1/4 left-10 text-white/30 text-4xl animate-float">
-          <FontAwesomeIcon :icon="faCompass" />
+        <div class="absolute top-1/4 left-10 text-white/25 text-4xl animate-float-bounce">
+          <FontAwesomeIcon :icon="faCompass" class="drop-shadow-glow" />
         </div>
-        <div class="absolute top-1/3 right-16 text-white/30 text-5xl animate-float-delayed">
-          <FontAwesomeIcon :icon="faMountain" />
+        <div class="absolute top-1/3 right-16 text-white/20 text-5xl animate-float-spin-slow">
+          <FontAwesomeIcon :icon="faMountain" class="drop-shadow-glow" />
         </div>
-        <div class="absolute bottom-1/4 left-1/4 text-white/30 text-3xl animate-float-slow">
-          <FontAwesomeIcon :icon="faUsers" />
+        <div class="absolute bottom-1/4 left-1/4 text-white/25 text-3xl animate-float-pulse">
+          <FontAwesomeIcon :icon="faUsers" class="drop-shadow-glow" />
         </div>
-        <div class="absolute top-1/2 right-1/4 text-white/20 text-6xl animate-float delay-3000">
-          <FontAwesomeIcon :icon="faTree" />
+        <div
+          class="absolute top-1/2 right-1/4 text-white/15 text-6xl animate-float-drift delay-3000"
+        >
+          <FontAwesomeIcon :icon="faTree" class="drop-shadow-glow" />
         </div>
-        <div class="absolute bottom-1/3 right-10 text-white/25 text-2xl animate-float-delayed">
-          <FontAwesomeIcon :icon="faCampground" />
+        <div
+          class="absolute bottom-1/3 right-10 text-white/20 text-2xl animate-float-bounce-delayed"
+        >
+          <FontAwesomeIcon :icon="faCampground" class="drop-shadow-glow" />
         </div>
       </div>
 
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-        <!-- Badge - Now Fully Editable -->
+        <!-- Premium Badge with Shine Effect -->
         <div
-          class="mb-6 inline-block animate-fade-in-down relative"
+          class="mb-8 inline-block animate-slide-down relative"
           :class="{ 'editable-section': isEditMode }"
         >
           <span
-            class="glass-effect text-white px-6 py-3 rounded-full text-sm font-semibold backdrop-blur-md border border-white/30 inline-flex items-center space-x-2 btn-glow"
+            class="glass-effect-premium text-white px-8 py-3.5 rounded-full text-sm font-bold backdrop-blur-xl border-2 border-white/40 inline-flex items-center space-x-3 shadow-2xl hover:scale-105 transition-transform duration-300 cursor-pointer group"
             @click="isEditMode && startEditing('hero', 'badge')"
           >
-            <FontAwesomeIcon :icon="faStar" class="text-yellow-300" />
-            <span v-if="!isEditing('hero', 'badge')">
-              {{ editableContent.sections?.hero?.badge || 'Welcome to Your Adventure Log' }}
+            <FontAwesomeIcon :icon="faStar" class="text-yellow-400 animate-pulse-bright" />
+            <span v-if="!isEditing('hero', 'badge')" class="relative">
+              {{ editableContent.sections?.hero?.badge || defaultPageContent.sections.hero.badge }}
+              <span
+                class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine"
+              ></span>
             </span>
             <input
               v-else
@@ -389,23 +449,39 @@
               class="bg-transparent border-b-2 border-white outline-none text-center w-full"
               autofocus
             />
-            <FontAwesomeIcon :icon="faArrowRight" class="text-xs ml-1" />
+            <FontAwesomeIcon
+              :icon="faArrowRight"
+              class="text-xs group-hover:translate-x-1 transition-transform"
+            />
           </span>
           <div v-if="isEditMode" class="edit-controls absolute -top-2 -right-2 flex space-x-1">
-            <button class="bg-blue-500 text-white p-1 rounded-full text-xs">
+            <button
+              class="bg-blue-500 text-white p-1.5 rounded-full text-xs hover:bg-blue-600 transition-colors shadow-lg"
+            >
               <FontAwesomeIcon :icon="faEdit" />
             </button>
           </div>
         </div>
 
-        <!-- Main Heading - Enhanced Editable Fields -->
+        <!-- Main Heading with Text Shadow and Glow -->
         <h1
-          class="text-4xl md:text-5xl lg:text-6xl font-black mb-6 leading-tight animate-fade-in-up relative text-shadow"
+          class="text-5xl md:text-6xl lg:text-7xl font-black mb-8 leading-tight animate-fade-scale-up relative"
           :class="{ 'editable-section': isEditMode }"
         >
-          <span class="block mb-2" @click="isEditMode && startEditing('hero', 'title')">
-            <span v-if="!isEditing('hero', 'title')">
-              {{ editableContent.sections?.hero?.title || 'About Our' }}
+          <span
+            class="block mb-4 drop-shadow-2xl hover:scale-105 transition-transform duration-300 cursor-pointer"
+            @click="isEditMode && startEditing('hero', 'title')"
+            style="
+              text-shadow:
+                0 0 40px rgba(255, 255, 255, 0.3),
+                0 4px 20px rgba(0, 0, 0, 0.8);
+            "
+          >
+            <span
+              v-if="!isEditing('hero', 'title')"
+              class="bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent"
+            >
+              {{ editableContent.sections?.hero?.title || defaultPageContent.sections.hero.title }}
             </span>
             <input
               v-else
@@ -417,19 +493,40 @@
             />
           </span>
 
-          <!-- Subtitle - Enhanced with gradient text editing -->
+          <!-- Hero Description Text -->
           <p
-            class="text-xl md:text-2xl opacity-90 max-w-3xl mx-auto leading-relaxed font-light animate-fade-in-up delay-200 relative text-shadow"
+            class="text-xl md:text-2xl opacity-90 max-w-3xl mx-auto mb-8 animate-fade-in-up delay-200 font-light leading-relaxed cursor-pointer hover:opacity-100 transition-opacity"
+            :class="{ 'editable-section': isEditMode }"
+            @click="isEditMode && startEditing('hero', 'text')"
+            style="text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7)"
+          >
+            <span v-if="!isEditing('hero', 'text')">
+              {{ editableContent.sections?.hero?.text || defaultPageContent.sections.hero.text }}
+            </span>
+            <textarea
+              v-else
+              v-model="editableContent.sections.hero.text"
+              @blur="stopEditing"
+              @keyup.enter="stopEditing"
+              class="bg-transparent border-b-2 border-white outline-none text-center w-full resize-none"
+              rows="2"
+            />
+          </p>
+
+          <!-- Subtitle with Animated Gradient -->
+          <p
+            class="text-2xl md:text-3xl opacity-95 max-w-4xl mx-auto leading-relaxed font-semibold animate-fade-in-up delay-300 cursor-pointer group"
             :class="{ 'editable-section': isEditMode }"
             @click="isEditMode && startEditing('hero', 'subtitle')"
           >
             <span
               v-if="!isEditing('hero', 'subtitle')"
-              class="font-semibold block bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent"
+              class="block bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent animate-gradient-x drop-shadow-lg group-hover:scale-105 transition-transform"
+              style="background-size: 200% 200%"
             >
               {{
                 editableContent.sections?.hero?.subtitle ||
-                'Document and share your amazing journeys with the world'
+                defaultPageContent.sections.hero.subtitle
               }}
             </span>
             <textarea
@@ -443,27 +540,35 @@
           </p>
         </h1>
 
-        <!-- CTA Elements - Now Editable -->
+        <!-- Enhanced CTA Cards with Hover Effects -->
         <div
-          class="mt-10 flex flex-col sm:flex-row justify-center gap-6 animate-fade-in-up delay-400"
+          class="mt-12 flex flex-col sm:flex-row justify-center gap-6 animate-fade-in-up delay-500"
         >
-          <!-- First CTA Card - Editable -->
+          <!-- First CTA Card -->
           <div
-            class="group glass-effect rounded-2xl px-8 py-4 backdrop-blur-sm border border-white/20 hover:border-amber-300/50 transition-all duration-300 relative"
+            class="group glass-effect-card rounded-2xl px-10 py-6 backdrop-blur-xl border-2 border-white/30 hover:border-amber-400/70 transition-all duration-500 relative overflow-hidden cursor-pointer transform hover:scale-105 hover:-translate-y-1 shadow-2xl hover:shadow-amber-500/20"
             :class="{ 'editable-section': isEditMode }"
             @click="isEditMode && startEditing('hero', 'cta1')"
           >
-            <div class="flex items-center space-x-3">
-              <div class="text-amber-300 group-hover:scale-110 transition-transform">
-                <FontAwesomeIcon :icon="faCompass" />
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-amber-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            ></div>
+            <div class="flex items-center space-x-4 relative z-10">
+              <div
+                class="text-amber-400 text-3xl group-hover:rotate-12 group-hover:scale-125 transition-all duration-500"
+              >
+                <FontAwesomeIcon :icon="faCompass" class="drop-shadow-lg" />
               </div>
               <div>
                 <div
-                  class="text-white font-semibold text-lg"
+                  class="text-white font-bold text-xl mb-1"
                   @click.stop="isEditMode && startEditing('hero', 'cta1Title')"
                 >
                   <span v-if="!isEditing('hero', 'cta1Title')">
-                    {{ editableContent.sections?.hero?.cta1Title || 'Explore Adventures' }}
+                    {{
+                      editableContent.sections?.hero?.cta1Title ||
+                      defaultPageContent.sections.hero.cta1Title
+                    }}
                   </span>
                   <input
                     v-else
@@ -475,11 +580,14 @@
                   />
                 </div>
                 <div
-                  class="text-white/70 text-sm"
+                  class="text-white/80 text-sm font-medium"
                   @click.stop="isEditMode && startEditing('hero', 'cta1Subtitle')"
                 >
                   <span v-if="!isEditing('hero', 'cta1Subtitle')">
-                    {{ editableContent.sections?.hero?.cta1Subtitle || 'Start your journey today' }}
+                    {{
+                      editableContent.sections?.hero?.cta1Subtitle ||
+                      defaultPageContent.sections.hero.cta1Subtitle
+                    }}
                   </span>
                   <input
                     v-else
@@ -494,23 +602,31 @@
             </div>
           </div>
 
-          <!-- Second CTA Card - Editable -->
+          <!-- Second CTA Card -->
           <div
-            class="group glass-effect rounded-2xl px-8 py-4 backdrop-blur-sm border border-white/20 hover:border-emerald-300/50 transition-all duration-300 relative"
+            class="group glass-effect-card rounded-2xl px-10 py-6 backdrop-blur-xl border-2 border-white/30 hover:border-emerald-400/70 transition-all duration-500 relative overflow-hidden cursor-pointer transform hover:scale-105 hover:-translate-y-1 shadow-2xl hover:shadow-emerald-500/20"
             :class="{ 'editable-section': isEditMode }"
             @click="isEditMode && startEditing('hero', 'cta2')"
           >
-            <div class="flex items-center space-x-3">
-              <div class="text-emerald-300 group-hover:scale-110 transition-transform">
-                <FontAwesomeIcon :icon="faPlayCircle" />
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-emerald-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            ></div>
+            <div class="flex items-center space-x-4 relative z-10">
+              <div
+                class="text-emerald-400 text-3xl group-hover:scale-125 transition-all duration-500"
+              >
+                <FontAwesomeIcon :icon="faPlayCircle" class="drop-shadow-lg" />
               </div>
               <div>
                 <div
-                  class="text-white font-semibold text-lg"
+                  class="text-white font-bold text-xl mb-1"
                   @click.stop="isEditMode && startEditing('hero', 'cta2Title')"
                 >
                   <span v-if="!isEditing('hero', 'cta2Title')">
-                    {{ editableContent.sections?.hero?.cta2Title || 'We guide your path' }}
+                    {{
+                      editableContent.sections?.hero?.cta2Title ||
+                      defaultPageContent.sections.hero.cta2Title
+                    }}
                   </span>
                   <input
                     v-else
@@ -522,11 +638,14 @@
                   />
                 </div>
                 <div
-                  class="text-white/70 text-sm"
+                  class="text-white/80 text-sm font-medium"
                   @click.stop="isEditMode && startEditing('hero', 'cta2Subtitle')"
                 >
                   <span v-if="!isEditing('hero', 'cta2Subtitle')">
-                    {{ editableContent.sections?.hero?.cta2Subtitle || 'Get into action' }}
+                    {{
+                      editableContent.sections?.hero?.cta2Subtitle ||
+                      defaultPageContent.sections.hero.cta2Subtitle
+                    }}
                   </span>
                   <input
                     v-else
@@ -542,46 +661,53 @@
           </div>
         </div>
 
-        <!-- Background Image URL Editor (Only in Edit Mode) -->
-        <div v-if="isEditMode" class="mt-8 max-w-2xl mx-auto">
-          <div class="glass-effect rounded-xl p-4">
-            <h3 class="text-white font-semibold mb-2">Hero Background Image</h3>
+        <!-- Background Image Editor (Edit Mode Only) -->
+        <div v-if="isEditMode" class="mt-10 max-w-2xl mx-auto">
+          <div class="glass-effect-card rounded-xl p-6 border border-white/20">
+            <h3 class="text-white font-bold mb-3 text-lg">🖼️ Hero Background Image</h3>
             <div class="flex space-x-2">
               <input
                 v-model="editableContent.sections.hero.backgroundImage"
                 placeholder="Enter image URL..."
-                class="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/50 outline-none focus:border-amber-300"
+                class="flex-1 bg-white/10 border border-white/30 rounded-lg px-4 py-3 text-white placeholder-white/50 outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all"
               />
               <button
-                @click="editableContent.sections.hero.backgroundImage = ''"
-                class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
+                @click="
+                  editableContent.sections.hero.backgroundImage =
+                    defaultPageContent.sections.hero.backgroundImage
+                "
+                class="bg-red-500 text-white px-5 py-3 rounded-lg hover:bg-red-600 transition-colors font-semibold shadow-lg"
               >
                 Reset
               </button>
             </div>
-            <p class="text-white/70 text-sm mt-2">
-              Paste a direct image URL for the background. Recommended: 1920x1080px or larger.
+            <p class="text-white/60 text-sm mt-3">
+              💡 Paste a direct image URL. Recommended: 1920x1080px or larger for best quality.
             </p>
           </div>
         </div>
 
-        <!-- Stats Section - Enhanced with Add/Remove -->
+        <!-- Enhanced Stats Section with Animated Cards -->
         <div
-          class="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto animate-fade-in-up delay-600"
+          class="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto animate-fade-in-up delay-700"
         >
           <div
-            v-for="(stat, index) in editableContent.sections?.hero?.stats || []"
+            v-for="(stat, index) in editableContent.sections?.hero?.stats ||
+            defaultPageContent.sections.hero.stats"
             :key="index"
-            class="stat-card glass-effect rounded-xl p-4 text-center relative"
+            class="stat-card-premium glass-effect-card rounded-2xl p-6 text-center relative overflow-hidden group cursor-pointer transform hover:scale-105 transition-all duration-500 border-2 border-white/20 hover:border-amber-300/50 shadow-xl hover:shadow-2xl"
             :class="{ 'editable-section': isEditMode }"
           >
             <div
-              class="text-3xl font-black text-white mb-2 flex justify-center"
+              class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            ></div>
+            <div
+              class="text-4xl md:text-5xl font-black text-white mb-3 flex justify-center relative z-10"
               @click="isEditMode && startEditing('heroStats', 'number', index)"
             >
               <span
                 v-if="!isEditing('heroStats', 'number', index)"
-                class="bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent"
+                class="bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 bg-clip-text text-transparent drop-shadow-lg animate-pulse-subtle"
               >
                 {{ stat.number }}
               </span>
@@ -590,12 +716,12 @@
                 v-model="stat.number"
                 @blur="stopEditing"
                 @keyup.enter="stopEditing"
-                class="bg-transparent border-b-2 border-white outline-none text-center w-20"
+                class="bg-transparent border-b-2 border-white outline-none text-center w-24"
                 autofocus
               />
             </div>
             <div
-              class="text-white/80 text-base font-medium"
+              class="text-white font-bold text-lg mb-2 relative z-10"
               @click="isEditMode && startEditing('heroStats', 'label', index)"
             >
               <span v-if="!isEditing('heroStats', 'label', index)">{{ stat.label }}</span>
@@ -609,7 +735,7 @@
               />
             </div>
             <div
-              class="mt-1 text-white/60 text-xs"
+              class="text-white/70 text-sm relative z-10"
               @click="isEditMode && startEditing('heroStats', 'description', index)"
             >
               <span v-if="!isEditing('heroStats', 'description', index)">
@@ -620,14 +746,17 @@
                 v-model="stat.description"
                 @blur="stopEditing"
                 @keyup.enter="stopEditing"
-                class="bg-transparent border-b-2 border-white outline-none text-center w-full text-xs"
+                class="bg-transparent border-b-2 border-white outline-none text-center w-full text-sm"
                 autofocus
               />
             </div>
-            <div v-if="isEditMode" class="edit-controls absolute -top-2 -right-2 flex space-x-1">
+            <div
+              v-if="isEditMode"
+              class="edit-controls absolute -top-3 -right-3 flex space-x-1 z-20"
+            >
               <button
                 @click="removeHeroStat(index)"
-                class="bg-red-500 text-white p-1 rounded-full text-xs"
+                class="bg-red-500 text-white p-2 rounded-full text-xs hover:bg-red-600 transition-colors shadow-lg"
               >
                 <FontAwesomeIcon :icon="faTimes" />
               </button>
@@ -635,20 +764,20 @@
           </div>
 
           <!-- Add Stat Button -->
-          <div v-if="isEditMode" class="col-span-3 flex justify-center">
+          <div v-if="isEditMode" class="col-span-3 flex justify-center mt-4">
             <button
               @click="addHeroStat"
-              class="bg-green-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-green-600 transition-colors"
+              class="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-xl flex items-center space-x-2 hover:from-green-600 hover:to-emerald-600 transition-all duration-300 font-bold shadow-xl hover:shadow-2xl transform hover:scale-105"
             >
               <FontAwesomeIcon :icon="faPlus" />
-              <span>Add Stat</span>
+              <span>Add New Stat</span>
             </button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Mission Section - UPDATED to use theme classes -->
+    <!-- Mission Section -->
     <section class="py-20 theme-bg-accent relative overflow-hidden">
       <!-- Background Pattern -->
       <div class="absolute inset-0 opacity-[0.02]">
@@ -670,7 +799,7 @@
                 @click="isEditMode && startEditing('missionBadge')"
               >
                 <FontAwesomeIcon :icon="faGlobe" />
-                <span>MY MISSION</span>
+                <span>MY MISSION And Goal</span>
               </span>
             </div>
 
@@ -679,7 +808,12 @@
               :class="{ 'editable-section': isEditMode }"
               @click="isEditMode && startEditing('mission', 'title')"
             >
-              <span v-if="!isEditing('mission', 'title')">Why I Adventure</span>
+              <span v-if="!isEditing('mission', 'title')">
+                {{
+                  editableContent.sections?.mission?.title ||
+                  defaultPageContent.sections.mission.title
+                }}
+              </span>
               <input
                 v-else
                 v-model="editableContent.sections.mission.title"
@@ -696,58 +830,28 @@
               @click="isEditMode && startEditing('mission', 'content')"
             >
               <span v-if="!isEditing('mission', 'content')">
-                {{ editableContent.sections?.mission?.content }}
+                {{
+                  editableContent.sections?.mission?.content ||
+                  defaultPageContent.sections.mission.content
+                }}
               </span>
               <textarea
                 v-else
                 v-model="editableContent.sections.mission.content"
                 @blur="stopEditing"
                 @keyup.enter="stopEditing"
-                class="bg-transparent border-b-2 theme-border-secondary outline-none w-full resize-none"
+                class="bg-transparent border-b-2 outline-none w-full resize-none"
                 rows="4"
                 autofocus
               />
             </p>
-
-            <!-- Mission Points -->
-            <div class="space-y-4">
-              <div
-                class="flex items-center space-x-4 p-4 rounded-xl theme-bg-accent shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <div
-                  class="w-12 h-12 theme-bg-primary rounded-xl flex items-center justify-center flex-shrink-0"
-                >
-                  <FontAwesomeIcon :icon="faRoute" class="theme-text-accent text-lg" />
-                </div>
-                <div>
-                  <h4 class="font-bold theme-text-primary">Track Every Journey</h4>
-                  <p class="theme-text-secondary text-sm">
-                    From city explorations to mountain treks
-                  </p>
-                </div>
-              </div>
-              <div
-                class="flex items-center space-x-4 p-4 rounded-xl theme-bg-accent shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <div
-                  class="w-12 h-12 theme-bg-primary rounded-xl flex items-center justify-center flex-shrink-0"
-                >
-                  <FontAwesomeIcon :icon="faBinoculars" class="theme-text-accent text-lg" />
-                </div>
-                <div>
-                  <h4 class="font-bold theme-text-primary">Share My Perspective</h4>
-                  <p class="theme-text-secondary text-sm">
-                    Inspire others with my unique experiences
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
 
           <!-- Stats Grid -->
           <div class="grid grid-cols-2 gap-6 animate-fade-in-up delay-200">
             <div
-              v-for="(stat, index) in editableContent.sections?.mission?.stats"
+              v-for="(stat, index) in editableContent.sections?.mission?.stats ||
+              defaultPageContent.sections.mission.stats"
               :key="index"
               class="group theme-bg-accent p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 theme-border-primary relative"
               :class="{ 'editable-section': isEditMode }"
@@ -788,10 +892,10 @@
       </div>
     </section>
 
-    <!-- Features Grid with Modern Cards - UPDATED to use theme classes -->
-    <section class="py-20 theme-bg-primary relative">
+    <!-- Features Grid with Modern Cards -->
+    <section class="py-20 relative">
       <!-- Decorative Elements -->
-      <div class="absolute top-0 left-0 w-full h-1 theme-gradient-primary"></div>
+      <div class="absolute top-0 left-0 w-full h-1"></div>
 
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Section Header -->
@@ -811,7 +915,10 @@
             @click="isEditMode && startEditing('features', 'title')"
           >
             <span v-if="!isEditing('features', 'title')">
-              {{ editableContent.sections?.features?.title }}
+              {{
+                editableContent.sections?.features?.title ||
+                defaultPageContent.sections.features.title
+              }}
             </span>
             <input
               v-else
@@ -831,7 +938,8 @@
         <!-- Feature Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div
-            v-for="(feature, index) in editableContent.sections?.features?.items"
+            v-for="(feature, index) in editableContent.sections?.features?.items ||
+            defaultPageContent.sections.features.items"
             :key="index"
             class="group relative theme-bg-accent p-8 rounded-3xl border-2 theme-border-secondary hover:theme-border-primary transition-all duration-500 hover:shadow-2xl hover:-translate-y-2"
             :class="{ 'editable-section': isEditMode }"
@@ -845,7 +953,10 @@
                 <div
                   class="relative theme-gradient-primary theme-text-accent p-5 rounded-2xl text-3xl transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300"
                 >
+                  <!-- Use editable icon -->
+                  <span v-if="feature.icon">{{ feature.icon }}</span>
                   <FontAwesomeIcon
+                    v-else
                     :icon="index === 0 ? faMapMarkedAlt : index === 1 ? faCamera : faUsers"
                   />
                 </div>
@@ -926,7 +1037,7 @@
       </div>
     </section>
 
-    <!-- Recent Adventures Section - Elegant Black & White Design -->
+    <!-- Recent Adventures Section -->
     <section class="py-16 sm:py-20 lg:py-24 bg-white relative overflow-hidden">
       <!-- Subtle Background Pattern -->
       <div class="absolute inset-0 opacity-[0.03]">
@@ -972,7 +1083,9 @@
             @click="isEditMode && startEditing('recent', 'title')"
           >
             <span v-if="!isEditing('recent', 'title')" class="relative inline-block">
-              {{ editableContent.sections?.recent?.title }}
+              {{
+                editableContent.sections?.recent?.title || defaultPageContent.sections.recent.title
+              }}
               <!-- Underline accent -->
               <span
                 class="absolute -bottom-2 left-0 w-full h-1 bg-black transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"
@@ -1454,40 +1567,93 @@
   textarea:focus {
     background: rgba(255, 255, 255, 0.2);
   }
-  /* These will now work because CSS variables are inherited */
-  .theme-page {
-    color: var(--text-primary);
-    background-color: var(--bg-primary);
+
+  /* Theme CSS Classes - Add these */
+  .theme-gradient-primary {
+    background: linear-gradient(
+      135deg,
+      var(--color-primary, #000000),
+      var(--color-secondary, #8b4513)
+    );
+  }
+
+  .theme-bg-primary {
+    background-color: var(--color-primary, #000000);
+  }
+
+  .theme-bg-accent {
+    background-color: var(--color-accent, #ffffff);
+  }
+
+  .theme-text-primary {
+    color: var(--color-primary, #000000);
+  }
+
+  .theme-text-secondary {
+    color: var(--color-secondary, #8b4513);
+  }
+
+  .theme-text-accent {
+    color: var(--color-accent, #ffffff);
+  }
+
+  .theme-border-primary {
+    border-color: var(--color-primary, #000000);
+  }
+
+  .theme-border-secondary {
+    border-color: var(--color-secondary, #8b4513);
   }
 
   /* Ensure all color classes use CSS variables */
   .text-primary {
-    color: var(--color-primary) !important;
+    color: var(--color-primary, #000000) !important;
   }
+
   .bg-primary {
-    background-color: var(--color-primary) !important;
+    background-color: var(--color-primary, #000000) !important;
   }
+
   .border-primary {
-    border-color: var(--color-primary) !important;
+    border-color: var(--color-primary, #000000) !important;
   }
 
   .text-secondary {
-    color: var(--color-secondary) !important;
+    color: var(--color-secondary, #8b4513) !important;
   }
+
   .bg-secondary {
-    background-color: var(--color-secondary) !important;
+    background-color: var(--color-secondary, #8b4513) !important;
   }
+
   .border-secondary {
-    border-color: var(--color-secondary) !important;
+    border-color: var(--color-secondary, #8b4513) !important;
   }
 
   .text-accent {
-    color: var(--color-accent) !important;
+    color: var(--color-accent, #ffffff) !important;
   }
+
   .bg-accent {
-    background-color: var(--color-accent) !important;
+    background-color: var(--color-accent, #ffffff) !important;
   }
+
   .border-accent {
-    border-color: var(--color-accent) !important;
+    border-color: var(--color-accent, #ffffff) !important;
+  }
+
+  /* Line clamp utilities */
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
   }
 </style>

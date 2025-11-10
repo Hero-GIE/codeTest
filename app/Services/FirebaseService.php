@@ -806,10 +806,20 @@ class FirebaseService
                 'published' => true,
                 'sections'  => [
                     'hero'     => [
-                        'title'    => 'Welcome to My Adventure Log',
-                        'subtitle' => 'Documenting my journeys and experiences',
-                        'image'    => '/images/hero-default.jpg',
-                        'text'     => 'Start your adventure and share your stories with the world.',
+                        'badge'           => 'Welcome to Your Adventure Log',
+                        'title'           => 'Welcome to My Adventure Log',
+                        'subtitle'        => 'Documenting my journeys and experiences',
+                        'text'            => 'Start your adventure and share your stories with the world.',
+                        'backgroundImage' => 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2074&q=80',
+                        'cta1Title'       => 'Explore Adventures',
+                        'cta1Subtitle'    => 'Start your journey today',
+                        'cta2Title'       => 'We guide your path',
+                        'cta2Subtitle'    => 'Get into action',
+                        'stats'           => [
+                            ['number' => '100+', 'label' => 'Adventures', 'description' => 'By our community'],
+                            ['number' => '50+', 'label' => 'Countries', 'description' => 'Explored worldwide'],
+                            ['number' => '1k+', 'label' => 'Photos', 'description' => 'Memories captured'],
+                        ],
                     ],
                     'features' => [
                         'title' => 'What I Do',
@@ -831,6 +841,16 @@ class FirebaseService
                             ],
                         ],
                     ],
+                    'mission'  => [
+                        'title'   => 'Our Mission',
+                        'content' => 'We believe every adventure has a story worth telling. Our mission is to provide the tools and platform for adventurers to document, share, and inspire others with their journeys.',
+                        'stats'   => [
+                            ['number' => '0+', 'label' => 'Adventures Logged'],
+                            ['number' => '0+', 'label' => 'Countries Covered'],
+                            ['number' => '0+', 'label' => 'Photos Shared'],
+                            ['number' => '1', 'label' => 'Happy Explorer'],
+                        ],
+                    ],
                     'recent'   => [
                         'title' => 'Recent Adventures',
                         'posts' => [
@@ -850,14 +870,34 @@ class FirebaseService
                     ],
                 ],
             ],
+
             // In your getDefaultPageContent method, update the 'about' section:
             'about'   => [
                 'title'     => 'About Our Adventure',
                 'published' => true,
                 'sections'  => [
                     'hero'         => [
-                        'title'    => 'About Us',
-                        'subtitle' => 'Discover the story behind Adventure Log and the passionate team dedicated to helping you document and share your journeys with the world.',
+                        'badge'            => 'Our Story & Mission',
+                        'title'            => 'About UsS',
+                        'highlightedTitle' => 'Adventure Journey',
+                        'subtitle'         => 'Discover the story behind Adventure Log and the passionate team dedicated to helping you document and share your journeys with the world.',
+                        'stats'            => [
+                            [
+                                'number'      => '5K+',
+                                'label'       => 'Team Members',
+                                'description' => 'Passionate Adventurers',
+                            ],
+                            [
+                                'number'      => '50+',
+                                'label'       => 'Countries Reached',
+                                'description' => 'Global Community',
+                            ],
+                            [
+                                'number'      => '3+',
+                                'label'       => 'Years of Passion',
+                                'description' => 'Dedicated Service',
+                            ],
+                        ],
                     ],
                     'mission'      => [
                         'title'       => 'OUR MISSION',
@@ -887,6 +927,37 @@ class FirebaseService
                             'icon'        => 'faHeart',
                         ],
                     ],
+                    'stats'        => [
+                        'title'    => 'Adventure by the Numbers',
+                        'subtitle' => 'Growing every day with passionate explorers',
+                    ],
+                    'values'       => [
+                        'badge'    => 'WHAT DRIVES US',
+                        'title'    => 'Our Core Values',
+                        'subtitle' => 'The principles that guide everything we do',
+                        'items'    => [
+                            [
+                                'title'       => 'Authenticity',
+                                'description' => 'Real stories from real adventurers. We celebrate genuine experiences and authentic voices.',
+                                'action'      => 'Stay True',
+                            ],
+                            [
+                                'title'       => 'Inspiration',
+                                'description' => 'Spark curiosity and adventure in others. Every story has the power to inspire someone\'s next journey.',
+                                'action'      => 'Light the Way',
+                            ],
+                            [
+                                'title'       => 'Community',
+                                'description' => 'Connect with fellow explorers worldwide. Together, we create a global network of adventure seekers.',
+                                'action'      => 'Grow Together',
+                            ],
+                        ],
+                    ],
+                    'cta'          => [
+                        'title'      => 'Join Our Community',
+                        'subtitle'   => 'Start documenting your adventures today and become part of a global community of explorers.',
+                        'buttonText' => 'Get Started Free',
+                    ],
                 ],
                 'stats'     => [
                     'team_members'      => '5K+',
@@ -894,9 +965,36 @@ class FirebaseService
                     'years_of_passion'  => '3+',
                 ],
             ],
+
             'gallery' => [
                 'title'     => 'Adventure Gallery',
                 'published' => true,
+                'sections'  => [
+                    'hero' => [
+                        'title'            => 'Adventure Gallery',
+                        'highlightedTitle' => 'Visual Stories',
+                        'subtitle'         => 'Visual stories from incredible journeys around the world',
+                        'badge'            => 'Welcome to Your Adventure Log',
+                        'backgroundImage'  => 'https://plus.unsplash.com/premium_photo-1709371824843-2b72258fbd71?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1267',
+                        'stat1Label'       => 'Photos Shared',
+                        'stat2Label'       => 'Adventures Documented',
+                        'stat3Label'       => 'Countries Covered',
+                        'stat4Label'       => 'Community Active',
+                        'countriesCovered' => 50,
+                        'communityActive'  => '24/7',
+                        'categories'       => [
+                            'Mountain Expeditions',
+                            'Forest Trails',
+                            'Coastal Adventures',
+                            'Desert Journeys',
+                            'Urban Exploration',
+                        ],
+                        'cta1Title'        => 'Browse Gallery',
+                        'cta1Subtitle'     => 'Explore stunning visuals',
+                        'cta2Title'        => 'Share Your Story',
+                        'cta2Subtitle'     => 'Upload your adventures',
+                    ],
+                ],
                 'images'    => [],
             ],
             // In your FirebaseService.php, update the contact page defaults
@@ -911,8 +1009,23 @@ class FirebaseService
                 ],
                 'sections'  => [
                     'hero'   => [
-                        'title'    => 'Get In Touch',
-                        'subtitle' => 'We\'d love to hear about your adventures and help you share them with the world',
+                        'title'            => 'Get In Touch',
+                        'subtitle'         => "We'd love to hear about your adventures and help you share them with the world",
+                        'badge'            => "Let's Connect & Collaborate",
+                        'highlightedTitle' => 'Start Your Journey',
+                        'backgroundImage'  => 'https://images.unsplash.com/photo-1596524430615-b46475ddff6e?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170',
+                        'emailTitle'       => 'Email Us',
+                        'emailSubtitle'    => 'We reply within 1 hour',
+                        'phoneTitle'       => 'Call Us',
+                        'phoneNumber'      => '+1 (555) 123-4567',
+                        'phoneSubtitle'    => 'Mon – Fri: 9AM – 6PM',
+                        'locationTitle'    => 'Visit Us',
+                        'addressLine1'     => '123 Adventure Lane',
+                        'addressLine2'     => 'Los Angeles, CA',
+                        'cta1Title'        => 'Send Message',
+                        'cta1Subtitle'     => 'Get instant response',
+                        'cta2Title'        => 'Schedule Call',
+                        'cta2Subtitle'     => 'Book a meeting',
                     ],
                     'info'   => [
                         'title'       => 'Let\'s Start a Conversation',

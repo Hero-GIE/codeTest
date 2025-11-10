@@ -4,8 +4,10 @@
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
   import {
     faEdit,
+    faCalendar,
     faEye,
     faArrowLeft,
+    faLocationDot,
     faUpload,
     faImage,
     faHeading,
@@ -46,6 +48,17 @@
   const saving = ref(false);
   const mobileMenuOpen = ref(false);
 
+  const saveContent = async () => {
+    saving.value = true;
+    try {
+      await router.post(`/website/pages/${props.page}`, editedContent);
+      setTimeout(() => (saving.value = false), 1000);
+    } catch (error) {
+      console.error('Error saving content:', error);
+      saving.value = false;
+    }
+  };
+
   // Add these methods to your existing methods object
   const addHeroStat = () => {
     if (!editedContent.sections.hero.stats) {
@@ -62,6 +75,22 @@
   const removeHeroStat = (index) => {
     if (editedContent.sections.hero.stats) {
       editedContent.sections.hero.stats.splice(index, 1);
+      saveContent();
+    }
+  };
+
+  // Add these methods to your existing methods object
+  const addGalleryCategory = () => {
+    if (!editedContent.sections.hero.categories) {
+      editedContent.sections.hero.categories = [];
+    }
+    editedContent.sections.hero.categories.push('New Category');
+    saveContent();
+  };
+
+  const removeGalleryCategory = (index) => {
+    if (editedContent.sections.hero.categories) {
+      editedContent.sections.hero.categories.splice(index, 1);
       saveContent();
     }
   };
@@ -115,63 +144,6 @@
           { number: '0+', label: 'Photos Shared' },
           { number: '1', label: 'Happy Explorer' },
         ],
-      };
-    }
-  }
-
-  // Ensure all required sections exist for about page
-  if (props.page === 'about') {
-    if (!editedContent.sections) {
-      editedContent.sections = {};
-    }
-    if (!editedContent.sections.hero) {
-      editedContent.sections.hero = {
-        title: 'About Our',
-        subtitle:
-          'Discover the story behind Adventure Log and the passionate team dedicated to helping you document and share your journeys with the world.',
-      };
-    }
-    if (!editedContent.sections.mission) {
-      editedContent.sections.mission = {
-        title: 'OUR MISSION',
-        heading: 'Empowering Adventurers Worldwide',
-        points: [
-          'Born from a passion for exploration and storytelling, Adventure Log was created to bridge the gap between memorable experiences and lasting documentation.',
-          "We understand that every journey, whether it's climbing mountains or exploring local hidden gems, deserves to be remembered and shared in a beautiful, meaningful way.",
-          'Our platform combines intuitive design with powerful features to help you create stunning visual narratives of your adventures.',
-        ],
-        quote:
-          '"Every adventure is a story waiting to be told. We\'re here to help you tell yours in the most beautiful way possible."',
-        quoteAuthor: '— The Adventure Log Team',
-      };
-    }
-    if (!editedContent.sections.featureCards) {
-      editedContent.sections.featureCards = [
-        {
-          title: 'Global Community',
-          description:
-            'Join adventurers from around the world sharing their incredible stories and inspiring others to explore.',
-          icon: 'faGlobeAmericas',
-        },
-        {
-          title: 'Innovative Platform',
-          description:
-            'Cutting-edge tools and features designed specifically for documenting and sharing your adventures beautifully.',
-          icon: 'faCompass',
-        },
-        {
-          title: 'Built with Passion',
-          description:
-            'Created by adventurers, for adventurers. We live and breathe exploration and understand your needs.',
-          icon: 'faHeart',
-        },
-      ];
-    }
-    if (!editedContent.stats) {
-      editedContent.stats = {
-        team_members: '5K+',
-        countries_reached: '50+',
-        years_of_passion: '3+',
       };
     }
   }
@@ -239,16 +211,34 @@
     }
   }
 
-  const saveContent = async () => {
-    saving.value = true;
-    try {
-      await router.post(`/website/pages/${props.page}`, editedContent);
-      setTimeout(() => (saving.value = false), 1000);
-    } catch (error) {
-      console.error('Error saving content:', error);
-      saving.value = false;
+  // Ensure all required sections exist for gallery page
+  if (props.page === 'gallery') {
+    if (!editedContent.sections) {
+      editedContent.sections = {};
     }
-  };
+    if (!editedContent.sections.hero) {
+      editedContent.sections.hero = {
+        title: 'Adventure Gallery',
+        subtitle: 'Visual stories from incredible journeys around the world',
+        badge: 'Welcome to Your Adventure Log',
+        backgroundImage:
+          'https://plus.unsplash.com/premium_photo-1709371824843-2b72258fbd71?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1267',
+        categories: [
+          'Mountain Expeditions',
+          'Forest Trails',
+          'Coastal Adventures',
+          'Desert Journeys',
+          'Urban Exploration',
+        ],
+        cta1Title: 'Browse Gallery',
+        cta1Subtitle: 'Explore stunning visuals',
+        cta2Title: 'Share Your Story',
+        cta2Subtitle: 'Upload your adventures',
+      };
+      // Save the initial content
+      saveContent();
+    }
+  }
 
   // Add these reactive variables
   const showAdventureModal = ref(false);
@@ -717,6 +707,22 @@
       hero: {
         title: 'Get In Touch',
         subtitle: "We'd love to hear about your adventures and help you share them with the world",
+        badge: "Let's Connect & Collaborate",
+        highlightedTitle: 'Start Your Journey',
+        backgroundImage:
+          'https://images.unsplash.com/photo-1596524430615-b46475ddff6e?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170',
+        emailTitle: 'Email Us',
+        emailSubtitle: 'We reply within 1 hour',
+        phoneTitle: 'Call Us',
+        phoneNumber: '+1 (555) 123-4567',
+        phoneSubtitle: 'Mon – Fri: 9AM – 6PM',
+        locationTitle: 'Visit Us',
+        addressLine1: '123 Adventure Lane',
+        addressLine2: 'Los Angeles, CA',
+        cta1Title: 'Send Message',
+        cta1Subtitle: 'Get instant response',
+        cta2Title: 'Schedule Call',
+        cta2Subtitle: 'Book a meeting',
       },
       info: {
         title: "Let's Start a Conversation",
@@ -765,9 +771,16 @@
   const initializeAboutPage = () => {
     editedContent.sections = {
       hero: {
-        title: 'About Our',
+        badge: 'Our Story & Mission',
+        title: 'About Us',
+        highlightedTitle: 'Adventure Journey',
         subtitle:
           'Discover the story behind Adventure Log and the passionate team dedicated to helping you document and share your journeys with the world.',
+        stats: [
+          { number: '5K+', label: 'Team Members', description: 'Passionate Adventurers' },
+          { number: '50+', label: 'Countries Reached', description: 'Global Community' },
+          { number: '3+', label: 'Years of Passion', description: 'Dedicated Service' },
+        ],
       },
       mission: {
         title: 'OUR MISSION',
@@ -801,12 +814,118 @@
           icon: 'faHeart',
         },
       ],
+      values: {
+        badge: 'WHAT DRIVES US',
+        title: 'Our Core Values',
+        subtitle: 'The principles that guide everything we do',
+        items: [
+          {
+            title: 'Authenticity',
+            description:
+              'Real stories from real adventurers. We celebrate genuine experiences and authentic voices.',
+            action: 'Stay True',
+          },
+          {
+            title: 'Inspiration',
+            description:
+              "Spark curiosity and adventure in others. Every story has the power to inspire someone's next journey.",
+            action: 'Light the Way',
+          },
+          {
+            title: 'Community',
+            description:
+              'Connect with fellow explorers worldwide. Together, we create a global network of adventure seekers.',
+            action: 'Grow Together',
+          },
+        ],
+      },
+      cta: {
+        title: 'Join Our Community',
+        subtitle:
+          'Start documenting your adventures today and become part of a global community of explorers.',
+        buttonText: 'Get Started Free',
+      },
     };
     editedContent.stats = {
       team_members: '5K+',
       countries_reached: '50+',
       years_of_passion: '3+',
     };
+    saveContent();
+  };
+
+  const initializeHomePage = () => {
+    editedContent.sections = {
+      hero: {
+        badge: 'Welcome to Your Adventure Log',
+        title: 'Welcome to My Adventure Log',
+        subtitle: 'Documenting my journeys and experiences',
+        text: 'Start your adventure and share your stories with the world.',
+        backgroundImage:
+          'https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2074&q=80',
+        cta1Title: 'Explore Adventures',
+        cta1Subtitle: 'Start your journey today',
+        cta2Title: 'We guide your path',
+        cta2Subtitle: 'Get into action',
+        stats: [
+          { number: '100+', label: 'Adventures', description: 'By our community' },
+          { number: '50+', label: 'Countries', description: 'Explored worldwide' },
+          { number: '1k+', label: 'Photos', description: 'Memories captured' },
+        ],
+      },
+      features: {
+        title: 'What I Do',
+        items: [
+          {
+            title: 'Adventure Logging',
+            description: 'Track and share my adventures',
+            icon: '🚀',
+          },
+          {
+            title: 'Story Telling',
+            description: 'Share experiences and memories',
+            icon: '📖',
+          },
+          {
+            title: 'Photo Journal',
+            description: 'Visual journey through photos',
+            icon: '📷',
+          },
+        ],
+      },
+      mission: {
+        title: 'Our Mission',
+        content:
+          'We believe every adventure has a story worth telling. Our mission is to provide the tools and platform for adventurers to document, share, and inspire others with their journeys.',
+        stats: [
+          { number: '0+', label: 'Adventures Logged' },
+          { number: '0+', label: 'Countries Covered' },
+          { number: '0+', label: 'Photos Shared' },
+          { number: '1', label: 'Happy Explorer' },
+        ],
+      },
+      recent: {
+        title: 'Recent Adventures',
+        posts: [
+          {
+            title: 'Mountain Hiking',
+            date: '2024-01-15',
+            image:
+              'https://images.unsplash.com/photo-1454496522488-7a8e488e8606?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1176&q=80',
+            excerpt: 'Amazing views from the summit...',
+          },
+          {
+            title: 'Beach Vacation',
+            date: '2024-01-10',
+            image:
+              'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1173&q=80',
+            excerpt: 'Relaxing days by the ocean...',
+          },
+        ],
+      },
+    };
+    editedContent.title = 'My Adventure Log';
+    editedContent.published = true;
     saveContent();
   };
 
@@ -954,6 +1073,27 @@
 
             <!-- Home Page Sections -->
             <div v-if="page === 'home'">
+              <!-- Initialize Button -->
+              <div
+                v-if="!editedContent.sections?.hero && !editedContent.sections?.features"
+                class="mb-6 p-4 border-2 border-dashed border-purple-300 rounded-xl bg-purple-50/50 text-center"
+              >
+                <div class="mb-4">
+                  <FontAwesomeIcon :icon="faRocket" class="text-purple-500 text-3xl" />
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Initialize Home Page</h3>
+                <p class="text-gray-600 text-sm mb-4">
+                  Set up your home page with beautiful default content that you can customize.
+                </p>
+                <button
+                  @click="initializeHomePage"
+                  class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-all flex items-center space-x-2 mx-auto"
+                >
+                  <FontAwesomeIcon :icon="faPlus" />
+                  <span>Initialize Home Page Sections</span>
+                </button>
+              </div>
+
               <!-- Hero Section - Enhanced with All Editable Fields -->
               <div
                 v-if="editedContent.sections.hero"
@@ -1019,7 +1159,7 @@
                       v-model="editedContent.sections.hero.title"
                       @blur="saveContent"
                       class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                      placeholder="Enter hero title..."
+                      placeholder="Welcome to My Adventure Log"
                     />
                   </div>
 
@@ -1033,7 +1173,21 @@
                       @blur="saveContent"
                       rows="3"
                       class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm resize-vertical"
-                      placeholder="Enter hero subtitle..."
+                      placeholder="Documenting my journeys and experiences"
+                    />
+                  </div>
+
+                  <!-- Hero Text -->
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Hero Text
+                    </label>
+                    <textarea
+                      v-model="editedContent.sections.hero.text"
+                      @blur="saveContent"
+                      rows="2"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm resize-vertical"
+                      placeholder="Start your adventure and share your stories with the world."
                     />
                   </div>
 
@@ -1048,14 +1202,14 @@
                           v-model="editedContent.sections.hero.cta1Title"
                           @blur="saveContent"
                           class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
-                          placeholder="CTA Title"
+                          placeholder="Explore Adventures"
                         />
                         <input
                           type="text"
                           v-model="editedContent.sections.hero.cta1Subtitle"
                           @blur="saveContent"
                           class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
-                          placeholder="CTA Subtitle"
+                          placeholder="Start your journey today"
                         />
                       </div>
                     </div>
@@ -1069,14 +1223,14 @@
                           v-model="editedContent.sections.hero.cta2Title"
                           @blur="saveContent"
                           class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
-                          placeholder="CTA Title"
+                          placeholder="We guide your path"
                         />
                         <input
                           type="text"
                           v-model="editedContent.sections.hero.cta2Subtitle"
                           @blur="saveContent"
                           class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
-                          placeholder="CTA Subtitle"
+                          placeholder="Get into action"
                         />
                       </div>
                     </div>
@@ -1189,7 +1343,7 @@
                       v-model="editedContent.sections.features.title"
                       @blur="saveContent"
                       class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      placeholder="Enter features section title..."
+                      placeholder="What I Do"
                     />
                   </div>
 
@@ -1229,6 +1383,16 @@
                             rows="2"
                             class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm resize-vertical"
                             placeholder="Feature description..."
+                          />
+                        </div>
+                        <div>
+                          <label class="block text-xs text-gray-600 mb-1 font-medium">Icon</label>
+                          <input
+                            type="text"
+                            v-model="item.icon"
+                            @blur="saveContent"
+                            class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
+                            placeholder="🚀, 📖, 📷, etc."
                           />
                         </div>
                       </div>
@@ -1272,7 +1436,7 @@
                       v-model="editedContent.sections.mission.title"
                       @blur="saveContent"
                       class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                      placeholder="Enter mission title..."
+                      placeholder="Our Mission"
                     />
                   </div>
                   <div>
@@ -1284,7 +1448,7 @@
                       @blur="saveContent"
                       rows="3"
                       class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm resize-vertical"
-                      placeholder="Enter mission content..."
+                      placeholder="We believe every adventure has a story worth telling..."
                     />
                   </div>
 
@@ -1371,7 +1535,7 @@
                       v-model="editedContent.sections.recent.title"
                       @blur="saveContent"
                       class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                      placeholder="Enter recent adventures title..."
+                      placeholder="Recent Adventures"
                     />
                   </div>
 
@@ -1663,10 +1827,11 @@
             </div>
 
             <!-- About Page Sections -->
-            <div v-if="page === 'about'">
+            <!-- About Page Sections -->
+            <div v-if="page === 'about'" class="space-y-6">
               <!-- Initialize Button -->
               <div
-                v-if="!editedContent.sections.hero && !editedContent.sections.mission"
+                v-if="!editedContent.sections?.hero && !editedContent.sections?.mission"
                 class="mb-4"
               >
                 <button
@@ -1680,226 +1845,172 @@
 
               <!-- Hero Section -->
               <div
-                v-if="editedContent.sections.hero"
-                class="p-3 sm:p-4 lg:p-5 border-2 border-purple-200 rounded-lg sm:rounded-xl hover:border-purple-400 transition-all duration-300 bg-purple-50/30"
+                v-if="editedContent.sections?.hero"
+                class="p-4 border-2 border-purple-200 rounded-xl bg-purple-50/30"
               >
-                <h3
-                  class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center space-x-2"
-                >
-                  <div
-                    class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0"
-                  >
-                    <FontAwesomeIcon :icon="faPalette" class="text-white text-xs sm:text-sm" />
-                  </div>
-                  <span>Hero Section</span>
-                </h3>
-
-                <div class="space-y-3">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Hero Section</h3>
+                <div class="space-y-4">
+                  <!-- Badge -->
                   <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                      Hero Title
-                    </label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Badge Text</label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.hero.badge"
+                      @blur="saveContent"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="Our Story & Mission"
+                    />
+                  </div>
+
+                  <!-- Title -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
                     <input
                       type="text"
                       v-model="editedContent.sections.hero.title"
                       @blur="saveContent"
-                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                      placeholder="e.g., About Our"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="About Our"
                     />
                   </div>
+
+                  <!-- Highlighted Title -->
                   <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                      Hero Subtitle
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Highlighted Title
                     </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.hero.highlightedTitle"
+                      @blur="saveContent"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="Adventure Journey"
+                    />
+                  </div>
+
+                  <!-- Subtitle -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Subtitle</label>
                     <textarea
                       v-model="editedContent.sections.hero.subtitle"
                       @blur="saveContent"
                       rows="3"
-                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm resize-vertical"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
                       placeholder="Discover the story behind..."
                     />
+                  </div>
+
+                  <!-- Hero Stats -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Hero Stats</label>
+                    <div class="space-y-3">
+                      <div
+                        v-for="(stat, index) in editedContent.sections.hero.stats || []"
+                        :key="index"
+                        class="grid grid-cols-3 gap-3 p-3 border border-gray-200 rounded-lg bg-white"
+                      >
+                        <div>
+                          <label class="block text-xs text-gray-600 mb-1">Number</label>
+                          <input
+                            type="text"
+                            v-model="stat.number"
+                            @blur="saveContent"
+                            class="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                            placeholder="5K+"
+                          />
+                        </div>
+                        <div>
+                          <label class="block text-xs text-gray-600 mb-1">Label</label>
+                          <input
+                            type="text"
+                            v-model="stat.label"
+                            @blur="saveContent"
+                            class="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                            placeholder="Team Members"
+                          />
+                        </div>
+                        <div>
+                          <label class="block text-xs text-gray-600 mb-1">Description</label>
+                          <input
+                            type="text"
+                            v-model="stat.description"
+                            @blur="saveContent"
+                            class="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                            placeholder="Passionate Adventurers"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
               <!-- Mission Section -->
               <div
-                v-if="editedContent.sections.mission"
-                class="p-3 sm:p-4 lg:p-5 border-2 border-green-200 rounded-lg sm:rounded-xl hover:border-green-400 transition-all duration-300 bg-green-50/30"
+                v-if="editedContent.sections?.mission"
+                class="p-4 border-2 border-green-200 rounded-xl bg-green-50/30"
               >
-                <h3
-                  class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center space-x-2"
-                >
-                  <div
-                    class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0"
-                  >
-                    <FontAwesomeIcon :icon="faLightbulb" class="text-white text-xs sm:text-sm" />
-                  </div>
-                  <span>Mission Section</span>
-                </h3>
-
-                <div class="space-y-3">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Mission Section</h3>
+                <div class="space-y-4">
                   <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
                       Mission Title
                     </label>
                     <input
                       type="text"
                       v-model="editedContent.sections.mission.title"
                       @blur="saveContent"
-                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                      placeholder="e.g., OUR MISSION"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="OUR MISSION"
                     />
                   </div>
                   <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
                       Mission Heading
                     </label>
                     <input
                       type="text"
                       v-model="editedContent.sections.mission.heading"
                       @blur="saveContent"
-                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                      placeholder="e.g., Empowering Adventurers Worldwide"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="Empowering Adventurers Worldwide"
                     />
                   </div>
                   <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
                       Mission Points
                     </label>
                     <div class="space-y-2">
-                      <div
-                        v-for="(point, index) in editedContent.sections.mission.points"
+                      <textarea
+                        v-for="(point, index) in editedContent.sections.mission.points || []"
                         :key="index"
-                        class="relative"
-                      >
-                        <textarea
-                          v-model="editedContent.sections.mission.points[index]"
-                          @blur="saveContent"
-                          rows="2"
-                          class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm resize-vertical"
-                          :placeholder="`Point ${index + 1}...`"
-                        />
-                        <button
-                          v-if="editedContent.sections.mission.points.length > 1"
-                          @click="removeMissionPoint(index)"
-                          class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition-all"
-                        >
-                          <FontAwesomeIcon :icon="faTrash" class="text-xs" />
-                        </button>
-                      </div>
+                        v-model="editedContent.sections.mission.points[index]"
+                        @blur="saveContent"
+                        rows="2"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        :placeholder="`Mission point ${index + 1}`"
+                      />
                     </div>
-                    <button
-                      @click="addMissionPoint"
-                      class="mt-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center space-x-1"
-                    >
-                      <FontAwesomeIcon :icon="faPlus" class="text-xs" />
-                      <span>Add Point</span>
-                    </button>
                   </div>
                   <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                      Quote
-                    </label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Quote</label>
                     <textarea
                       v-model="editedContent.sections.mission.quote"
                       @blur="saveContent"
                       rows="2"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm resize-vertical"
-                      placeholder="Enter inspirational quote..."
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="Inspirational quote..."
                     />
                   </div>
                   <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                      Quote Author
-                    </label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Quote Author</label>
                     <input
                       type="text"
                       v-model="editedContent.sections.mission.quoteAuthor"
                       @blur="saveContent"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                      placeholder="e.g., — The Adventure Log Team"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="— The Adventure Log Team"
                     />
-                  </div>
-                </div>
-              </div>
-
-              <!-- Feature Cards Section -->
-              <div
-                v-if="editedContent.sections.featureCards"
-                class="p-3 sm:p-4 lg:p-5 border-2 border-purple-200 rounded-lg sm:rounded-xl hover:border-purple-400 transition-all duration-300 bg-purple-50/30"
-              >
-                <div class="flex items-center justify-between mb-3 sm:mb-4">
-                  <h3
-                    class="text-base sm:text-lg font-bold text-gray-900 flex items-center space-x-2"
-                  >
-                    <div
-                      class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0"
-                    >
-                      <FontAwesomeIcon :icon="faList" class="text-white text-xs sm:text-sm" />
-                    </div>
-                    <span>Feature Cards</span>
-                  </h3>
-                  <button
-                    @click="addFeatureCard"
-                    class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center space-x-1"
-                  >
-                    <FontAwesomeIcon :icon="faPlus" class="text-xs" />
-                    <span>Add Card</span>
-                  </button>
-                </div>
-
-                <div class="space-y-3">
-                  <div
-                    v-for="(card, index) in editedContent.sections.featureCards"
-                    :key="index"
-                    class="p-3 sm:p-4 border-2 border-gray-200 rounded-lg bg-white relative"
-                  >
-                    <button
-                      @click="removeFeatureCard(index)"
-                      class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 transition-all"
-                    >
-                      <FontAwesomeIcon :icon="faTrash" class="text-xs" />
-                    </button>
-
-                    <div class="space-y-2 pr-8">
-                      <div>
-                        <label class="block text-xs text-gray-600 mb-1 font-medium">
-                          Card Title
-                        </label>
-                        <input
-                          type="text"
-                          v-model="card.title"
-                          @blur="saveContent"
-                          class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm"
-                          placeholder="Feature title..."
-                        />
-                      </div>
-                      <div>
-                        <label class="block text-xs text-gray-600 mb-1 font-medium">
-                          Description
-                        </label>
-                        <textarea
-                          v-model="card.description"
-                          @blur="saveContent"
-                          rows="2"
-                          class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm resize-vertical"
-                          placeholder="Feature description..."
-                        />
-                      </div>
-                      <div>
-                        <label class="block text-xs text-gray-600 mb-1 font-medium">
-                          Icon (FontAwesome name)
-                        </label>
-                        <input
-                          type="text"
-                          v-model="card.icon"
-                          @blur="saveContent"
-                          class="w-full px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm"
-                          placeholder="e.g., faGlobeAmericas"
-                        />
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -1907,34 +2018,124 @@
               <!-- Stats Section -->
               <div
                 v-if="editedContent.stats"
-                class="p-3 sm:p-4 lg:p-5 border-2 border-blue-200 rounded-lg sm:rounded-xl hover:border-blue-400 transition-all duration-300 bg-blue-50/30"
+                class="p-4 border-2 border-blue-200 rounded-xl bg-blue-50/30"
               >
-                <h3
-                  class="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4 flex items-center space-x-2"
-                >
-                  <div
-                    class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center flex-shrink-0"
-                  >
-                    <FontAwesomeIcon :icon="faChartBar" class="text-white text-xs sm:text-sm" />
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Stats Section</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Team Members</label>
+                    <input
+                      type="text"
+                      v-model="editedContent.stats.team_members"
+                      @blur="saveContent"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="5K+"
+                    />
                   </div>
-                  <span>Stats Section</span>
-                </h3>
-
-                <div class="space-y-3">
-                  <div
-                    v-for="(value, key) in editedContent.stats"
-                    :key="key"
-                    class="p-3 border-2 border-gray-200 rounded-lg bg-white"
-                  >
-                    <label class="block text-xs text-gray-600 mb-1 font-medium capitalize">
-                      {{ key.replace('_', ' ') }}
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Countries Reached
                     </label>
                     <input
                       type="text"
-                      v-model="editedContent.stats[key]"
+                      v-model="editedContent.stats.countries_reached"
                       @blur="saveContent"
-                      class="w-full px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
-                      :placeholder="`e.g., 50+`"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="50+"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Years of Passion
+                    </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.stats.years_of_passion"
+                      @blur="saveContent"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="3+"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Core Values Section -->
+              <div
+                v-if="editedContent.sections?.values"
+                class="p-4 border-2 border-orange-200 rounded-xl bg-orange-50/30"
+              >
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Core Values Section</h3>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Values Badge</label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.values.badge"
+                      @blur="saveContent"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="WHAT DRIVES US"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Values Title</label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.values.title"
+                      @blur="saveContent"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="Our Core Values"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Values Subtitle
+                    </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.values.subtitle"
+                      @blur="saveContent"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="The principles that guide everything we do"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- CTA Section -->
+              <div
+                v-if="editedContent.sections?.cta"
+                class="p-4 border-2 border-purple-200 rounded-xl bg-purple-50/30"
+              >
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Call to Action Section</h3>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">CTA Title</label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.cta.title"
+                      @blur="saveContent"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="Join Our Community"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">CTA Subtitle</label>
+                    <textarea
+                      v-model="editedContent.sections.cta.subtitle"
+                      @blur="saveContent"
+                      rows="2"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="Start documenting your adventures today..."
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Button Text</label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.cta.buttonText"
+                      @blur="saveContent"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      placeholder="Get Started Free"
                     />
                   </div>
                 </div>
@@ -1954,7 +2155,7 @@
                 </button>
               </div>
 
-              <!-- Hero Section -->
+              <!-- Enhanced Hero Section -->
               <div
                 v-if="editedContent.sections.hero"
                 class="p-3 sm:p-4 lg:p-5 border-2 border-purple-200 rounded-lg sm:rounded-xl hover:border-purple-400 transition-all duration-300 bg-purple-50/30"
@@ -1967,33 +2168,206 @@
                   >
                     <FontAwesomeIcon :icon="faPalette" class="text-white text-xs sm:text-sm" />
                   </div>
-                  <span>Hero Section</span>
+                  <span>Contact Hero Section</span>
                 </h3>
 
-                <div class="space-y-3">
+                <div class="space-y-4">
+                  <!-- Background Image -->
                   <div>
                     <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                      Hero Title
+                      Background Image URL
+                    </label>
+                    <input
+                      type="url"
+                      v-model="editedContent.sections.hero.backgroundImage"
+                      @blur="saveContent"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                      placeholder="https://images.unsplash.com/photo-..."
+                    />
+                    <p class="text-xs text-gray-500 mt-1">
+                      Use high-quality contact/communication themed images from Unsplash
+                    </p>
+                  </div>
+
+                  <!-- Badge -->
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Badge Text
+                    </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.hero.badge"
+                      @blur="saveContent"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                      placeholder="Let's Connect & Collaborate"
+                    />
+                  </div>
+
+                  <!-- Main Title -->
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Main Title
                     </label>
                     <input
                       type="text"
                       v-model="editedContent.sections.hero.title"
                       @blur="saveContent"
                       class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                      placeholder="Enter hero title..."
+                      placeholder="Get In Touch"
                     />
                   </div>
+
+                  <!-- Highlighted Title -->
                   <div>
                     <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                      Hero Subtitle
+                      Highlighted Title (Gradient Text)
+                    </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.hero.highlightedTitle"
+                      @blur="saveContent"
+                      class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                      placeholder="Start Your Journey"
+                    />
+                  </div>
+
+                  <!-- Subtitle -->
+                  <div>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Subtitle
                     </label>
                     <textarea
                       v-model="editedContent.sections.hero.subtitle"
                       @blur="saveContent"
                       rows="3"
                       class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm resize-vertical"
-                      placeholder="Enter hero subtitle..."
+                      placeholder="We'd love to hear about your adventures..."
                     />
+                  </div>
+
+                  <!-- Contact Cards -->
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <!-- Email Card -->
+                    <div class="p-3 border-2 border-amber-200 rounded-lg bg-amber-50/30">
+                      <h4 class="text-xs font-semibold text-amber-800 mb-2">Email Card</h4>
+                      <div class="space-y-2">
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.emailTitle"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="Email Us"
+                        />
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.emailSubtitle"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="We reply within 1 hour"
+                        />
+                      </div>
+                    </div>
+
+                    <!-- Phone Card -->
+                    <div class="p-3 border-2 border-emerald-200 rounded-lg bg-emerald-50/30">
+                      <h4 class="text-xs font-semibold text-emerald-800 mb-2">Phone Card</h4>
+                      <div class="space-y-2">
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.phoneTitle"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="Call Us"
+                        />
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.phoneNumber"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="+1 (555) 123-4567"
+                        />
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.phoneSubtitle"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="Mon – Fri: 9AM – 6PM"
+                        />
+                      </div>
+                    </div>
+
+                    <!-- Location Card -->
+                    <div class="p-3 border-2 border-cyan-200 rounded-lg bg-cyan-50/30">
+                      <h4 class="text-xs font-semibold text-cyan-800 mb-2">Location Card</h4>
+                      <div class="space-y-2">
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.locationTitle"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="Visit Us"
+                        />
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.addressLine1"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="123 Adventure Lane"
+                        />
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.addressLine2"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="Los Angeles, CA"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- CTA Cards -->
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- CTA 1 -->
+                    <div class="p-3 border-2 border-amber-200 rounded-lg bg-amber-50/30">
+                      <h4 class="text-xs font-semibold text-amber-800 mb-2">First CTA Button</h4>
+                      <div class="space-y-2">
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.cta1Title"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="Send Message"
+                        />
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.cta1Subtitle"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="Get instant response"
+                        />
+                      </div>
+                    </div>
+
+                    <!-- CTA 2 -->
+                    <div class="p-3 border-2 border-cyan-200 rounded-lg bg-cyan-50/30">
+                      <h4 class="text-xs font-semibold text-cyan-800 mb-2">Second CTA Button</h4>
+                      <div class="space-y-2">
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.cta2Title"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="Schedule Call"
+                        />
+                        <input
+                          type="text"
+                          v-model="editedContent.sections.hero.cta2Subtitle"
+                          @blur="saveContent"
+                          class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          placeholder="Book a meeting"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2222,116 +2596,399 @@
             </div>
 
             <!-- Gallery Editor Section -->
-            <div
-              v-if="page === 'gallery'"
-              class="p-4 sm:p-6 border-2 border-purple-200 rounded-xl bg-purple-50/30"
-            >
-              <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center space-x-2">
-                <FontAwesomeIcon :icon="faImages" class="text-purple-600" />
-                <span>Gallery Images Management</span>
-              </h3>
+            <div v-if="page === 'gallery'" class="space-y-6">
+              <!-- Gallery Hero Section -->
+              <div
+                v-if="editedContent.sections.hero"
+                class="p-4 sm:p-6 border-2 border-purple-200 rounded-xl bg-purple-50/30"
+              >
+                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center space-x-2">
+                  <div
+                    class="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0"
+                  >
+                    <FontAwesomeIcon :icon="faImages" class="text-white text-sm" />
+                  </div>
+                  <span>Gallery Hero Section</span>
+                </h3>
 
-              <!-- Upload Section -->
-              <div class="mb-6 p-4 bg-white rounded-lg border-2 border-dashed border-gray-300">
-                <h4 class="font-semibold text-gray-800 mb-3">Upload New Image</h4>
-                <div class="space-y-3">
-                  <input
-                    type="file"
-                    ref="fileInput"
-                    @change="handleFileUpload"
-                    accept="image/*"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                  />
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="space-y-4">
+                  <!-- Badge -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Badge Text</label>
                     <input
-                      v-model="newImage.caption"
                       type="text"
-                      placeholder="Image caption"
-                      class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                    />
-                    <input
-                      v-model="newImage.location"
-                      type="text"
-                      placeholder="Location"
-                      class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                      v-model="editedContent.sections.hero.badge"
+                      @blur="saveContent"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                      placeholder="Welcome to Your Adventure Log"
                     />
                   </div>
-                  <button
-                    @click="uploadImage"
-                    :disabled="uploading"
-                    class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 flex items-center space-x-2"
-                  >
-                    <FontAwesomeIcon
-                      :icon="uploading ? faSpinner : faUpload"
-                      :class="{
-                        'animate-spin': uploading,
-                      }"
+                  <!-- Background Image -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Background Image URL
+                    </label>
+                    <input
+                      type="url"
+                      v-model="editedContent.sections.hero.backgroundImage"
+                      @blur="saveContent"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                      placeholder="https://images.unsplash.com/photo-..."
                     />
-                    <span>{{ uploading ? 'Uploading...' : 'Upload Image' }}</span>
-                  </button>
+                    <p class="text-xs text-gray-500 mt-1">
+                      Use high-quality landscape images from Unsplash
+                    </p>
+                  </div>
+
+                  <!-- Badge -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Badge Text</label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.hero.badge"
+                      @blur="saveContent"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                      placeholder="Welcome to Your Adventure Log"
+                    />
+                  </div>
+
+                  <!-- Main Title -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Main Title</label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.hero.title"
+                      @blur="saveContent"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                      placeholder="Adventure Gallery"
+                    />
+                  </div>
+
+                  <!-- Highlighted Title -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Highlighted Title (Gradient Text)
+                    </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.hero.highlightedTitle"
+                      @blur="saveContent"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                      placeholder="Visual Stories"
+                    />
+                  </div>
+
+                  <!-- Subtitle -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Subtitle</label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.hero.subtitle"
+                      @blur="saveContent"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                      placeholder="Visual stories from incredible journeys around the world"
+                    />
+                  </div>
+
+                  <!-- Stats Section -->
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Stat 1 Label (Photos)
+                      </label>
+                      <input
+                        type="text"
+                        v-model="editedContent.sections.hero.stat1Label"
+                        @blur="saveContent"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                        placeholder="Photos Shared"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Stat 2 Label (Adventures)
+                      </label>
+                      <input
+                        type="text"
+                        v-model="editedContent.sections.hero.stat2Label"
+                        @blur="saveContent"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                        placeholder="Adventures Documented"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Stat 3 Label (Countries)
+                      </label>
+                      <input
+                        type="text"
+                        v-model="editedContent.sections.hero.stat3Label"
+                        @blur="saveContent"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                        placeholder="Countries Covered"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Stat 4 Label (Community)
+                      </label>
+                      <input
+                        type="text"
+                        v-model="editedContent.sections.hero.stat4Label"
+                        @blur="saveContent"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                        placeholder="Community Active"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Countries Covered Number -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Countries Covered Number
+                    </label>
+                    <input
+                      type="number"
+                      v-model="editedContent.sections.hero.countriesCovered"
+                      @blur="saveContent"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                      placeholder="50"
+                    />
+                  </div>
+
+                  <!-- Community Active Text -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Community Active Text
+                    </label>
+                    <input
+                      type="text"
+                      v-model="editedContent.sections.hero.communityActive"
+                      @blur="saveContent"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                      placeholder="24/7"
+                    />
+                  </div>
+
+                  <!-- Gallery Categories -->
+                  <div>
+                    <div class="flex items-center justify-between mb-2">
+                      <label class="block text-sm font-medium text-gray-700">
+                        Gallery Categories
+                      </label>
+                      <button
+                        @click="addGalleryCategory"
+                        class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-xs font-semibold transition-all flex items-center space-x-1"
+                      >
+                        <FontAwesomeIcon :icon="faPlus" class="text-xs" />
+                        <span>Add Category</span>
+                      </button>
+                    </div>
+
+                    <div class="space-y-2">
+                      <div
+                        v-for="(category, index) in editedContent.sections.hero.categories || []"
+                        :key="index"
+                        class="p-3 border-2 border-gray-200 rounded-lg bg-white relative"
+                      >
+                        <button
+                          @click="removeGalleryCategory(index)"
+                          class="absolute top-2 right-2 text-red-500 hover:text-red-700 p-1 rounded-lg hover:bg-red-50 transition-all"
+                        >
+                          <FontAwesomeIcon :icon="faTrash" class="text-xs" />
+                        </button>
+
+                        <div class="pr-8">
+                          <label class="block text-xs text-gray-600 mb-1 font-medium">
+                            Category {{ index + 1 }}
+                          </label>
+                          <input
+                            type="text"
+                            v-model="editedContent.sections.hero.categories[index]"
+                            @blur="saveContent"
+                            class="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                            placeholder="e.g., Mountain Expeditions"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- CTA Cards -->
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- CTA 1 -->
+                    <div class="p-3 border-2 border-amber-200 rounded-lg bg-amber-50/30">
+                      <h4 class="text-xs font-semibold text-amber-800 mb-2">First CTA Card</h4>
+                      <div class="space-y-2">
+                        <div>
+                          <label class="block text-xs text-amber-700 mb-1 font-medium">Title</label>
+                          <input
+                            type="text"
+                            v-model="editedContent.sections.hero.cta1Title"
+                            @blur="saveContent"
+                            class="w-full px-2 py-1 border border-amber-300 rounded text-xs"
+                            placeholder="Browse Gallery"
+                          />
+                        </div>
+                        <div>
+                          <label class="block text-xs text-amber-700 mb-1 font-medium">
+                            Subtitle
+                          </label>
+                          <input
+                            type="text"
+                            v-model="editedContent.sections.hero.cta1Subtitle"
+                            @blur="saveContent"
+                            class="w-full px-2 py-1 border border-amber-300 rounded text-xs"
+                            placeholder="Explore stunning visuals"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- CTA 2 -->
+                    <div class="p-3 border-2 border-emerald-200 rounded-lg bg-emerald-50/30">
+                      <h4 class="text-xs font-semibold text-emerald-800 mb-2">Second CTA Card</h4>
+                      <div class="space-y-2">
+                        <div>
+                          <label class="block text-xs text-emerald-700 mb-1 font-medium">
+                            Title
+                          </label>
+                          <input
+                            type="text"
+                            v-model="editedContent.sections.hero.cta2Title"
+                            @blur="saveContent"
+                            class="w-full px-2 py-1 border border-emerald-300 rounded text-xs"
+                            placeholder="Share Your Story"
+                          />
+                        </div>
+                        <div>
+                          <label class="block text-xs text-emerald-700 mb-1 font-medium">
+                            Subtitle
+                          </label>
+                          <input
+                            type="text"
+                            v-model="editedContent.sections.hero.cta2Subtitle"
+                            @blur="saveContent"
+                            class="w-full px-2 py-1 border border-emerald-300 rounded text-xs"
+                            placeholder="Upload your adventures"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <!-- Existing Images -->
-              <div class="space-y-4">
-                <h4 class="font-semibold text-gray-800">
-                  Existing Images ({{ editedContent.images?.length || 0 }})
-                </h4>
+              <!-- Gallery Images Management Section -->
+              <div class="p-4 sm:p-6 border-2 border-purple-200 rounded-xl bg-purple-50/30">
+                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center space-x-2">
+                  <FontAwesomeIcon :icon="faImages" class="text-purple-600" />
+                  <span>Gallery Images Management</span>
+                </h3>
 
-                <!-- No Images State -->
-                <div
-                  v-if="!editedContent.images?.length"
-                  class="text-center py-12 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50/50"
-                >
-                  <div
-                    class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4"
-                  >
-                    <FontAwesomeIcon :icon="faImages" class="text-purple-500 text-2xl" />
+                <!-- Upload Section -->
+                <div class="mb-6 p-4 bg-white rounded-lg border-2 border-dashed border-gray-300">
+                  <h4 class="font-semibold text-gray-800 mb-3">Upload New Image</h4>
+                  <div class="space-y-3">
+                    <input
+                      type="file"
+                      ref="fileInput"
+                      @change="handleFileUpload"
+                      accept="image/*"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    />
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <input
+                        v-model="newImage.caption"
+                        type="text"
+                        placeholder="Image caption"
+                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                      />
+                      <input
+                        v-model="newImage.location"
+                        type="text"
+                        placeholder="Location"
+                        class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+                    <button
+                      @click="uploadImage"
+                      :disabled="uploading"
+                      class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50 flex items-center space-x-2"
+                    >
+                      <FontAwesomeIcon
+                        :icon="uploading ? faSpinner : faUpload"
+                        :class="{
+                          'animate-spin': uploading,
+                        }"
+                      />
+                      <span>{{ uploading ? 'Uploading...' : 'Upload Image' }}</span>
+                    </button>
                   </div>
-                  <h5 class="text-lg font-semibold text-gray-700 mb-2">No Images Uploaded Yet</h5>
-                  <p class="text-gray-500 text-sm max-w-md mx-auto">
-                    Upload your first adventure photo to start building your gallery. Images will
-                    appear here once uploaded.
-                  </p>
                 </div>
 
-                <!-- Images Grid -->
-                <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Existing Images -->
+                <div class="space-y-4">
+                  <h4 class="font-semibold text-gray-800">
+                    Existing Images ({{ editedContent.images?.length || 0 }})
+                  </h4>
+
+                  <!-- No Images State -->
                   <div
-                    v-for="(image, index) in editedContent.images"
-                    :key="image.id"
-                    class="bg-white rounded-lg border border-gray-200 p-3"
+                    v-if="!editedContent.images?.length"
+                    class="text-center py-12 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50/50"
                   >
-                    <img
-                      :src="image.url"
-                      :alt="image.caption"
-                      class="w-full h-32 object-cover rounded mb-2"
-                    />
-                    <input
-                      v-model="image.caption"
-                      @blur="updateImage(image)"
-                      type="text"
-                      class="w-full px-2 py-1 border border-gray-300 rounded text-sm mb-2"
-                      placeholder="Caption"
-                    />
-                    <input
-                      v-model="image.location"
-                      @blur="updateImage(image)"
-                      type="text"
-                      class="w-full px-2 py-1 border border-gray-300 rounded text-sm mb-2"
-                      placeholder="Location"
-                    />
-                    <button
-                      @click="openDeleteDialog(image)"
-                      class="w-full bg-red-500 text-white py-1 rounded text-sm hover:bg-red-600 flex items-center justify-center space-x-1 transition-all duration-200"
+                    <div
+                      class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4"
                     >
-                      <FontAwesomeIcon :icon="faTrash" />
-                      <span>Delete</span>
-                    </button>
+                      <FontAwesomeIcon :icon="faImages" class="text-purple-500 text-2xl" />
+                    </div>
+                    <h5 class="text-lg font-semibold text-gray-700 mb-2">No Images Uploaded Yet</h5>
+                    <p class="text-gray-500 text-sm max-w-md mx-auto">
+                      Upload your first adventure photo to start building your gallery. Images will
+                      appear here once uploaded.
+                    </p>
+                  </div>
+
+                  <!-- Images Grid -->
+                  <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div
+                      v-for="(image, index) in editedContent.images"
+                      :key="image.id"
+                      class="bg-white rounded-lg border border-gray-200 p-3"
+                    >
+                      <img
+                        :src="image.url"
+                        :alt="image.caption"
+                        class="w-full h-32 object-cover rounded mb-2"
+                      />
+                      <input
+                        v-model="image.caption"
+                        @blur="updateImage(image)"
+                        type="text"
+                        class="w-full px-2 py-1 border border-gray-300 rounded text-sm mb-2"
+                        placeholder="Caption"
+                      />
+                      <input
+                        v-model="image.location"
+                        @blur="updateImage(image)"
+                        type="text"
+                        class="w-full px-2 py-1 border border-gray-300 rounded text-sm mb-2"
+                        placeholder="Location"
+                      />
+                      <button
+                        @click="openDeleteDialog(image)"
+                        class="w-full bg-red-500 text-white py-1 rounded text-sm hover:bg-red-600 flex items-center justify-center space-x-1 transition-all duration-200"
+                      >
+                        <FontAwesomeIcon :icon="faTrash" />
+                        <span>Delete</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
+
             <!-- Simple Content Editor (for other pages) -->
             <div
               v-if="page !== 'home' && page !== 'about' && page !== 'contact'"

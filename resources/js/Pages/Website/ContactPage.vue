@@ -62,8 +62,16 @@
     >
       <!-- Background Pattern -->
       <div class="absolute inset-0">
-        <!-- Background image -->
+        <!-- Background image - NOW EDITABLE -->
         <div
+          v-if="pageContent?.sections?.hero?.backgroundImage"
+          class="absolute inset-0 bg-cover bg-center"
+          :style="`background-image: url('${pageContent.sections.hero.backgroundImage}')`"
+        ></div>
+
+        <!-- Fallback background if no image set -->
+        <div
+          v-else
           class="absolute inset-0 bg-cover bg-center"
           style="
             background-image: url('https://images.unsplash.com/photo-1596524430615-b46475ddff6e?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1170');
@@ -108,30 +116,40 @@
 
       <!-- Foreground content -->
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-        <!-- Badge -->
-        <div class="mb-6 inline-block animate-fade-in-down">
+        <!-- Badge - NOW EDITABLE -->
+        <div
+          v-if="pageContent?.sections?.hero?.badge"
+          class="mb-6 inline-block animate-fade-in-down"
+        >
           <span
             class="glass-effect text-white px-6 py-3 rounded-full text-sm font-semibold backdrop-blur-md border border-white/30 inline-flex items-center space-x-2"
           >
             <FontAwesomeIcon :icon="faComments" class="text-cyan-300" />
-            <span>Let's Connect & Collaborate</span>
+            <span>{{ pageContent.sections.hero.badge }}</span>
             <FontAwesomeIcon :icon="faArrowRight" class="text-xs ml-1" />
           </span>
         </div>
 
-        <!-- Heading -->
+        <!-- Heading - NOW EDITABLE -->
         <h1 class="text-4xl md:text-5xl lg:text-6xl font-black mb-6 text-shadow">
           <span class="block text-white">
             {{ pageContent?.sections?.hero?.title || 'Get In Touch' }}
           </span>
           <span
+            v-if="pageContent?.sections?.hero?.highlightedTitle"
+            class="block bg-gradient-to-r from-amber-300 to-cyan-300 bg-clip-text text-transparent mt-2"
+          >
+            {{ pageContent.sections.hero.highlightedTitle }}
+          </span>
+          <span
+            v-else
             class="block bg-gradient-to-r from-amber-300 to-cyan-300 bg-clip-text text-transparent mt-2"
           >
             Start Your Journey
           </span>
         </h1>
 
-        <!-- Subtitle -->
+        <!-- Subtitle - NOW EDITABLE -->
         <p
           class="text-xl md:text-2xl text-white opacity-90 max-w-2xl mx-auto leading-relaxed text-shadow mb-8"
         >
@@ -141,52 +159,79 @@
           }}
         </p>
 
-        <!-- Contact Details -->
+        <!-- Contact Details - NOW EDITABLE -->
         <div
           class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12 animate-fade-in-up delay-600"
         >
+          <!-- Email Card -->
           <div class="glass-effect rounded-2xl p-6 text-center">
             <div class="text-amber-300 text-3xl mb-4">
               <FontAwesomeIcon :icon="faEnvelope" />
             </div>
-            <div class="text-white font-semibold text-lg mb-2">Email Us</div>
-            <div class="text-white/70 text-sm">contact@justlive.com</div>
-            <div class="text-white/60 text-xs mt-2">We reply within 1 hour</div>
+            <div class="text-white font-semibold text-lg mb-2">
+              {{ pageContent?.sections?.hero?.emailTitle || 'Email Us' }}
+            </div>
+            <div class="text-white/70 text-sm">
+              {{ pageContent?.email || 'contact@justlive.com' }}
+            </div>
+            <div class="text-white/60 text-xs mt-2">
+              {{ pageContent?.sections?.hero?.emailSubtitle || 'We reply within 1 hour' }}
+            </div>
           </div>
 
+          <!-- Phone Card -->
           <div class="glass-effect rounded-2xl p-6 text-center">
             <div class="text-emerald-300 text-3xl mb-4">
               <FontAwesomeIcon :icon="faPhone" />
             </div>
-            <div class="text-white font-semibold text-lg mb-2">Call Us</div>
-            <div class="text-white/70 text-sm">+1 (555) 123-4567</div>
-            <div class="text-white/60 text-xs mt-2">Mon – Fri: 9AM – 6PM</div>
+            <div class="text-white font-semibold text-lg mb-2">
+              {{ pageContent?.sections?.hero?.phoneTitle || 'Call Us' }}
+            </div>
+            <div class="text-white/70 text-sm">
+              {{ pageContent?.sections?.hero?.phoneNumber || '+1 (555) 123-4567' }}
+            </div>
+            <div class="text-white/60 text-xs mt-2">
+              {{ pageContent?.sections?.hero?.phoneSubtitle || 'Mon – Fri: 9AM – 6PM' }}
+            </div>
           </div>
 
+          <!-- Location Card -->
           <div class="glass-effect rounded-2xl p-6 text-center">
             <div class="text-cyan-300 text-3xl mb-4">
               <FontAwesomeIcon :icon="faMapMarkerAlt" />
             </div>
-            <div class="text-white font-semibold text-lg mb-2">Visit Us</div>
-            <div class="text-white/70 text-sm">123 Adventure Lane</div>
-            <div class="text-white/60 text-xs mt-2">Los Angeles, CA</div>
+            <div class="text-white font-semibold text-lg mb-2">
+              {{ pageContent?.sections?.hero?.locationTitle || 'Visit Us' }}
+            </div>
+            <div class="text-white/70 text-sm">
+              {{ pageContent?.sections?.hero?.addressLine1 || '123 Adventure Lane' }}
+            </div>
+            <div class="text-white/60 text-xs mt-2">
+              {{ pageContent?.sections?.hero?.addressLine2 || 'Los Angeles, CA' }}
+            </div>
           </div>
         </div>
 
-        <!-- CTA Buttons -->
+        <!-- CTA Buttons - NOW EDITABLE -->
         <div
           class="flex flex-col sm:flex-row justify-center items-center gap-6 animate-fade-in-up delay-700"
         >
+          <!-- CTA 1 -->
           <div
-            class="group glass-effect rounded-2xl px-8 py-4 backdrop-blur-sm border border-white/20 hover:border-amber-300/50 transition-all duration-300"
+            v-if="pageContent?.sections?.hero?.cta1Title"
+            class="group glass-effect rounded-2xl px-8 py-4 backdrop-blur-sm border border-white/20 hover:border-amber-300/50 transition-all duration-300 cursor-pointer"
           >
             <div class="flex items-center space-x-3">
               <div class="text-amber-300 group-hover:scale-110 transition-transform">
                 <FontAwesomeIcon :icon="faPaperPlane" />
               </div>
               <div>
-                <div class="text-white font-semibold text-lg">Send Message</div>
-                <div class="text-white/70 text-sm">Get instant response</div>
+                <div class="text-white font-semibold text-lg">
+                  {{ pageContent.sections.hero.cta1Title }}
+                </div>
+                <div class="text-white/70 text-sm">
+                  {{ pageContent.sections.hero.cta1Subtitle }}
+                </div>
               </div>
               <FontAwesomeIcon
                 :icon="faArrowRight"
@@ -195,16 +240,22 @@
             </div>
           </div>
 
+          <!-- CTA 2 -->
           <div
-            class="group glass-effect rounded-2xl px-8 py-4 backdrop-blur-sm border border-white/20 hover:border-cyan-300/50 transition-all duration-300"
+            v-if="pageContent?.sections?.hero?.cta2Title"
+            class="group glass-effect rounded-2xl px-8 py-4 backdrop-blur-sm border border-white/20 hover:border-cyan-300/50 transition-all duration-300 cursor-pointer"
           >
             <div class="flex items-center space-x-3">
               <div class="text-cyan-300 group-hover:scale-110 transition-transform">
                 <FontAwesomeIcon :icon="faCalendar" />
               </div>
               <div>
-                <div class="text-white font-semibold text-lg">Schedule Call</div>
-                <div class="text-white/70 text-sm">Book a meeting</div>
+                <div class="text-white font-semibold text-lg">
+                  {{ pageContent.sections.hero.cta2Title }}
+                </div>
+                <div class="text-white/70 text-sm">
+                  {{ pageContent.sections.hero.cta2Subtitle }}
+                </div>
               </div>
             </div>
           </div>
@@ -563,7 +614,7 @@
           >
             <div class="flex items-start space-x-3 sm:space-x-4">
               <div
-                class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary to-secondary rounded-lg sm:rounded-xl flex items-center justify-center text-accent shadow-lg group-hover:scale-105 sm:group-hover:scale-110 transition-transform"
+                class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-black rounded-lg sm:rounded-xl flex items-center justify-center text-accent shadow-lg group-hover:scale-105 sm:group-hover:scale-110 transition-transform"
               >
                 <FontAwesomeIcon :icon="getFAQIcon(faq.icon)" class="text-base sm:text-lg" />
               </div>

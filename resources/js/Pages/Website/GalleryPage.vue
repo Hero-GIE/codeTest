@@ -14,6 +14,7 @@
     faArrowLeft,
     faArrowRight,
     faTrash,
+    faCompass,
   } from '@fortawesome/free-solid-svg-icons';
   import { ref, onMounted, onUnmounted, computed } from 'vue';
 
@@ -115,178 +116,227 @@
   onUnmounted(() => {
     document.removeEventListener('keydown', handleKeydown);
   });
+
+  // Add computed property to simplify access
+  const heroSection = computed(() => {
+    return props.pageContent?.sections?.hero || {};
+  });
 </script>
 
 <template>
   <div class="animate-fade-in-up theme-page">
-    <!-- Gallery Hero -->
-
+    <!-- ========== GALLERY PAGE HERO SECTION ========== -->
     <section
       class="bg-gradient-to-br from-primary to-secondary text-accent py-16 md:py-24 relative overflow-hidden"
     >
-      <!-- Background Pattern - UPDATED -->
+      <!-- Background with Dynamic Image -->
       <div class="absolute inset-0">
-        <!-- Background image -->
         <div
-          class="absolute inset-0 bg-cover bg-center"
-          style="
-            background-image: url('https://plus.unsplash.com/premium_photo-1709371824843-2b72258fbd71?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1267');
-          "
+          v-if="heroSection.backgroundImage"
+          class="absolute inset-0 bg-cover bg-center scale-105 animate-slow-zoom"
+          :style="`background-image: url('${heroSection.backgroundImage}')`"
         ></div>
 
-        <!-- Enhanced Gradient Overlay - UPDATED -->
+        <!-- Multi-layered Enhanced Gradient Overlay -->
         <div
-          class="absolute inset-0 bg-gradient-to-br from-primary/90 via-secondary/60 to-primary/90"
-        ></div>
-        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-      </div>
-
-      <!-- Animated Background Elements - ADDED -->
-      <div class="absolute inset-0 overflow-hidden">
-        <div
-          class="absolute top-10 left-20 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-pulse-glow"
+          class="absolute inset-0 bg-gradient-to-br from-indigo-900/85 via-purple-800/50 to-teal-900/75"
         ></div>
         <div
-          class="absolute bottom-20 right-32 w-80 h-80 bg-white/15 rounded-full blur-3xl animate-pulse-glow delay-1000"
+          class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"
         ></div>
         <div
-          class="absolute top-1/2 left-1/4 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse-glow delay-2000"
+          class="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-black/40"
         ></div>
       </div>
 
-      <!-- Floating Icons - ADDED -->
+      <!-- Enhanced Animated Background Elements -->
+      <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div
+          class="absolute top-16 left-20 w-96 h-96 bg-purple-400/20 rounded-full blur-3xl animate-float-glow"
+        ></div>
+        <div
+          class="absolute bottom-20 right-32 w-[500px] h-[500px] bg-cyan-500/20 rounded-full blur-3xl animate-pulse-glow-slow"
+        ></div>
+        <div
+          class="absolute top-1/2 left-1/4 w-80 h-80 bg-amber-400/15 rounded-full blur-3xl animate-float-delayed delay-2000"
+        ></div>
+      </div>
+
+      <!-- Floating Particles -->
+      <div class="absolute inset-0 pointer-events-none overflow-hidden">
+        <div
+          class="absolute top-[15%] left-[20%] w-2 h-2 bg-white/40 rounded-full animate-float-particle"
+        ></div>
+        <div
+          class="absolute top-[30%] left-[70%] w-1.5 h-1.5 bg-purple-300/50 rounded-full animate-float-particle delay-500"
+        ></div>
+        <div
+          class="absolute top-[55%] left-[25%] w-2.5 h-2.5 bg-cyan-300/40 rounded-full animate-float-particle delay-1000"
+        ></div>
+        <div
+          class="absolute top-[40%] left-[80%] w-1 h-1 bg-amber-300/50 rounded-full animate-float-particle delay-1500"
+        ></div>
+      </div>
+
+      <!-- Floating Icons with Enhanced Animations -->
       <div class="absolute inset-0 pointer-events-none">
-        <div class="absolute top-1/3 left-16 text-white/25 text-5xl animate-float">
-          <FontAwesomeIcon :icon="faCamera" />
+        <div class="absolute top-1/3 left-16 text-white/25 text-5xl animate-float-bounce">
+          <FontAwesomeIcon :icon="faCamera" class="drop-shadow-glow" />
         </div>
-        <div class="absolute bottom-1/4 right-20 text-white/30 text-4xl animate-float-delayed">
-          <FontAwesomeIcon :icon="faImages" />
+        <div class="absolute bottom-1/4 right-20 text-white/30 text-4xl animate-float-spin-slow">
+          <FontAwesomeIcon :icon="faImages" class="drop-shadow-glow" />
         </div>
-        <div class="absolute top-1/2 right-1/3 text-white/20 text-6xl animate-float-slow">
-          <FontAwesomeIcon :icon="faMountain" />
+        <div class="absolute top-1/2 right-1/3 text-white/20 text-6xl animate-float-drift">
+          <FontAwesomeIcon :icon="faMountain" class="drop-shadow-glow" />
         </div>
-        <div class="absolute top-1/4 right-1/4 text-white/20 text-3xl animate-float delay-1500">
-          <FontAwesomeIcon :icon="faMap" />
+        <div
+          class="absolute top-1/4 right-1/4 text-white/20 text-3xl animate-float-pulse delay-1500"
+        >
+          <FontAwesomeIcon :icon="faMap" class="drop-shadow-glow" />
         </div>
       </div>
 
-      <!-- Foreground content - UPDATED -->
+      <!-- Foreground Content -->
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-        <!-- Badge - UPDATED -->
-        <div class="mb-6 inline-block animate-fade-in-down">
+        <!-- Premium Badge -->
+        <div v-if="heroSection.badge" class="mb-8 inline-block animate-slide-down">
           <span
-            class="glass-effect text-white px-6 py-3 rounded-full text-sm font-semibold backdrop-blur-md border border-white/30 inline-flex items-center space-x-2"
+            class="glass-effect-premium text-white px-8 py-3.5 rounded-full text-sm font-bold backdrop-blur-xl border-2 border-white/40 inline-flex items-center space-x-3 shadow-2xl hover:scale-105 transition-transform duration-300 cursor-pointer group"
           >
-            <FontAwesomeIcon :icon="faStar" class="text-yellow-300" />
-            <span>Welcome to Your Adventure Log</span>
-            <FontAwesomeIcon :icon="faArrowRight" class="text-xs ml-1" />
+            <FontAwesomeIcon :icon="faStar" class="text-yellow-400 animate-pulse-bright" />
+            <span class="relative">
+              {{ heroSection.badge }}
+              <span
+                class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shine"
+              ></span>
+            </span>
           </span>
         </div>
 
-        <!-- Heading - UPDATED -->
-        <h1 class="text-4xl md:text-5xl lg:text-6xl font-black mb-6 text-shadow">
-          <span class="block text-white">{{ pageContent?.title || 'Adventure Gallery' }}</span>
+        <!-- Enhanced Heading -->
+        <h1 class="text-5xl md:text-6xl lg:text-7xl font-black mb-8 animate-fade-scale-up">
           <span
-            class="block bg-gradient-to-r from-amber-300 to-emerald-300 bg-clip-text text-transparent mt-2"
+            class="block text-white drop-shadow-2xl mb-4"
+            style="
+              text-shadow:
+                0 0 40px rgba(255, 255, 255, 0.3),
+                0 4px 20px rgba(0, 0, 0, 0.8);
+            "
           >
-            Visual Stories
+            {{ heroSection.title || 'Adventure Gallery' }}
+          </span>
+          <span
+            class="block bg-gradient-to-r from-amber-300 via-yellow-400 to-emerald-400 bg-clip-text text-transparent animate-gradient-x drop-shadow-lg text-4xl md:text-5xl"
+            style="background-size: 200% 200%"
+          >
+            {{ heroSection.subtitle || 'Visual stories from incredible journeys around the world' }}
           </span>
         </h1>
 
-        <!-- Subtitle - UPDATED -->
-        <p
-          class="text-xl md:text-2xl text-white opacity-90 max-w-2xl mx-auto leading-relaxed text-shadow mb-8"
-        >
-          Visual stories from incredible journeys around the world
-        </p>
-
-        <!-- Gallery Stats - UPDATED with dynamic photo count -->
+        <!-- Enhanced Gallery Stats -->
         <div
-          class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-10 animate-fade-in-up delay-300"
+          class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto mb-12 animate-fade-in-up delay-300"
         >
-          <div class="glass-effect rounded-xl p-4 text-center">
-            <div class="text-2xl font-bold text-amber-300 mb-1">
+          <div
+            class="glass-effect-card rounded-xl p-5 text-center group hover:scale-105 transition-all duration-300 border-2 border-white/20 hover:border-amber-300/50 shadow-lg"
+          >
+            <div
+              class="text-3xl font-bold text-amber-400 mb-2 group-hover:scale-110 transition-transform"
+            >
               {{ pageContent?.images?.length || 0 }}
             </div>
-            <div class="text-white/80 text-sm">Photos Shared</div>
+            <div class="text-white/90 text-sm font-semibold">Photos Shared</div>
           </div>
-          <div class="glass-effect rounded-xl p-4 text-center">
-            <div class="text-2xl font-bold text-emerald-300 mb-1">
+          <div
+            class="glass-effect-card rounded-xl p-5 text-center group hover:scale-105 transition-all duration-300 border-2 border-white/20 hover:border-emerald-300/50 shadow-lg"
+          >
+            <div
+              class="text-3xl font-bold text-emerald-400 mb-2 group-hover:scale-110 transition-transform"
+            >
               {{ Math.ceil((pageContent?.images?.length || 0) / 3) }}+
             </div>
-            <div class="text-white/80 text-sm">Adventures Documented</div>
+            <div class="text-white/90 text-sm font-semibold">Adventures Documented</div>
           </div>
-          <div class="glass-effect rounded-xl p-4 text-center">
-            <div class="text-2xl font-bold text-blue-300 mb-1">50+</div>
-            <div class="text-white/80 text-sm">Countries Covered</div>
+          <div
+            class="glass-effect-card rounded-xl p-5 text-center group hover:scale-105 transition-all duration-300 border-2 border-white/20 hover:border-blue-300/50 shadow-lg"
+          >
+            <div
+              class="text-3xl font-bold text-blue-400 mb-2 group-hover:scale-110 transition-transform"
+            >
+              50+
+            </div>
+            <div class="text-white/90 text-sm font-semibold">Countries Covered</div>
           </div>
-          <div class="glass-effect rounded-xl p-4 text-center">
-            <div class="text-2xl font-bold text-purple-300 mb-1">24/7</div>
-            <div class="text-white/80 text-sm">Community Active</div>
+          <div
+            class="glass-effect-card rounded-xl p-5 text-center group hover:scale-105 transition-all duration-300 border-2 border-white/20 hover:border-purple-300/50 shadow-lg"
+          >
+            <div
+              class="text-3xl font-bold text-purple-400 mb-2 group-hover:scale-110 transition-transform"
+            >
+              24/7
+            </div>
+            <div class="text-white/90 text-sm font-semibold">Community Active</div>
           </div>
         </div>
 
-        <!-- Gallery Categories - NEW CONTENT -->
-        <div class="flex flex-wrap justify-center gap-4 mb-12 animate-fade-in-up delay-500">
-          <span
-            class="glass-effect text-white px-4 py-2 rounded-full text-sm border border-white/20 hover:border-amber-300/50 transition-all"
-          >
-            Mountain Expeditions
-          </span>
-          <span
-            class="glass-effect text-white px-4 py-2 rounded-full text-sm border border-white/20 hover:border-emerald-300/50 transition-all"
-          >
-            Forest Trails
-          </span>
-          <span
-            class="glass-effect text-white px-4 py-2 rounded-full text-sm border border-white/20 hover:border-blue-300/50 transition-all"
-          >
-            Coastal Adventures
-          </span>
-          <span
-            class="glass-effect text-white px-4 py-2 rounded-full text-sm border border-white/20 hover:border-purple-300/50 transition-all"
-          >
-            Desert Journeys
-          </span>
-          <span
-            class="glass-effect text-white px-4 py-2 rounded-full text-sm border border-white/20 hover:border-red-300/50 transition-all"
-          >
-            Urban Exploration
-          </span>
-        </div>
-
-        <!-- CTA Buttons - NEW CONTENT -->
+        <!-- Enhanced Categories -->
         <div
+          v-if="heroSection.categories"
+          class="flex flex-wrap justify-center gap-4 mb-12 animate-fade-in-up delay-500"
+        >
+          <span
+            v-for="(category, index) in heroSection.categories"
+            :key="index"
+            class="glass-effect-card text-white px-5 py-2.5 rounded-full text-sm border-2 border-white/30 hover:border-amber-400/60 transition-all duration-300 cursor-pointer hover:scale-105 font-semibold shadow-lg"
+          >
+            {{ category }}
+          </span>
+        </div>
+
+        <!-- Enhanced CTA Buttons -->
+        <div
+          v-if="heroSection.cta1Title || heroSection.cta2Title"
           class="flex flex-col sm:flex-row justify-center items-center gap-6 animate-fade-in-up delay-700"
         >
           <div
-            class="group glass-effect rounded-2xl px-8 py-4 backdrop-blur-sm border border-white/20 hover:border-amber-300/50 transition-all duration-300"
+            v-if="heroSection.cta1Title"
+            class="group glass-effect-card rounded-2xl px-10 py-6 backdrop-blur-xl border-2 border-white/30 hover:border-amber-400/70 transition-all duration-500 relative overflow-hidden cursor-pointer transform hover:scale-105 hover:-translate-y-1 shadow-2xl hover:shadow-amber-500/20"
           >
-            <div class="flex items-center space-x-3">
-              <div class="text-amber-300 group-hover:scale-110 transition-transform">
-                <FontAwesomeIcon :icon="faCamera" />
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-amber-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            ></div>
+            <div class="flex items-center space-x-4 relative z-10">
+              <div
+                class="text-amber-400 text-3xl group-hover:rotate-12 group-hover:scale-125 transition-all duration-500"
+              >
+                <FontAwesomeIcon :icon="faCamera" class="drop-shadow-lg" />
               </div>
               <div>
-                <div class="text-white font-semibold text-lg">Browse Gallery</div>
-                <div class="text-white/70 text-sm">Explore stunning visuals</div>
+                <div class="text-white font-bold text-xl mb-1">{{ heroSection.cta1Title }}</div>
+                <div class="text-white/80 text-sm font-medium">{{ heroSection.cta1Subtitle }}</div>
               </div>
               <FontAwesomeIcon
                 :icon="faArrowRight"
-                class="text-white/60 group-hover:text-amber-300 group-hover:translate-x-1 transition-all"
+                class="text-white/60 group-hover:text-amber-400 group-hover:translate-x-2 transition-all duration-300 text-lg"
               />
             </div>
           </div>
 
           <div
-            class="group glass-effect rounded-2xl px-8 py-4 backdrop-blur-sm border border-white/20 hover:border-emerald-300/50 transition-all duration-300"
+            class="group glass-effect-card rounded-2xl px-10 py-6 backdrop-blur-xl border-2 border-white/30 hover:border-emerald-400/70 transition-all duration-500 relative overflow-hidden cursor-pointer transform hover:scale-105 hover:-translate-y-1 shadow-2xl hover:shadow-emerald-500/20"
           >
-            <div class="flex items-center space-x-3">
-              <div class="text-emerald-300 group-hover:scale-110 transition-transform">
-                <FontAwesomeIcon :icon="faUpload" />
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-emerald-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            ></div>
+            <div class="flex items-center space-x-4 relative z-10">
+              <div
+                class="text-emerald-400 text-3xl group-hover:scale-125 transition-all duration-500"
+              >
+                <FontAwesomeIcon :icon="faUpload" class="drop-shadow-lg" />
               </div>
               <div>
-                <div class="text-white font-semibold text-lg">Share Your Story</div>
-                <div class="text-white/70 text-sm">Upload your adventures</div>
+                <div class="text-white font-bold text-xl mb-1">{{ heroSection.cta2Title }}</div>
+                <div class="text-white/80 text-sm font-medium">{{ heroSection.cta2Subtitle }}</div>
               </div>
             </div>
           </div>
