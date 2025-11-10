@@ -1827,7 +1827,6 @@
             </div>
 
             <!-- About Page Sections -->
-            <!-- About Page Sections -->
             <div v-if="page === 'about'" class="space-y-6">
               <!-- Initialize Button -->
               <div
@@ -2694,7 +2693,7 @@
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Stat 1 Label (Photos)
+                        Stat 1 Label (Images)
                       </label>
                       <input
                         type="text"

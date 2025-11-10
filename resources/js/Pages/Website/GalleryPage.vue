@@ -126,6 +126,7 @@
 <template>
   <div class="animate-fade-in-up theme-page">
     <!-- ========== GALLERY PAGE HERO SECTION ========== -->
+
     <section
       class="bg-gradient-to-br from-primary to-secondary text-accent py-16 md:py-24 relative overflow-hidden"
     >
