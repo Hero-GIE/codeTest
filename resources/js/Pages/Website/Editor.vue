@@ -48,6 +48,11 @@
   const saving = ref(false);
   const mobileMenuOpen = ref(false);
 
+  // Add these new reactive variables
+  const showDeleteDialog = ref(false);
+  const imageToDelete = ref(null);
+  const deleting = ref(false);
+
   const saveContent = async () => {
     saving.value = true;
     try {
@@ -540,11 +545,6 @@
     }
   };
 
-  // Add these new reactive variables
-  const showDeleteDialog = ref(false);
-  const imageToDelete = ref(null);
-  const deleting = ref(false);
-
   // Replace the deleteImage function with this:
   const openDeleteDialog = (image) => {
     imageToDelete.value = image;
@@ -925,6 +925,46 @@
       },
     };
     editedContent.title = 'My Adventure Log';
+    editedContent.published = true;
+    saveContent();
+  };
+
+  const initializeGalleryPage = () => {
+    editedContent.sections = {
+      hero: {
+        title: 'Adventure Gallery',
+        highlightedTitle: 'Visual Stories',
+        subtitle: 'Visual stories from incredible journeys around the world',
+        badge: 'Welcome to Your Adventure Log',
+        backgroundImage:
+          'https://plus.unsplash.com/premium_photo-1709371824843-2b72258fbd71?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1267',
+
+        // Stats Values
+        photosShared: '0',
+        adventuresDocumented: '0+',
+        countriesCovered: '50+',
+        communityActive: '24/7',
+
+        // Stats Labels
+        photosSharedLabel: 'Photos Shared',
+        adventuresDocumentedLabel: 'Adventures Documented',
+        countriesCoveredLabel: 'Countries Covered',
+        communityActiveLabel: 'Community Active',
+
+        categories: [
+          'Mountain Expeditions',
+          'Forest Trails',
+          'Coastal Adventures',
+          'Desert Journeys',
+          'Urban Exploration',
+        ],
+        cta1Title: 'Browse Gallery',
+        cta1Subtitle: 'Explore stunning visuals',
+        cta2Title: 'Share Your Story',
+        cta2Subtitle: 'Upload your adventures',
+      },
+    };
+    editedContent.title = 'Adventure Gallery';
     editedContent.published = true;
     saveContent();
   };
@@ -2596,6 +2636,25 @@
 
             <!-- Gallery Editor Section -->
             <div v-if="page === 'gallery'" class="space-y-6">
+              <div
+                v-if="!editedContent.sections?.hero"
+                class="mb-6 p-4 border-2 border-dashed border-purple-300 rounded-xl bg-purple-50/50 text-center"
+              >
+                <div class="mb-4">
+                  <FontAwesomeIcon :icon="faImages" class="text-purple-500 text-3xl" />
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Initialize Gallery Page</h3>
+                <p class="text-gray-600 text-sm mb-4">
+                  Set up your gallery page with beautiful default content that you can customize.
+                </p>
+                <button
+                  @click="initializeGalleryPage"
+                  class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-all flex items-center space-x-2 mx-auto"
+                >
+                  <FontAwesomeIcon :icon="faPlus" />
+                  <span>Initialize Gallery Page Sections</span>
+                </button>
+              </div>
               <!-- Gallery Hero Section -->
               <div
                 v-if="editedContent.sections.hero"

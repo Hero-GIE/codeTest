@@ -17,6 +17,125 @@ class WebsiteController extends Controller
         $this->firebaseService  = $firebaseService;
         $this->analyticsService = $analyticsService;
     }
+    // public function showPage(Request $request, $page = 'home')
+    // {
+    //     \Log::info("WebsiteController - showPage called", [
+    //         'page' => $page,
+    //         'user' => session('firebase_user') ? 'logged_in' : 'guest',
+    //         'url'  => $request->fullUrl(),
+    //     ]);
+
+    //     // Get current user if logged in
+    //     $user = session('firebase_user');
+
+    //     // 🔥 CORRECT: Determine whose website we're viewing
+    //     $websiteOwnerUid = $this->getWebsiteOwnerUid($request, $user);
+
+    //     // Get content and settings for the website owner
+    //     $pageContent     = $this->getPageContentForOwner($websiteOwnerUid, $page);
+    //     $websiteSettings = $this->getWebsiteSettingsForOwner($websiteOwnerUid);
+
+    //     // Make sure this includes customColors
+    //     if (! $websiteSettings || ! isset($websiteSettings['customColors'])) {
+    //         $websiteSettings = [
+    //             'customColors' => [
+    //                 'primary'   => '#000000',
+    //                 'secondary' => '#8B4513',
+    //                 'accent'    => '#FFFFFF',
+    //             ],
+    //         ];
+    //     }
+
+    //     // Determine if current user is the owner
+    //     $isOwner = $user && $user['uid'] === $websiteOwnerUid;
+
+    //     // 🔥 CHECK IF PAGE IS PUBLISHED (unless user is the owner)
+    //     if (! $isOwner && ! ($pageContent['published'] ?? false)) {
+    //         // Page is not published and user is not the owner
+    //         abort(404, 'Page not found');
+    //     }
+
+    //     // ✅ FIXED: Load adventures separately and inject them into page content
+    //     if ($page === 'home' && $websiteOwnerUid) {
+    //         \Log::info("🏠 Loading adventures for home page", ['uid' => $websiteOwnerUid]);
+
+    //         // Fetch adventures from the correct location
+    //         $userAdventures = $this->firebaseService->getUserAdventuresForHomepage($websiteOwnerUid, 4);
+
+    //         \Log::info("📊 Adventures fetched", [
+    //             'count'      => count($userAdventures),
+    //             'adventures' => $userAdventures,
+    //         ]);
+
+    //         // Inject adventures into page content
+    //         if (! isset($pageContent['sections'])) {
+    //             $pageContent['sections'] = [];
+    //         }
+    //         if (! isset($pageContent['sections']['recent'])) {
+    //             $pageContent['sections']['recent'] = [
+    //                 'title' => 'Recent Adventures',
+    //                 'posts' => [],
+    //             ];
+    //         }
+
+    //         $pageContent['sections']['recent']['posts'] = $userAdventures;
+
+    //         \Log::info("✅ Adventures injected into page content", [
+    //             'final_count' => count($pageContent['sections']['recent']['posts']),
+    //         ]);
+    //     }
+
+    //     // 🔥 GALLERY-SPECIFIC LOGIC: Load gallery images
+    //     if ($page === 'gallery' && $websiteOwnerUid) {
+    //         \Log::info("🖼️ Loading gallery images for gallery page", ['uid' => $websiteOwnerUid]);
+
+    //         // Fetch gallery images from Firebase
+    //         $galleryImages = $this->firebaseService->getGalleryImages($websiteOwnerUid);
+
+    //         \Log::info("📊 Gallery images fetched", [
+    //             'count'  => count($galleryImages),
+    //             'images' => array_map(function ($img) {
+    //                 return [
+    //                     'id'      => $img['id'] ?? 'unknown',
+    //                     'caption' => $img['caption'] ?? 'No caption',
+    //                 ];
+    //             }, $galleryImages),
+    //         ]);
+
+    //         // Inject gallery images into page content
+    //         $pageContent['images'] = $galleryImages;
+
+    //         \Log::info("✅ Gallery images injected into page content", [
+    //             'final_count' => count($pageContent['images']),
+    //         ]);
+    //     }
+
+    //     // 🔥 RECORD ANALYTICS for the website owner (only for published pages)
+    //     if ($websiteOwnerUid && ($pageContent['published'] ?? false)) {
+    //         $this->analyticsService->recordVisit($websiteOwnerUid, $page, $request);
+    //     }
+
+    //     // Get list of published pages
+    //     $publishedPages = $this->getPublishedPages($websiteOwnerUid);
+
+    //     \Log::info("📋 Final published pages for navigation", [
+    //         'uid'             => $websiteOwnerUid,
+    //         'published_pages' => $publishedPages,
+    //         'current_page'    => $page,
+    //         'is_published'    => in_array($page, $publishedPages),
+    //     ]);
+
+    //     return Inertia::render('Website/Page', [
+    //         'user'            => $user,
+    //         'page'            => $page,
+    //         'pageContent'     => $pageContent,
+    //         'websiteSettings' => $websiteSettings,
+    //         'isEditMode'      => $request->has('edit') && $isOwner,
+    //         'isOwner'         => $isOwner,
+    //         'publishedPages'  => $publishedPages,
+    //     ]);
+    // }
+
     public function showPage(Request $request, $page = 'home')
     {
         \Log::info("WebsiteController - showPage called", [
@@ -53,6 +172,19 @@ class WebsiteController extends Controller
         if (! $isOwner && ! ($pageContent['published'] ?? false)) {
             // Page is not published and user is not the owner
             abort(404, 'Page not found');
+        }
+
+        // ✅ ADD GALLERY DEBUG LOGGING RIGHT HERE - before the gallery-specific logic
+        if ($page === 'gallery') {
+            \Log::info("🖼️ Gallery Page Debug - BEFORE Processing", [
+                'website_owner_uid'      => $websiteOwnerUid,
+                'page_content_exists'    => ! empty($pageContent),
+                'has_sections'           => isset($pageContent['sections']),
+                'has_hero'               => isset($pageContent['sections']['hero']),
+                'hero_keys'              => isset($pageContent['sections']['hero']) ? array_keys($pageContent['sections']['hero']) : 'no hero',
+                'is_using_default'       => $pageContent === $this->getDefaultPageContent('gallery'),
+                'page_content_structure' => $pageContent, // This will show the full structure
+            ]);
         }
 
         // ✅ FIXED: Load adventures separately and inject them into page content
@@ -107,6 +239,13 @@ class WebsiteController extends Controller
 
             \Log::info("✅ Gallery images injected into page content", [
                 'final_count' => count($pageContent['images']),
+            ]);
+
+            // ✅ ADD SECOND DEBUG LOG AFTER GALLERY PROCESSING
+            \Log::info("🖼️ Gallery Page Debug - AFTER Processing", [
+                'has_images'              => isset($pageContent['images']),
+                'images_count'            => count($pageContent['images'] ?? []),
+                'final_page_content_keys' => array_keys($pageContent),
             ]);
         }
 

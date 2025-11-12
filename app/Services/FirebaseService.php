@@ -990,7 +990,7 @@ class FirebaseService
                         'countriesCovered'          => '50+',
                         'communityActive'           => '24/7',
 
-                        // Stats Labels (NEW)
+                        // Stats Labels
                         'photosSharedLabel'         => 'Photos Shared',
                         'adventuresDocumentedLabel' => 'Adventures Documented',
                         'countriesCoveredLabel'     => 'Countries Covered',
@@ -1011,7 +1011,6 @@ class FirebaseService
                 ],
                 'images'    => [],
             ],
-
             // In your FirebaseService.php, update the contact page defaults
             'contact' => [
                 'title'     => 'Get In Touch',
@@ -1159,23 +1158,61 @@ class FirebaseService
     /**
      * Get user-specific page content
      */
+    // public function getUserPageContent($uid, $page)
+    // {
+    //     try {
+    //         $ref     = $this->database->getReference("websites/{$uid}/pages/{$page}");
+    //         $content = $ref->getValue();
+
+    //         if (empty($content)) {
+    //             // Create default page content for this user
+    //             $defaultContent = $this->getDefaultPageContent($page);
+    //             $ref->set($defaultContent);
+    //             return $defaultContent;
+    //         }
+
+    //         return $content;
+    //     } catch (\Exception $error) {
+    //         \Log::error("❌ [getUserPageContent] Error: " . $error->getMessage());
+    //         return $this->getDefaultPageContent($page);
+    //     }
+    // }
+
+    // In FirebaseService.php
     public function getUserPageContent($uid, $page)
     {
         try {
-            $ref     = $this->database->getReference("websites/{$uid}/pages/{$page}");
-            $content = $ref->getValue();
+            $document = $this->firestore->database()
+                ->collection('websites')
+                ->document($uid)
+                ->collection('pages')
+                ->document($page)
+                ->snapshot();
 
-            if (empty($content)) {
-                // Create default page content for this user
-                $defaultContent = $this->getDefaultPageContent($page);
-                $ref->set($defaultContent);
-                return $defaultContent;
+            if ($document->exists()) {
+                $data = $document->data();
+
+                // Ensure gallery page has proper structure
+                if ($page === 'gallery') {
+                    if (! isset($data['sections'])) {
+                        $data['sections'] = [];
+                    }
+                    if (! isset($data['sections']['hero'])) {
+                        $data['sections']['hero'] = [];
+                    }
+                    if (! isset($data['images'])) {
+                        $data['images'] = [];
+                    }
+                }
+
+                return $data;
             }
 
-            return $content;
-        } catch (\Exception $error) {
-            \Log::error("❌ [getUserPageContent] Error: " . $error->getMessage());
-            return $this->getDefaultPageContent($page);
+            return null;
+
+        } catch (\Exception $e) {
+            \Log::error('Firebase error getting page content: ' . $e->getMessage());
+            return null;
         }
     }
 
