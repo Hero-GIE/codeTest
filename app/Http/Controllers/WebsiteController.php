@@ -373,10 +373,22 @@ class WebsiteController extends Controller
         if ($ownerUid) {
             $userContent = $this->firebaseService->getUserPageContent($ownerUid, $page);
             if ($userContent) {
+                \Log::info("📄 Using user content for page", [
+                    'page'         => $page,
+                    'uid'          => $ownerUid,
+                    'has_sections' => isset($userContent['sections']),
+                    'has_hero'     => isset($userContent['sections']['hero']),
+                ]);
                 return $userContent;
             }
         }
 
+        \Log::info("📄 Using DEFAULT content for page", [
+            'page'                 => $page,
+            'uid'                  => $ownerUid,
+            'default_has_sections' => isset($this->getDefaultPageContent($page)['sections']),
+            'default_has_hero'     => isset($this->getDefaultPageContent($page)['sections']['hero']),
+        ]);
         return $this->getDefaultPageContent($page);
     }
 
@@ -558,11 +570,46 @@ class WebsiteController extends Controller
                     'years_of_passion'  => '3+',
                 ],
             ],
+
             'gallery' => [
                 'title'     => 'Adventure Gallery',
                 'published' => true,
+                'sections'  => [
+                    'hero' => [
+                        'title'                     => 'Adventure Gallery',
+                        'highlightedTitle'          => 'Visual Stories',
+                        'subtitle'                  => 'Visual stories from incredible journeys around the world',
+                        'badge'                     => 'Welcome to Your Adventure Log',
+                        'backgroundImage'           => 'https://plus.unsplash.com/premium_photo-1709371824843-2b72258fbd71?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1267',
+
+                        // Stats Values
+                        'photosShared'              => '0',
+                        'adventuresDocumented'      => '0+',
+                        'countriesCovered'          => '50+',
+                        'communityActive'           => '24/7',
+
+                        // Stats Labels
+                        'photosSharedLabel'         => 'Photos Shared',
+                        'adventuresDocumentedLabel' => 'Adventures Documented',
+                        'countriesCoveredLabel'     => 'Countries Covered',
+                        'communityActiveLabel'      => 'Community Active',
+
+                        'categories'                => [
+                            'Mountain Expeditions',
+                            'Forest Trails',
+                            'Coastal Adventures',
+                            'Desert Journeys',
+                            'Urban Exploration',
+                        ],
+                        'cta1Title'                 => 'Browse Gallery',
+                        'cta1Subtitle'              => 'Explore stunning visuals',
+                        'cta2Title'                 => 'Share Your Story',
+                        'cta2Subtitle'              => 'Upload your adventures',
+                    ],
+                ],
                 'images'    => [],
             ],
+
             'contact' => [
                 'title'     => 'Get In Touch',
                 'published' => true,
@@ -620,7 +667,7 @@ class WebsiteController extends Controller
     /**
      * Get default website settings
      */
-    private function getDefaultWebsiteSettings()
+    private function getDefaultWebsiteSettings(): array
     {
         return [
             'siteName' => 'Adventure Blog',

@@ -217,6 +217,7 @@
   }
 
   // Ensure all required sections exist for gallery page
+
   if (props.page === 'gallery') {
     if (!editedContent.sections) {
       editedContent.sections = {};
@@ -224,10 +225,24 @@
     if (!editedContent.sections.hero) {
       editedContent.sections.hero = {
         title: 'Adventure Gallery',
+        highlightedTitle: 'Visual Stories',
         subtitle: 'Visual stories from incredible journeys around the world',
         badge: 'Welcome to Your Adventure Log',
         backgroundImage:
           'https://plus.unsplash.com/premium_photo-1709371824843-2b72258fbd71?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1267',
+
+        // Stats Values
+        photosShared: '0',
+        adventuresDocumented: '0+',
+        countriesCovered: '50+',
+        communityActive: '24/7',
+
+        // Stats Labels
+        photosSharedLabel: 'Photos Shared',
+        adventuresDocumentedLabel: 'Adventures Documented',
+        countriesCoveredLabel: 'Countries Covered',
+        communityActiveLabel: 'Community Active',
+
         categories: [
           'Mountain Expeditions',
           'Forest Trails',

@@ -972,7 +972,6 @@ class FirebaseService
                 ],
             ],
 
-            // In your getDefaultPageContent method
             'gallery' => [
                 'title'     => 'Adventure Gallery',
                 'published' => true,
@@ -1158,61 +1157,23 @@ class FirebaseService
     /**
      * Get user-specific page content
      */
-    // public function getUserPageContent($uid, $page)
-    // {
-    //     try {
-    //         $ref     = $this->database->getReference("websites/{$uid}/pages/{$page}");
-    //         $content = $ref->getValue();
-
-    //         if (empty($content)) {
-    //             // Create default page content for this user
-    //             $defaultContent = $this->getDefaultPageContent($page);
-    //             $ref->set($defaultContent);
-    //             return $defaultContent;
-    //         }
-
-    //         return $content;
-    //     } catch (\Exception $error) {
-    //         \Log::error("❌ [getUserPageContent] Error: " . $error->getMessage());
-    //         return $this->getDefaultPageContent($page);
-    //     }
-    // }
-
-    // In FirebaseService.php
     public function getUserPageContent($uid, $page)
     {
         try {
-            $document = $this->firestore->database()
-                ->collection('websites')
-                ->document($uid)
-                ->collection('pages')
-                ->document($page)
-                ->snapshot();
+            $ref     = $this->database->getReference("websites/{$uid}/pages/{$page}");
+            $content = $ref->getValue();
 
-            if ($document->exists()) {
-                $data = $document->data();
-
-                // Ensure gallery page has proper structure
-                if ($page === 'gallery') {
-                    if (! isset($data['sections'])) {
-                        $data['sections'] = [];
-                    }
-                    if (! isset($data['sections']['hero'])) {
-                        $data['sections']['hero'] = [];
-                    }
-                    if (! isset($data['images'])) {
-                        $data['images'] = [];
-                    }
-                }
-
-                return $data;
+            if (empty($content)) {
+                // Create default page content for this user
+                $defaultContent = $this->getDefaultPageContent($page);
+                $ref->set($defaultContent);
+                return $defaultContent;
             }
 
-            return null;
-
-        } catch (\Exception $e) {
-            \Log::error('Firebase error getting page content: ' . $e->getMessage());
-            return null;
+            return $content;
+        } catch (\Exception $error) {
+            \Log::error("❌ [getUserPageContent] Error: " . $error->getMessage());
+            return $this->getDefaultPageContent($page);
         }
     }
 
